@@ -1,50 +1,42 @@
 package wallet
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/Dcaf-Protocol/keeper-bot/configs"
-	"github.com/portto/solana-go-sdk/client"
-	"github.com/portto/solana-go-sdk/rpc"
-	"github.com/portto/solana-go-sdk/types"
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/mr-tron/base58"
 	"github.com/sirupsen/logrus"
 )
 
 type Wallet struct {
-	client  *client.Client
-	account types.Account
+	Client  *rpc.Client
+	Account *solana.Wallet
 }
 
 func NewWallet(
 	secrets *configs.Secrets,
+	solClient *rpc.Client,
 ) (*Wallet, error) {
-	wallet := Wallet{}
-	if secrets.IsLocal() {
-		wallet.client = client.NewClient(rpc.LocalnetRPCEndpoint)
-	} else {
-		wallet.client = client.NewClient(rpc.MainnetRPCEndpoint)
-	}
-	if resp, err := wallet.client.GetVersion(context.Background()); err != nil {
-		logrus.WithError(err).Fatalf("failed to get client version info")
-		return nil, err
-	} else {
-		logrus.
-			WithFields(logrus.Fields{"version": resp.SolanaCore}).
-			Info("created solClient")
-	}
-
+	wallet := Wallet{Client: solClient}
 	var accountBytes []byte
 	if err := json.Unmarshal([]byte(secrets.Account), &accountBytes); err != nil {
 		return nil, err
 	}
-	account, err := types.AccountFromBytes(accountBytes)
+	priv := base58.Encode(accountBytes)
+	solWallet, err := solana.WalletFromPrivateKeyBase58(priv)
 	if err != nil {
 		return nil, err
 	}
-	wallet.account = account
+	wallet.Account = solWallet
+	// account, err := types.AccountFromBytes(accountBytes)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// wallet.Account = account
 	logrus.
-		WithFields(logrus.Fields{"publicKey": wallet.account.PublicKey.ToBase58()}).
+		WithFields(logrus.Fields{"publicKey": wallet.Account.PublicKey()}).
 		Infof("loaded wallet")
 	return &wallet, nil
 }

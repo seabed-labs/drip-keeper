@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Dcaf-Protocol/keeper-bot/configs"
+	"github.com/Dcaf-Protocol/keeper-bot/pkg/client"
 	"github.com/Dcaf-Protocol/keeper-bot/pkg/service/dca"
 	"github.com/Dcaf-Protocol/keeper-bot/pkg/wallet"
 	"github.com/sirupsen/logrus"
@@ -18,9 +19,14 @@ func init() {
 func main() {
 	logrus.Info("starting keeper bot")
 	fxApp := fx.New(
-		fx.Provide(configs.GetSecrets),
-		fx.Provide(wallet.NewWallet),
-		fx.Invoke(dca.NewDCA),
+		fx.Provide(
+			configs.GetSecrets,
+			client.NewSolanaClient,
+			wallet.NewWallet,
+		),
+		fx.Invoke(
+			dca.NewDCA,
+		),
 		fx.NopLogger,
 	)
 	if err := fxApp.Start(context.Background()); err != nil {
