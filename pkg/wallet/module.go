@@ -20,21 +20,21 @@ func NewWallet(
 	solClient *rpc.Client,
 ) (*Wallet, error) {
 	wallet := Wallet{Client: solClient}
-	var accountBytes []byte
-	if err := json.Unmarshal([]byte(secrets.Account), &accountBytes); err != nil {
-		return nil, err
+	if secrets.Environment != configs.ProdEnv && secrets.Account == "" {
+		logrus.Infof("creating new wallet")
+		wallet.Account = solana.NewWallet()
+	} else {
+		var accountBytes []byte
+		if err := json.Unmarshal([]byte(secrets.Account), &accountBytes); err != nil {
+			return nil, err
+		}
+		priv := base58.Encode(accountBytes)
+		solWallet, err := solana.WalletFromPrivateKeyBase58(priv)
+		if err != nil {
+			return nil, err
+		}
+		wallet.Account = solWallet
 	}
-	priv := base58.Encode(accountBytes)
-	solWallet, err := solana.WalletFromPrivateKeyBase58(priv)
-	if err != nil {
-		return nil, err
-	}
-	wallet.Account = solWallet
-	// account, err := types.AccountFromBytes(accountBytes)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// wallet.Account = account
 	logrus.
 		WithFields(logrus.Fields{"publicKey": wallet.Account.PublicKey()}).
 		Infof("loaded wallet")

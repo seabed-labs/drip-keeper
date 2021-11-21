@@ -18,7 +18,11 @@ func InjectDependencies(
 			client.NewSolanaClient,
 			wallet.NewWallet,
 		),
-		fx.Invoke(testCase),
+		fx.Invoke(
+			configs.InitLogrus,
+			testCase,
+		),
+		fx.NopLogger,
 	}
 	app := fx.New(opts...)
 	defer app.Stop(context.Background())

@@ -21,10 +21,10 @@ jobs:
       run: go build cmd/main.go 
 
   test:
+    env:
+      KEEPER_BOT_ENV: ${{ secrets.KEEPER_BOT_ENV }}
     name: Run test suite
     runs-on: ubuntu-latest
-    environment: staging_environment
-
 
     steps:
     - name: Install Go
@@ -49,6 +49,4 @@ jobs:
       run: go test -coverprofile ./c.out $(go list ./...) || exit $?
 
     - name: Stop solana-test-validator
-      env:
-        KEEPER_BOT_ENV: ${{ secrets.KEEPER_BOT_ENV }}
       run: docker-compose --file ./build/githubactions/docker-compose.yaml down 

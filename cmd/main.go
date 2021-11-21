@@ -11,13 +11,7 @@ import (
 	"go.uber.org/fx"
 )
 
-func init() {
-	// Log as JSON instead of the default ASCII formatter.
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-}
-
 func main() {
-	logrus.Info("starting keeper bot")
 	fxApp := fx.New(
 		fx.Provide(
 			configs.GetSecrets,
@@ -25,6 +19,7 @@ func main() {
 			wallet.NewWallet,
 		),
 		fx.Invoke(
+			configs.InitLogrus,
 			dca.NewDCA,
 		),
 		fx.NopLogger,
@@ -32,6 +27,7 @@ func main() {
 	if err := fxApp.Start(context.Background()); err != nil {
 		logrus.WithError(err).Fatalf("failed to start keeper bot")
 	}
+	logrus.Info("starting keeper bot")
 	sig := <-fxApp.Done()
 	logrus.WithFields(logrus.Fields{"signal": sig}).
 		Infof("recieved exit signal, stoping keeper bot")
