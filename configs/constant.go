@@ -7,6 +7,7 @@ const (
 const (
 	NilEnv   = Environment("")
 	LocalEnv = Environment("LOCAL")
+	TESTENV  = Environment("TEST")
 	DevEnv   = Environment("DEV")
 	ProdEnv  = Environment("ENV")
 )
