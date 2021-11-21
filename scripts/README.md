@@ -1,1 +1,0 @@
-Run all scripts from here from the root folder
