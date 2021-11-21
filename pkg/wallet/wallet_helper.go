@@ -1,18 +1,17 @@
-package test
+package wallet
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	"github.com/Dcaf-Protocol/keeper-bot/pkg/wallet"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
 )
 
 func InitTestWallet(
-	solClient *rpc.Client, wallet *wallet.Wallet,
+	solClient *rpc.Client, wallet *Wallet,
 ) (uint64, error) {
 	if _, err := solClient.RequestAirdrop(
 		context.Background(), wallet.Account.PublicKey(),

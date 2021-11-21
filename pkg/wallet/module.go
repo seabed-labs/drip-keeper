@@ -21,8 +21,11 @@ func NewWallet(
 ) (*Wallet, error) {
 	wallet := Wallet{Client: solClient}
 	if secrets.Environment != configs.ProdEnv && secrets.Account == "" {
-		logrus.Infof("creating new wallet")
+		logrus.Infof("creating & funding test wallet")
 		wallet.Account = solana.NewWallet()
+		if _, err := InitTestWallet(solClient, &wallet); err != nil {
+			return nil, err
+		}
 	} else {
 		var accountBytes []byte
 		if err := json.Unmarshal([]byte(secrets.Account), &accountBytes); err != nil {
