@@ -1,4 +1,5 @@
 # keeper-bot
+[![Test](https://github.com/Dcaf-Protocol/keeper-bot/actions/workflows/test.yaml/badge.svg)](https://github.com/Dcaf-Protocol/keeper-bot/actions/workflows/test.yaml)
 
 ## Getting Started
 Setup the `.env` file:
