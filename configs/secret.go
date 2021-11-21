@@ -26,3 +26,7 @@ func GetSecrets() (*Secrets, error) {
 func (s *Secrets) IsLocal() bool {
 	return s.Environment == LocalEnv || s.Environment == NilEnv
 }
+
+func (s *Secrets) IsTest() bool {
+	return s.Environment == TestEnv
+}

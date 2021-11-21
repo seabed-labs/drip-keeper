@@ -6,7 +6,7 @@ import (
 	"regexp"
 
 	"github.com/joho/godotenv"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // LoadEnv loads env vars from .env at root of repo
@@ -19,8 +19,9 @@ func GetProjectRoot() string {
 
 func LoadEnv() {
 	env := Environment(os.Getenv("KEEPER_BOT_ENV"))
+	logrus.WithField("env", env).Infof("loading env")
 	if env != LocalEnv && env != NilEnv {
-		log.WithField("env", env).Debug("skipping .env file")
+		logrus.WithField("env", env).Debug("skipping .env file")
 		return
 	}
 	re := regexp.MustCompile(`^(.*` + PROJECT_DIR + `)`)
@@ -29,7 +30,7 @@ func LoadEnv() {
 	filePath := fmt.Sprintf("%s/.env", string(rootPath))
 	err := godotenv.Load(filePath)
 	if err != nil {
-		log.WithFields(log.Fields{
+		logrus.WithFields(logrus.Fields{
 			"cause":    err,
 			"cwd":      cwd,
 			"filePath": filePath,
