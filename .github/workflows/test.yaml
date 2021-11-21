@@ -23,6 +23,8 @@ jobs:
   test:
     name: Run test suite
     runs-on: ubuntu-latest
+    environment: staging_environment
+
 
     steps:
     - name: Install Go
