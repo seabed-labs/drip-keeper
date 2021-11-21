@@ -5,6 +5,7 @@ import (
 
 	"github.com/Dcaf-Protocol/keeper-bot/pkg/wallet"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInitWallet(t *testing.T) {
@@ -12,6 +13,8 @@ func TestInitWallet(t *testing.T) {
 		solClient *rpc.Client,
 		wallet *wallet.Wallet,
 	) {
-		InitTestWallet(t, solClient, wallet)
+		balance, err := InitTestWallet(solClient, wallet)
+		assert.NoError(t, err)
+		assert.NotZero(t, balance)
 	})
 }
