@@ -1,0 +1,5 @@
+/.github/ @dcaf-mocha
+/build/ @dcaf-mocha
+/cmd/ @dcaf-mocha
+/configs/ @dcaf-mocha
+/pkg/ @dcaf-mocha
