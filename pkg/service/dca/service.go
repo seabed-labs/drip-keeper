@@ -59,4 +59,14 @@ func (dca *DCA) stopCron(
 
 func (dca *DCA) run() {
 	logrus.Info("running dca")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
+	defer cancel()
+	vault := "TODO: VAULT PUBKEY"
+	if err := dca.Wallet.TriggerDCA(ctx, vault); err != nil {
+		logrus.
+			WithFields(logrus.Fields{"vault": vault}).
+			WithError(err).
+			Errorf("failed to trigger DCA")
+	}
+	logrus.Infof("done DCA")
 }

@@ -1,9 +1,13 @@
 package wallet
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/Dcaf-Protocol/keeper-bot/configs"
+	dcaVault "github.com/Dcaf-Protocol/keeper-bot/pkg/generated/dca_vault"
+	"github.com/Dcaf-Protocol/keeper-bot/pkg/util"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/mr-tron/base58"
@@ -42,4 +46,57 @@ func NewWallet(
 		WithFields(logrus.Fields{"publicKey": wallet.Account.PublicKey()}).
 		Infof("loaded wallet")
 	return &wallet, nil
+}
+
+// TODO(Mocha): Missing Tests
+func (w *Wallet) TriggerDCA(
+	ctx context.Context, vaultPubkey string,
+) error {
+	goID := util.GoID()
+	logFields := logrus.Fields{"vault": vaultPubkey, "id": goID}
+	logrus.WithFields(logFields).Infof("starting DCA")
+
+	txBuilder := dcaVault.NewTriggerDcaInstructionBuilder()
+	txBuilder.SetClientAccount(w.Account.PublicKey())
+	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58("TODO"))
+	recent, err := w.Client.GetRecentBlockhash(ctx, rpc.CommitmentFinalized)
+	if err != nil {
+		return err
+	}
+	logFields["block"] = recent.Value.Blockhash
+	logrus.WithFields(logFields).Infof("DCA recrny block")
+
+	tx, err := solana.NewTransaction(
+		[]solana.Instruction{txBuilder.Build()},
+		recent.Value.Blockhash,
+		solana.TransactionPayer(w.Account.PublicKey()),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create Trigger DCA transaction, err %s", err)
+	}
+	logrus.WithFields(logFields).Infof("built Trigger DCA transaction")
+
+	_, err = tx.Sign(
+		func(key solana.PublicKey) *solana.PrivateKey {
+			if w.Account.PublicKey().Equals(key) {
+				return &w.Account.PrivateKey
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to sign transaction, err %s", err)
+	}
+	logrus.WithFields(logFields).Info("signed Trigger DCA transaction")
+
+	sig, err := w.Client.SendTransactionWithOpts(
+		ctx, tx, false, rpc.CommitmentFinalized,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to send transaction, err %s", err)
+	}
+	logFields["sig"] = sig
+	logrus.WithFields(logFields).Info("broadcast Trigger DCA transaction")
+
+	return nil
 }
