@@ -46,9 +46,10 @@ func checkAirDrop(
 			return
 		default:
 		}
-		ctx, _ := context.WithTimeout(context.Background(), timeout)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		balance, err := client.GetBalance(
 			ctx, pubkey, rpc.CommitmentFinalized)
+		cancel()
 		if err == nil && balance.Value != 0 {
 			done <- nil
 			return
