@@ -67,6 +67,9 @@ func (dca *DCA) run() {
 			WithFields(logrus.Fields{"vault": vault}).
 			WithError(err).
 			Errorf("failed to trigger DCA")
+	} else {
+		logrus.
+			WithFields(logrus.Fields{"vault": vault}).
+			Info("triggered DCA")
 	}
-	logrus.Infof("done DCA")
 }
