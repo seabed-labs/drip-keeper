@@ -13,10 +13,11 @@ func NewSolanaClient(
 ) (*rpc.Client, error) {
 	url := getURL(secrets.Environment)
 	solClient := *rpc.New(url)
-	if resp, err := solClient.GetVersion(context.Background()); err != nil {
+	resp, err := solClient.GetVersion(context.Background())
+	if err != nil {
 		logrus.WithError(err).Fatalf("failed to get client version info")
 		return nil, err
-	} 
+	}
 	logrus.
 		WithFields(logrus.Fields{
 			"version": resp.SolanaCore,
