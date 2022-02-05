@@ -16,13 +16,12 @@ func NewSolanaClient(
 	if resp, err := solClient.GetVersion(context.Background()); err != nil {
 		logrus.WithError(err).Fatalf("failed to get client version info")
 		return nil, err
-	} else {
-		logrus.
-			WithFields(logrus.Fields{
-				"version": resp.SolanaCore,
-				"url":     url}).
-			Info("created solClient")
-	}
+	} 
+	logrus.
+		WithFields(logrus.Fields{
+			"version": resp.SolanaCore,
+			"url":     url}).
+		Info("created solClient")
 	return &solClient, nil
 }
 
