@@ -5,22 +5,22 @@ import (
 
 	"github.com/Dcaf-Protocol/keeper-bot/configs"
 	"github.com/Dcaf-Protocol/keeper-bot/pkg/client"
-	"github.com/Dcaf-Protocol/keeper-bot/pkg/service/dca"
+	dca "github.com/Dcaf-Protocol/keeper-bot/pkg/service/dcacron"
 	"github.com/Dcaf-Protocol/keeper-bot/pkg/wallet"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
 
 func main() {
+	logrus.SetFormatter(&logrus.JSONFormatter{})
 	fxApp := fx.New(
 		fx.Provide(
-			configs.GetSecrets,
+			configs.GetBotConfig,
 			client.NewSolanaClient,
 			wallet.NewWallet,
 		),
 		fx.Invoke(
-			configs.InitLogrus,
-			dca.NewDCA,
+			dca.NewDCACron,
 		),
 		fx.NopLogger,
 	)
@@ -30,5 +30,5 @@ func main() {
 	logrus.Info("starting keeper bot")
 	sig := <-fxApp.Done()
 	logrus.WithFields(logrus.Fields{"signal": sig}).
-		Infof("recieved exit signal, stoping keeper bot")
+		Infof("received exit signal, stoping keeper bot")
 }

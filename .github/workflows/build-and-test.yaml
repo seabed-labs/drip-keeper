@@ -1,0 +1,189 @@
+name: Build and Test
+on:
+  pull_request:
+  push: { branches: main }
+
+env:
+  CLI_CACHE_KEY: anchor-v0.22.dev-7b86aed-solana-1.8.5
+  ENV: ${{ secrets.ENV }}
+  SOLANA_PROGRAMS: f13f47f08c40b79c83e83e3dd57c5561f74ee7e3
+  GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+
+jobs:
+  build_cli_deps:
+    name: Build CLI Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache cli deps
+        id: cache-cli-deps
+        uses: actions/cache@v2
+        with:
+          key: $${{ env.CLI_CACHE_KEY }}
+          path: |
+            ~/.local/share/solana
+            ~/.cargo
+            ~/.rustup
+            ~/.cargo/bin/anchor
+
+      - name: Install os deps
+        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
+        run: sudo apt-get update && sudo apt-get install -y pkg-config build-essential libudev-dev
+
+      - name: Install Rust Toolchain
+        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install Solana Tools 
+        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
+        run: sh -c "$(curl -sSfL https://release.solana.com/v1.8.5/install)"
+
+      - run: echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Install Anchor CLI 
+        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
+        run: cargo install --git https://github.com/project-serum/anchor --tag v0.22.0 anchor-cli --locked
+      
+      - name: Cache Solana Programs
+        id: cache-solana-programs
+        uses: actions/cache@v2
+        with:
+          key: $${{ env.SOLANA_PROGRAMS }}
+          path: |
+            solana-programs
+            solana-programs/target
+
+
+      - name: Checkout Solana Programs
+        if: steps.cache-solana-programs.outputs.cache-hit != 'true'
+        run: |
+          rm -rf solana-programs
+          git clone https://${{ env.GITHUB_TOKEN }}@github.com/Dcaf-Protocol/solana-programs.git 
+          cd solana-programs
+          git checkout ${{ env.SOLANA_PROGRAMS }}
+          anchor build
+
+
+  build_bot:
+    name: Build Keeper Bot
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.8
+
+      - name: Build
+        run: go build cmd/bot/main.go
+  
+  build_api:
+    name: Build API Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.8
+
+      - name: Build
+        run: go build cmd/api/main.go
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: [build_cli_deps, build_bot, build_api]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Cache CLI Deps
+        id: cache-cli-deps
+        uses: actions/cache@v2
+        with:
+          key: $${{ env.CLI_CACHE_KEY }}
+          path: |
+            ~/.local/share/solana
+            ~/.cargo
+            ~/.rustup
+            ~/.cargo/bin/anchor
+      
+      - name: Add solana to path
+        run: echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
+      
+      - name: Run solana-test-validator
+        run: solana-test-validator > /dev/null 2>&1 &
+      
+      - name: Cache solana programs
+        uses: actions/cache@v2
+        with:
+          key: $${{ env.SOLANA_PROGRAMS }}
+          path: |
+            solana-programs
+            solana-programs/target
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.8
+
+      - name: Install Code Coverage
+        uses: amancevice/setup-code-climate@v0
+        with:
+          cc_test_reporter_id: ${{ secrets.CC_TEST_REPORTER_ID }}
+
+      - name: Deploy Programs
+        run: |
+          go run cmd/check_local_validator.go
+          cd solana-programs
+          solana config set -u localhost 
+          echo -e ${{ secrets.KEEPER_BOT_ACCOUNT }} >> ./id.json
+          solana airdrop 10 ./id.json
+          anchor deploy --provider.wallet ./id.json
+
+      - name: Cache go packages
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      
+      - name: Code Coverage Before Build
+        run: cc-test-reporter before-build
+
+      - name: Run unit tests
+        run: go test -coverprofile ./c.out $(go list ./...) || exit $?
+
+      - name: Format Code Coverage File
+        run: cc-test-reporter format-coverage -t gocov --prefix github.com/Dcaf-Protocol/keeper-bot c.out
+
+      - name: Code Coverage After Build
+        if: ${{ github.event_name != 'pull_request' }}
+        run: cc-test-reporter after-build --prefix github.com/Dcaf-Protocol/keeper-bot --exit-code $?
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.8
+        
+      - uses: actions/checkout@v2
+      - name: Lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          only-new-issues: true
+          skip-go-installation: true

@@ -1,6 +1,7 @@
 package wallet_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/Dcaf-Protocol/keeper-bot/pkg/test"
@@ -14,8 +15,11 @@ func TestInitWallet(t *testing.T) {
 		solClient *rpc.Client,
 		wallet *walletPkg.Wallet,
 	) {
+		originalBalance, err := solClient.GetBalance(context.Background(), wallet.Account.PublicKey(), rpc.CommitmentConfirmed)
+		assert.NoError(t, err)
 		balance, err := walletPkg.InitTestWallet(solClient, wallet)
 		assert.NoError(t, err)
 		assert.NotZero(t, balance)
+		assert.NotEqual(t, originalBalance, balance)
 	})
 }

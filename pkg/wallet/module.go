@@ -20,11 +20,11 @@ type Wallet struct {
 }
 
 func NewWallet(
-	secrets *configs.Secrets,
+	config *configs.BotConfig,
 	solClient *rpc.Client,
 ) (*Wallet, error) {
 	wallet := Wallet{Client: solClient}
-	if secrets.Environment != configs.ProdEnv && secrets.Account == "" {
+	if !configs.IsProd(config.Environment) {
 		logrus.Infof("creating & funding test wallet")
 		wallet.Account = solana.NewWallet()
 		if _, err := InitTestWallet(solClient, &wallet); err != nil {
@@ -32,7 +32,7 @@ func NewWallet(
 		}
 	} else {
 		var accountBytes []byte
-		if err := json.Unmarshal([]byte(secrets.Account), &accountBytes); err != nil {
+		if err := json.Unmarshal([]byte(config.Account), &accountBytes); err != nil {
 			return nil, err
 		}
 		priv := base58.Encode(accountBytes)
@@ -48,18 +48,19 @@ func NewWallet(
 	return &wallet, nil
 }
 
-// TODO(Mocha): Missing Tests
+// // TODO(Mocha): Missing Tests
+// TODO(Mocha): Decouple transaction building and transaction signing
 func (w *Wallet) TriggerDCA(
 	ctx context.Context, vaultPubkey string,
 ) error {
-	goID := util.GoID()
+	goID := util.GoRoutineID()
 	logFields := logrus.Fields{"vault": vaultPubkey, "id": goID}
 	logrus.WithFields(logFields).Infof("starting DCA")
 
 	txBuilder := dcaVault.NewTriggerDcaInstructionBuilder()
 	txBuilder.SetClientAccount(w.Account.PublicKey())
 	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58("TODO"))
-	recent, err := w.Client.GetRecentBlockhash(ctx, rpc.CommitmentFinalized)
+	recent, err := w.Client.GetRecentBlockhash(ctx, rpc.CommitmentConfirmed)
 	if err != nil {
 		return err
 	}
@@ -90,7 +91,7 @@ func (w *Wallet) TriggerDCA(
 	logrus.WithFields(logFields).Info("signed Trigger DCA transaction")
 
 	sig, err := w.Client.SendTransactionWithOpts(
-		ctx, tx, false, rpc.CommitmentFinalized,
+		ctx, tx, false, rpc.CommitmentConfirmed,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to send transaction, err %s", err)

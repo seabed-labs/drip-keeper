@@ -9,9 +9,9 @@ import (
 )
 
 func NewSolanaClient(
-	secrets *configs.Secrets,
+	config *configs.BotConfig,
 ) (*rpc.Client, error) {
-	url := getURL(secrets.Environment)
+	url := getURL(config.Environment)
 	solClient := *rpc.New(url)
 	resp, err := solClient.GetVersion(context.Background())
 	if err != nil {
@@ -33,10 +33,12 @@ func getURL(env configs.Environment) string {
 	case configs.ProdEnv:
 		return rpc.MainNetBeta_RPC
 	case configs.NilEnv:
+		fallthrough
 	case configs.LocalEnv:
+		fallthrough
 	case configs.TestEnv:
+		fallthrough
 	default:
 		return rpc.LocalNet_RPC
 	}
-	return rpc.LocalNet_RPC
 }

@@ -11,18 +11,17 @@ import (
 	"go.uber.org/fx"
 )
 
-type DCA struct {
+type DCACron struct {
 	Cron   *cron.Cron
 	Wallet *wallet.Wallet
 }
 
-func NewDCA(
+func NewDCACron(
 	lc fx.Lifecycle,
 	wallet *wallet.Wallet,
-) (*DCA, error) {
-	dca := DCA{Wallet: wallet, Cron: cron.New()}
+) (*DCACron, error) {
+	dca := DCACron{Wallet: wallet, Cron: cron.New()}
 	cronPeriod := 1 * time.Minute
-	// TODO(Mocha): Need to change if we use multiple instances
 	if _, err := dca.Cron.AddFunc(
 		fmt.Sprintf("@every %s", cronPeriod), dca.run); err != nil {
 		return nil, err
@@ -39,7 +38,7 @@ func NewDCA(
 	return &dca, nil
 }
 
-func (dca *DCA) stopCron(
+func (dca *DCACron) stopCron(
 	ctx context.Context,
 ) error {
 	// Stop cron and wait for it to finish or timeout
@@ -57,7 +56,7 @@ func (dca *DCA) stopCron(
 	return nil
 }
 
-func (dca *DCA) run() {
+func (dca *DCACron) run() {
 	logrus.Info("running dca")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 	defer cancel()
