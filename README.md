@@ -13,4 +13,4 @@ Setup the `.env` file:
 
 Run the Bot: `go run cmd/bot/main.go`
 
-Generate IDL (assumes solana-program is a sibling of keeper-bot): `anchor-go --src=../../solana-programs/target/idl/dca_vault.json`
+Generate IDL (assumes solana-program is a sibling of keeper-bot): `anchor-go --src=../solana-programs/target/idl/dca_vault.json`
