@@ -13,14 +13,14 @@ import (
 func InjectDependencies(
 	testCase interface{},
 ) {
+	logrus.SetFormatter(&logrus.JSONFormatter{})
 	opts := []fx.Option{
 		fx.Provide(
-			configs.GetSecrets,
+			configs.GetBotConfig,
 			client.NewSolanaClient,
 			wallet.NewWallet,
 		),
 		fx.Invoke(
-			configs.InitLogrus,
 			testCase,
 		),
 		fx.NopLogger,

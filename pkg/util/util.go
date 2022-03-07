@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func GoID() int {
+func GoRoutineID() int {
 	var buf [64]byte
 	n := runtime.Stack(buf[:], false)
 	idField := strings.Fields(strings.TrimPrefix(string(buf[:n]), "goroutine "))[0]

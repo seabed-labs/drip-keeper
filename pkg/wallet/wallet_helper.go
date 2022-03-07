@@ -15,7 +15,7 @@ func InitTestWallet(
 ) (uint64, error) {
 	if _, err := solClient.RequestAirdrop(
 		context.Background(), wallet.Account.PublicKey(),
-		solana.LAMPORTS_PER_SOL*5, rpc.CommitmentFinalized); err != nil {
+		solana.LAMPORTS_PER_SOL*5, rpc.CommitmentConfirmed); err != nil {
 		return 0, err
 	}
 	errC := make(chan error)
@@ -25,7 +25,7 @@ func InitTestWallet(
 	}
 	balance, err := solClient.GetBalance(
 		context.Background(), wallet.Account.PublicKey(),
-		rpc.CommitmentFinalized)
+		rpc.CommitmentConfirmed)
 	if err != nil {
 		return 0, err
 	}
@@ -33,6 +33,7 @@ func InitTestWallet(
 	return balance.Value, nil
 }
 
+// TODO: This can be a generic function to check for a transaction till its confirmed
 func checkAirDrop(
 	client *rpc.Client, pubkey solana.PublicKey, done chan error,
 ) {
