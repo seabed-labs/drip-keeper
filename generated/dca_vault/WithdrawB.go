@@ -13,13 +13,13 @@ import (
 // WithdrawB is the `withdrawB` instruction.
 type WithdrawB struct {
 
-	// [0] = [WRITE] vault
+	// [0] = [] vault
 	//
 	// [1] = [] vaultPeriodI
 	//
 	// [2] = [] vaultPeriodJ
 	//
-	// [3] = [] userPosition
+	// [3] = [WRITE] userPosition
 	//
 	// [4] = [] userPositionNftAccount
 	//
@@ -29,7 +29,7 @@ type WithdrawB struct {
 	//
 	// [7] = [] vaultTokenBMint
 	//
-	// [8] = [] userTokenBAccount
+	// [8] = [WRITE] userTokenBAccount
 	//
 	// [9] = [WRITE, SIGNER] withdrawer
 	//
@@ -49,7 +49,7 @@ func NewWithdrawBInstructionBuilder() *WithdrawB {
 
 // SetVaultAccount sets the "vault" account.
 func (inst *WithdrawB) SetVaultAccount(vault ag_solanago.PublicKey) *WithdrawB {
-	inst.AccountMetaSlice[0] = ag_solanago.Meta(vault).WRITE()
+	inst.AccountMetaSlice[0] = ag_solanago.Meta(vault)
 	return inst
 }
 
@@ -82,7 +82,7 @@ func (inst *WithdrawB) GetVaultPeriodJAccount() *ag_solanago.AccountMeta {
 
 // SetUserPositionAccount sets the "userPosition" account.
 func (inst *WithdrawB) SetUserPositionAccount(userPosition ag_solanago.PublicKey) *WithdrawB {
-	inst.AccountMetaSlice[3] = ag_solanago.Meta(userPosition)
+	inst.AccountMetaSlice[3] = ag_solanago.Meta(userPosition).WRITE()
 	return inst
 }
 
@@ -137,7 +137,7 @@ func (inst *WithdrawB) GetVaultTokenBMintAccount() *ag_solanago.AccountMeta {
 
 // SetUserTokenBAccountAccount sets the "userTokenBAccount" account.
 func (inst *WithdrawB) SetUserTokenBAccountAccount(userTokenBAccount ag_solanago.PublicKey) *WithdrawB {
-	inst.AccountMetaSlice[8] = ag_solanago.Meta(userTokenBAccount)
+	inst.AccountMetaSlice[8] = ag_solanago.Meta(userTokenBAccount).WRITE()
 	return inst
 }
 
