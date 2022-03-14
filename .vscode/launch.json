@@ -9,7 +9,7 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "cmd/check_local_validator.go"
+      "program": "scripts/check_local_validator.go"
     },
     {
       "name": "bot",
