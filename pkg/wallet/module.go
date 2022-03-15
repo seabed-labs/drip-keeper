@@ -6,8 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Dcaf-Protocol/keeper-bot/configs"
-	dcaVault "github.com/Dcaf-Protocol/keeper-bot/pkg/generated/dca_vault"
-	"github.com/Dcaf-Protocol/keeper-bot/pkg/util"
+	dcaVault "github.com/Dcaf-Protocol/keeper-bot/generated/dca_vault"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/mr-tron/base58"
@@ -49,23 +48,39 @@ func New(
 }
 
 // // TODO(Mocha): Missing Tests
-// TODO(Mocha): Decouple transaction building and transaction signing
 func (w *WalletProvider) TriggerDCA(
-	ctx context.Context, vaultPubkey string,
+	ctx context.Context, config configs.TriggerDCAConfig, vaultPeriodI, vaultPeriodJ solana.PublicKey,
 ) error {
-	goID := util.GoRoutineID()
-	logFields := logrus.Fields{"vault": vaultPubkey, "id": goID}
-	logrus.WithFields(logFields).Infof("starting DCA")
+	logFields := logrus.Fields{"vault": config.Vault}
 
 	txBuilder := dcaVault.NewTriggerDcaInstructionBuilder()
-	txBuilder.SetClientAccount(w.Wallet.PublicKey())
-	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58("TODO"))
+	txBuilder.SetDcaTriggerSourceAccount(w.Wallet.PublicKey())
+	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58(config.Vault))
+	txBuilder.SetVaultProtoConfigAccount(solana.MustPublicKeyFromBase58(config.VaultProtoConfig))
+	txBuilder.SetLastVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriodI.String()))
+	txBuilder.SetCurrentVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriodJ.String()))
+	txBuilder.SetSwapTokenMintAccount(solana.MustPublicKeyFromBase58(config.SwapTokenMint))
+	txBuilder.SetTokenAMintAccount(solana.MustPublicKeyFromBase58(config.TokenAMint))
+	txBuilder.SetTokenBMintAccount(solana.MustPublicKeyFromBase58(config.TokenBMint))
+	txBuilder.SetVaultTokenAAccountAccount(solana.MustPublicKeyFromBase58(config.VaultTokenAAccount))
+	txBuilder.SetVaultTokenBAccountAccount(solana.MustPublicKeyFromBase58(config.VaultTokenBAccount))
+	txBuilder.SetSwapTokenAAccountAccount(solana.MustPublicKeyFromBase58(config.SwapTokenAAccount))
+	txBuilder.SetSwapTokenBAccountAccount(solana.MustPublicKeyFromBase58(config.SwapTokenBAccount))
+	txBuilder.SetSwapFeeAccountAccount(solana.MustPublicKeyFromBase58(config.SwapFeeAccount))
+	txBuilder.SetSwapAccount(solana.MustPublicKeyFromBase58(config.Swap))
+	txBuilder.SetSwapAuthorityAccount(solana.MustPublicKeyFromBase58(config.SwapAuthority))
+	txBuilder.SetTokenSwapProgramAccount(solana.TokenSwapProgramID)
+	txBuilder.SetTokenProgramAccount(solana.TokenProgramID)
+	txBuilder.SetAssociatedTokenProgramAccount(solana.SPLAssociatedTokenAccountProgramID)
+	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
+	txBuilder.SetRentAccount(solana.SysVarRentPubkey)
+
 	recent, err := w.Client.GetRecentBlockhash(ctx, rpc.CommitmentConfirmed)
 	if err != nil {
 		return err
 	}
 	logFields["block"] = recent.Value.Blockhash
-	logrus.WithFields(logFields).Infof("DCA recrny block")
+	logrus.WithFields(logFields).Infof("DCA recent block")
 
 	tx, err := solana.NewTransaction(
 		[]solana.Instruction{txBuilder.Build()},
@@ -77,26 +92,25 @@ func (w *WalletProvider) TriggerDCA(
 	}
 	logrus.WithFields(logFields).Infof("built Trigger DCA transaction")
 
-	_, err = tx.Sign(
+	if _, err := tx.Sign(
 		func(key solana.PublicKey) *solana.PrivateKey {
 			if w.Wallet.PublicKey().Equals(key) {
 				return &w.Wallet.PrivateKey
 			}
 			return nil
 		},
-	)
-	if err != nil {
+	); err != nil {
 		return fmt.Errorf("failed to sign transaction, err %s", err)
 	}
 	logrus.WithFields(logFields).Info("signed Trigger DCA transaction")
 
-	sig, err := w.Client.SendTransactionWithOpts(
+	txHash, err := w.Client.SendTransactionWithOpts(
 		ctx, tx, false, rpc.CommitmentConfirmed,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to send transaction, err %s", err)
 	}
-	logFields["sig"] = sig
+	logFields["txHash"] = txHash
 	logrus.WithFields(logFields).Info("broadcast Trigger DCA transaction")
 
 	return nil
