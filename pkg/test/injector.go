@@ -16,9 +16,9 @@ func InjectDependencies(
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	opts := []fx.Option{
 		fx.Provide(
-			configs.GetBotConfig,
+			configs.New,
 			client.NewSolanaClient,
-			wallet.NewWallet,
+			wallet.New,
 		),
 		fx.Invoke(
 			testCase,

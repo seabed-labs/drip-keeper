@@ -23,7 +23,7 @@ type TriggerDca struct {
 	//
 	// [4] = [WRITE] currentVaultPeriod
 	//
-	// [5] = [] swapTokenMint
+	// [5] = [WRITE] swapTokenMint
 	//
 	// [6] = [] tokenAMint
 	//
@@ -39,9 +39,9 @@ type TriggerDca struct {
 	//
 	// [12] = [WRITE] swapFeeAccount
 	//
-	// [13] = [] swap
+	// [13] = [WRITE] swap
 	//
-	// [14] = [] swapAuthority
+	// [14] = [WRITE] swapAuthority
 	//
 	// [15] = [] tokenSwapProgram
 	//
@@ -120,7 +120,7 @@ func (inst *TriggerDca) GetCurrentVaultPeriodAccount() *ag_solanago.AccountMeta 
 
 // SetSwapTokenMintAccount sets the "swapTokenMint" account.
 func (inst *TriggerDca) SetSwapTokenMintAccount(swapTokenMint ag_solanago.PublicKey) *TriggerDca {
-	inst.AccountMetaSlice[5] = ag_solanago.Meta(swapTokenMint)
+	inst.AccountMetaSlice[5] = ag_solanago.Meta(swapTokenMint).WRITE()
 	return inst
 }
 
@@ -208,7 +208,7 @@ func (inst *TriggerDca) GetSwapFeeAccountAccount() *ag_solanago.AccountMeta {
 
 // SetSwapAccount sets the "swap" account.
 func (inst *TriggerDca) SetSwapAccount(swap ag_solanago.PublicKey) *TriggerDca {
-	inst.AccountMetaSlice[13] = ag_solanago.Meta(swap)
+	inst.AccountMetaSlice[13] = ag_solanago.Meta(swap).WRITE()
 	return inst
 }
 
@@ -219,7 +219,7 @@ func (inst *TriggerDca) GetSwapAccount() *ag_solanago.AccountMeta {
 
 // SetSwapAuthorityAccount sets the "swapAuthority" account.
 func (inst *TriggerDca) SetSwapAuthorityAccount(swapAuthority ag_solanago.PublicKey) *TriggerDca {
-	inst.AccountMetaSlice[14] = ag_solanago.Meta(swapAuthority)
+	inst.AccountMetaSlice[14] = ag_solanago.Meta(swapAuthority).WRITE()
 	return inst
 }
 

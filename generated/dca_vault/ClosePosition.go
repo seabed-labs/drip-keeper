@@ -33,7 +33,7 @@ type ClosePosition struct {
 	//
 	// [9] = [WRITE] userPositionNftAccount
 	//
-	// [10] = [] userPositionNftMint
+	// [10] = [WRITE] userPositionNftMint
 	//
 	// [11] = [] tokenAMint
 	//
@@ -167,7 +167,7 @@ func (inst *ClosePosition) GetUserPositionNftAccountAccount() *ag_solanago.Accou
 
 // SetUserPositionNftMintAccount sets the "userPositionNftMint" account.
 func (inst *ClosePosition) SetUserPositionNftMintAccount(userPositionNftMint ag_solanago.PublicKey) *ClosePosition {
-	inst.AccountMetaSlice[10] = ag_solanago.Meta(userPositionNftMint)
+	inst.AccountMetaSlice[10] = ag_solanago.Meta(userPositionNftMint).WRITE()
 	return inst
 }
 

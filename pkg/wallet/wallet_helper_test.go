@@ -13,11 +13,11 @@ import (
 func TestInitWallet(t *testing.T) {
 	test.InjectDependencies(func(
 		solClient *rpc.Client,
-		wallet *walletPkg.Wallet,
+		walletProvider *walletPkg.WalletProvider,
 	) {
-		originalBalance, err := solClient.GetBalance(context.Background(), wallet.Account.PublicKey(), rpc.CommitmentConfirmed)
+		originalBalance, err := solClient.GetBalance(context.Background(), walletProvider.Wallet.PublicKey(), rpc.CommitmentConfirmed)
 		assert.NoError(t, err)
-		balance, err := walletPkg.InitTestWallet(solClient, wallet)
+		balance, err := walletPkg.InitTestWallet(solClient, walletProvider)
 		assert.NoError(t, err)
 		assert.NotZero(t, balance)
 		assert.NotEqual(t, originalBalance, balance)
