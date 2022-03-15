@@ -25,7 +25,7 @@ func New(
 ) (*WalletProvider, error) {
 	WalletProvider := WalletProvider{Client: solClient}
 	if !configs.IsProd(config.Environment) {
-		logrus.Infof("creating & funding test wallet")
+		logrus.Infof("creating and funding test wallet")
 		WalletProvider.Wallet = solana.NewWallet()
 		if _, err := InitTestWallet(solClient, &WalletProvider); err != nil {
 			return nil, err

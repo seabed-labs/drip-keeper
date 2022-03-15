@@ -15,7 +15,7 @@ func InitTestWallet(
 ) (uint64, error) {
 	if _, err := solClient.RequestAirdrop(
 		context.Background(), walletProvider.Wallet.PublicKey(),
-		solana.LAMPORTS_PER_SOL*5, rpc.CommitmentConfirmed); err != nil {
+		solana.LAMPORTS_PER_SOL*50, rpc.CommitmentConfirmed); err != nil {
 		return 0, err
 	}
 	errC := make(chan error)

@@ -1,26 +1,26 @@
 environment: LOCAL
 triggerDCA:
-  - vault: "123"
-    vaultProtoConfig: "123"
-    vaultTokenAAccount: "123"
-    vaultTokenBAccount: "123"
-    tokenAMint: "123"
-    tokenBMint: "123"
-    swapTokenMint: "123"
-    swapTokenAAccount: "123"
-    swapTokenBAccount: "123"
-    swapFeeAccount: "123"
-    swapAuthority: "123"
-    swap: "123"
-  - vault: "456"
-    vaultProtoConfig: "456"
-    vaultTokenAAccount: "456"
-    vaultTokenBAccount: "456"
-    tokenAMint: "456"
-    tokenBMint: "456"
-    swapTokenMint: "456"
-    swapTokenAAccount: "456"
-    swapTokenBAccount: "456"
-    swapFeeAccount: "456"
-    swapAuthority: "456"
-    swap: "456"
+  - vault: "CAb3UJF3vMnzsfhCRyYEi4yWDtwheKY7GD1SPXiGxHAn"
+    vaultProtoConfig: "8dr4roXvLbjFBXxmimcqsQ3YixT3gtB2pH476rPMoJMd"
+    vaultTokenAAccount: "E5YubGjy4384nTkzHb6Q33zKHmUXX8mpTTd8jCJmcxyT"
+    vaultTokenBAccount: "BrJMGcypbP1Y1YKc4gohR49eD2FJaxAsvyvhjJsoeGwm"
+    tokenAMint: "82BDFMwjEa79oh79e3wTqxiFrakv1kRYkhnKUZpLc2La"
+    tokenBMint: "2mUyX1MWx4YBn83JyasHzomGoxnGz9bNjDpwtDB6hC8i"
+    swapTokenMint: "BHp372dw3Lgygz9eDGJweMo13tDJhNPQ7YpEVdTQr9Ho"
+    swapTokenAAccount: "35BcTcBFuyXPbtBi1uyQcbphaCHkcYZwPsjpsTsmFHoJ"
+    swapTokenBAccount: "E2Ko5MS9U7eAMr5Fhe7nwg6dkiMVZkvbmks7H5apQoWj"
+    swapFeeAccount: "BUPSFzxkVvdAsWJwpKfJZ1jt8dsJr7CLMNhz6KkKXint"
+    swapAuthority: "22Q4pBcjdJzZa75Lby891KiH2199z2nq8S4tQ1xEaEVE"
+    swap: "DhHC7qcy4RLYNN9Z83SAQETGXTYewjzqmMRPPeSdvroy"
+  - tokenAMint: CStYRrRBHcY67UyTex7fM6bfgysLHP3PremmweEBPbtT
+    tokenBMint: CT6hehMvbWiKAnCjrxhdiAfyQv7vc24LLb2KWdMPjcRB
+    swap: 32JVudxisNu74GeHqGabqggdd1DHPs9YnVjQH4xXRgbu
+    swapTokenMint: 3BC3TWfMJsdZNFZkkZe21DmXCLrvZFXD77kNXSvhosqR
+    swapTokenAAccount: Hp5GpX5APTr1s2T4iFFPdsHFsoepKn9TRZPqqoxXzSuj
+    swapTokenBAccount: 9rXcbZAA9NDKkTe6BMHue2sMVSmBHi6DRcxys7dAPyV8
+    swapFeeAccount: 57RMGkshHaReQrvVm12ZXf4ZmKvdqUkeSJyN5TK9KSVi
+    swapAuthority: BZ7Lyd1d6aFzLjSWHvc9QMPTomNUuBZDVX87aDi11spk
+    vaultProtoConfig: 9QgRAqYyCwd6eRnsCWHP9NqinhbMDfEdPEP2d9NmqJVe
+    vault: 3FqScqaw4syg5JXbuov2ykrW79rL4goxptinviuVc95K
+    vaultTokenAAccount: 625fthAPGgtpN9Ai8uVd68UTMXWryzPuKQUZYTPd7gLx
+    vaultTokenBAccount: G7cCZMvZ3jRrPPCSoeByVLgaqceu7fS9kXdu5Qkkr5vX

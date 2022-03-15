@@ -52,6 +52,7 @@ func New() (*Config, error) {
 	} else if IsDev(environment) {
 		configFileName = "./configs/dev.yaml"
 	}
+	configFileName = fmt.Sprintf("%s/%s", GetProjectRoot(), configFileName)
 
 	logrus.WithField("configFileName", configFileName).Infof("loading config file")
 	configFile, err := os.Open(configFileName)
@@ -66,10 +67,9 @@ func New() (*Config, error) {
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"config": fmt.Sprintf("%+v", config),
+		"TriggerDCAConfigs": fmt.Sprintf("%+v", config.TriggerDCAConfigs),
 	}).Info("loaded trigger dca configs")
 
-	logrus.Infof(config.TriggerDCAConfigs[0].Swap)
 	return &config, nil
 }
 
