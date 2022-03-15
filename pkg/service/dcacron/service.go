@@ -118,29 +118,6 @@ func (dca *DCACronService) stopCron(
 	return nil
 }
 
-// // GetAccountInfo returns all information associated with the account of provided publicKey.
-// func (cl *Client) GetAccountInfo(ctx context.Context, account solana.PublicKey) (out *GetAccountInfoResult, err error) {
-// 	return cl.GetAccountInfoWithOpts(
-// 		ctx,
-// 		account,
-// 		&GetAccountInfoOpts{
-// 			Encoding:   solana.EncodingBase64,
-// 			Commitment: "",
-// 			DataSlice:  nil,
-// 		},
-// 	)
-// }
-
-// // GetAccountDataInto decodes the binary data and populates
-// // the provided `inVar` parameter with all data associated with the account of provided publicKey.
-// func (cl *Client) GetAccountDataInto(ctx context.Context, account solana.PublicKey, inVar interface{}) (err error) {
-// 	resp, err := cl.GetAccountInfo(ctx, account)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(inVar)
-// }
-
 func (dca *DCACronService) run(config configs.TriggerDCAConfig) {
 	logrus.WithField("vault", config.Vault).Info("preparing trigger dca")
 
