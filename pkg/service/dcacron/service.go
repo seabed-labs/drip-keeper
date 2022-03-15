@@ -12,15 +12,15 @@ import (
 )
 
 type DCACron struct {
-	Cron   *cron.Cron
-	Wallet *wallet.Wallet
+	Cron           *cron.Cron
+	walletProvider *wallet.WalletProvider
 }
 
 func NewDCACron(
 	lc fx.Lifecycle,
-	wallet *wallet.Wallet,
+	walletProvider *wallet.WalletProvider,
 ) (*DCACron, error) {
-	dca := DCACron{Wallet: wallet, Cron: cron.New()}
+	dca := DCACron{walletProvider: walletProvider, Cron: cron.New()}
 	cronPeriod := 1 * time.Minute
 	if _, err := dca.Cron.AddFunc(
 		fmt.Sprintf("@every %s", cronPeriod), dca.run); err != nil {
@@ -61,7 +61,7 @@ func (dca *DCACron) run() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 	defer cancel()
 	vault := "TODO: VAULT PUBKEY"
-	if err := dca.Wallet.TriggerDCA(ctx, vault); err != nil {
+	if err := dca.walletProvider.TriggerDCA(ctx, vault); err != nil {
 		logrus.
 			WithFields(logrus.Fields{"vault": vault}).
 			WithError(err).

@@ -11,20 +11,20 @@ import (
 )
 
 func InitTestWallet(
-	solClient *rpc.Client, wallet *Wallet,
+	solClient *rpc.Client, walletProvider *WalletProvider,
 ) (uint64, error) {
 	if _, err := solClient.RequestAirdrop(
-		context.Background(), wallet.Account.PublicKey(),
+		context.Background(), walletProvider.Wallet.PublicKey(),
 		solana.LAMPORTS_PER_SOL*5, rpc.CommitmentConfirmed); err != nil {
 		return 0, err
 	}
 	errC := make(chan error)
-	go checkAirDrop(solClient, wallet.Account.PublicKey(), errC)
+	go checkAirDrop(solClient, walletProvider.Wallet.PublicKey(), errC)
 	if err := <-errC; err != nil {
 		return 0, err
 	}
 	balance, err := solClient.GetBalance(
-		context.Background(), wallet.Account.PublicKey(),
+		context.Background(), walletProvider.Wallet.PublicKey(),
 		rpc.CommitmentConfirmed)
 	if err != nil {
 		return 0, err

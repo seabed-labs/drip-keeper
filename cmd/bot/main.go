@@ -15,9 +15,9 @@ func main() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	fxApp := fx.New(
 		fx.Provide(
-			configs.GetBotConfig,
+			configs.New,
 			client.NewSolanaClient,
-			wallet.NewWallet,
+			wallet.New,
 		),
 		fx.Invoke(
 			dca.NewDCACron,

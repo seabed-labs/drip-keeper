@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const ENV = "ENV"
+const PROJECT_DIR = "keeper-bot"
 
 // LoadEnv loads env vars from .env at root of repo
 func GetProjectRoot() string {
@@ -20,12 +20,7 @@ func GetProjectRoot() string {
 }
 
 func LoadEnv() {
-	env := Environment(os.Getenv(ENV))
-	logrus.WithField("env", env).Infof("loading env")
-	if !IsLocal(env) {
-		logrus.WithField("env", env).Debug("skipping .env file")
-		return
-	}
+	logrus.WithField("env", Environment(os.Getenv(ENV))).Infof("loading env")
 	re := regexp.MustCompile(`^(.*` + PROJECT_DIR + `)`)
 	cwd, _ := os.Getwd()
 	rootPath := re.Find([]byte(cwd))
@@ -35,7 +30,6 @@ func LoadEnv() {
 		logrus.WithError(err).WithFields(logrus.Fields{
 			"cwd":      cwd,
 			"filePath": filePath,
-		}).Fatal("problem loading .env file")
-		os.Exit(-1)
+		}).Warning("problem loading .env file")
 	}
 }

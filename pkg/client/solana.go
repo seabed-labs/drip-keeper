@@ -9,7 +9,7 @@ import (
 )
 
 func NewSolanaClient(
-	config *configs.BotConfig,
+	config *configs.Config,
 ) (*rpc.Client, error) {
 	url := getURL(config.Environment)
 	solClient := *rpc.New(url)
@@ -35,8 +35,6 @@ func getURL(env configs.Environment) string {
 	case configs.NilEnv:
 		fallthrough
 	case configs.LocalEnv:
-		fallthrough
-	case configs.TestEnv:
 		fallthrough
 	default:
 		return rpc.LocalNet_RPC
