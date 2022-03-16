@@ -28,13 +28,13 @@ func NewSolanaClient(
 
 func getURL(env configs.Environment) string {
 	switch env {
-	case configs.DevEnv:
+	case configs.DevnetEnv:
 		return rpc.DevNet_RPC
-	case configs.ProdEnv:
+	case configs.MainnetEnv:
 		return rpc.MainNetBeta_RPC
 	case configs.NilEnv:
 		fallthrough
-	case configs.LocalEnv:
+	case configs.LocalnetEnv:
 		fallthrough
 	default:
 		return rpc.LocalNet_RPC
