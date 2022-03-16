@@ -46,11 +46,11 @@ func New() (*Config, error) {
 	LoadEnv()
 
 	environment := Environment(os.Getenv(ENV))
-	configFileName := "./configs/local.yaml"
+	configFileName := "./configs/localnet.yaml"
 	if IsProd(environment) {
-		configFileName = "./configs/prod.yaml"
+		configFileName = "./configs/mainnet.yaml"
 	} else if IsDev(environment) {
-		configFileName = "./configs/dev.yaml"
+		configFileName = "./configs/devnet.yaml"
 	}
 	configFileName = fmt.Sprintf("%s/%s", GetProjectRoot(), configFileName)
 
