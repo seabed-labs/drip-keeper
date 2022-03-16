@@ -1,4 +1,5 @@
 solana-programs/
+**/node_modules/
 .idea/
 test-ledger/
 .env
