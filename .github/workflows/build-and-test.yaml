@@ -144,7 +144,7 @@ jobs:
           go run scripts/check_local_validator.go
           cd solana-programs
           solana config set -u localhost 
-          echo -e ${{ secrets.KEEPER_BOT_ACCOUNT }} >> ./id.json
+          echo -e ${{ secrets.KEEPER_BOT_WALLET }} >> ./id.json
           solana airdrop 10 ./id.json
           anchor deploy --provider.wallet ./id.json
 

@@ -10,7 +10,7 @@ import (
 )
 
 type Config struct {
-	Environment       Environment        `yaml:"environment" env:"ENV" env-default:"5432"`
+	Environment       Environment        `yaml:"environment" env:"ENV"`
 	Wallet            string             `yaml:"wallet"      env:"KEEPER_BOT_WALLET"`
 	TriggerDCAConfigs []TriggerDCAConfig `yaml:"triggerDCA"`
 }
@@ -33,13 +33,13 @@ type TriggerDCAConfig struct {
 type Environment string
 
 const (
-	NilEnv   = Environment("")
-	LocalEnv = Environment("LOCAL")
-	DevEnv   = Environment("DEV")
-	ProdEnv  = Environment("PROD")
+	NilEnv      = Environment("")
+	LocalnetEnv = Environment("LOCALNET")
+	DevnetEnv   = Environment("DEVNET")
+	MainnetEnv  = Environment("MAINNET")
 )
 
-const KEEPER_BOT_ACCOUNT = "KEEPER_BOT_ACCOUNT"
+const KEEPER_BOT_WALLET = "KEEPER_BOT_WALLET"
 const ENV = "ENV"
 
 func New() (*Config, error) {
@@ -74,13 +74,13 @@ func New() (*Config, error) {
 }
 
 func IsLocal(env Environment) bool {
-	return env == LocalEnv || env == NilEnv
+	return env == LocalnetEnv || env == NilEnv
 }
 
 func IsDev(env Environment) bool {
-	return env == DevEnv
+	return env == DevnetEnv
 }
 
 func IsProd(env Environment) bool {
-	return env == ProdEnv
+	return env == MainnetEnv
 }
