@@ -92,7 +92,7 @@ func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*cron.Cr
 
 	cron := cron.New()
 	runWithConfig := func() {
-		dca.run(config)
+		dca.runWithRetry(config, 0, 5, 1)
 	}
 	if _, err := cron.AddFunc(fmt.Sprintf("@every %ds", vaultProtoConfigData.Granularity), runWithConfig); err != nil {
 		return nil, err
@@ -118,7 +118,20 @@ func (dca *DCACronService) stopCron(
 	return nil
 }
 
-func (dca *DCACronService) run(config configs.TriggerDCAConfig) {
+func (dca *DCACronService) runWithRetry(config configs.TriggerDCAConfig, try, maxTry int, timeout int64) {
+	if err := dca.run(config); err != nil {
+		if try >= maxTry {
+			logrus.WithField("try", try).WithField("maxTry", maxTry).WithField("timeout", timeout).Info("failed to DCA with retry")
+			return
+		}
+		logrus.WithError(err).WithField("timeout", timeout).WithField("try", try).Info("waiting before retrying DCA")
+		time.Sleep(time.Duration(timeout) * time.Second)
+		dca.runWithRetry(config, try+1, maxTry, timeout*timeout)
+	}
+
+}
+
+func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 	logrus.WithField("vault", config.Vault).Info("preparing trigger dca")
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -128,7 +141,7 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) {
 	vaultPubKey, err := solana.PublicKeyFromBase58(config.Vault)
 	if err != nil {
 		logrus.WithError(err).Errorf("failed to create vault pubkey from base58 string")
-		return
+		return err
 	}
 
 	// Use GetAccountInfoWithOpts so we can pass in a commitment level
@@ -139,7 +152,7 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) {
 	})
 	if err != nil {
 		logrus.WithError(err).Errorf("failed to get vault account info")
-		return
+		return err
 	}
 	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&vaultData); err != nil {
 		logrus.WithError(err).Errorf("failed to decode vault account data")
@@ -157,7 +170,7 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) {
 	}, dcaVault.ProgramID)
 	if err != nil {
 		logrus.WithError(err).Errorf("failed to get vaultPeriodI %d PDA", lastVaultPeriod)
-		return
+		return err
 	}
 	logrus.WithField("publicKey", vaultPeriodI.String()).Infof("fetched vaultPeriod %d PDA", lastVaultPeriod)
 
@@ -169,7 +182,7 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) {
 	}, dcaVault.ProgramID)
 	if err != nil {
 		logrus.WithError(err).Errorf("failed to get vaultPeriodJ %d PDA", currentVaultPeriod)
-		return
+		return err
 	}
 	logrus.WithField("publicKey", vaultPeriodJ.String()).Infof("fetched vaultPeriod %d PDA", currentVaultPeriod)
 
@@ -188,9 +201,10 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) {
 			WithFields(logrus.Fields{"vault": config.Vault}).
 			WithError(err).
 			Errorf("failed to trigger DCA")
-		return
+		return err
 	}
 	logrus.
 		WithFields(logrus.Fields{"vault": config.Vault}).
 		Info("triggered DCA")
+	return nil
 }
