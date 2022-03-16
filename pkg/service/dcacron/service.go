@@ -121,7 +121,7 @@ func (dca *DCACronService) stopCron(
 func (dca *DCACronService) runWithRetry(config configs.TriggerDCAConfig, try, maxTry int, timeout int64) {
 	if err := dca.run(config); err != nil {
 		if try >= maxTry {
-			logrus.WithField("tries", try).Info("failed to DCA with retry")
+			logrus.WithField("try", try).WithField("maxTry", maxTry).WithField("timeout", timeout).Info("failed to DCA with retry")
 			return
 		}
 		logrus.WithError(err).WithField("timeout", timeout).WithField("try", try).Info("waiting before retrying DCA")
