@@ -51,7 +51,6 @@ func New(
 func (w *WalletProvider) TriggerDCA(
 	ctx context.Context, config configs.TriggerDCAConfig, vaultPeriodI, vaultPeriodJ solana.PublicKey,
 ) error {
-	logFields := logrus.Fields{"vault": config.Vault}
 
 	txBuilder := dcaVault.NewTriggerDcaInstructionBuilder()
 	txBuilder.SetDcaTriggerSourceAccount(w.Wallet.PublicKey())
@@ -79,8 +78,7 @@ func (w *WalletProvider) TriggerDCA(
 	if err != nil {
 		return err
 	}
-	logFields["block"] = recent.Value.Blockhash
-	logrus.WithFields(logFields).Infof("DCA recent block")
+	logFields := logrus.Fields{"vault": config.Vault, "block": recent.Value.Blockhash}
 
 	tx, err := solana.NewTransaction(
 		[]solana.Instruction{txBuilder.Build()},
@@ -88,9 +86,9 @@ func (w *WalletProvider) TriggerDCA(
 		solana.TransactionPayer(w.Wallet.PublicKey()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create Trigger DCA transaction, err %s", err)
+		return fmt.Errorf("failed to create TriggerDCA transaction, err %s", err)
 	}
-	logrus.WithFields(logFields).Infof("built Trigger DCA transaction")
+	logrus.WithFields(logFields).Infof("built TriggerDCA transaction")
 
 	if _, err := tx.Sign(
 		func(key solana.PublicKey) *solana.PrivateKey {
@@ -111,7 +109,72 @@ func (w *WalletProvider) TriggerDCA(
 		return fmt.Errorf("failed to send transaction, err %s", err)
 	}
 	logFields["txHash"] = txHash
-	logrus.WithFields(logFields).Info("broadcast Trigger DCA transaction")
 
+	logrus.WithFields(logFields).Info("waiting for TriggerDCA transaction to confirm")
+	errC := make(chan error)
+	go checkTxHash(w.Client, txHash, errC)
+	if err := <-errC; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (w *WalletProvider) InitVaultPeriod(
+	ctx context.Context, config configs.TriggerDCAConfig, vaultPeriod solana.PublicKey, vaultPeriodID int64,
+) error {
+	txBuilder := dcaVault.NewInitVaultPeriodInstructionBuilder()
+	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58(config.Vault))
+	txBuilder.SetTokenAMintAccount(solana.MustPublicKeyFromBase58(config.TokenAMint))
+	txBuilder.SetTokenBMintAccount(solana.MustPublicKeyFromBase58(config.TokenBMint))
+	txBuilder.SetVaultProtoConfigAccount(solana.MustPublicKeyFromBase58(config.VaultProtoConfig))
+	txBuilder.SetCreatorAccount(w.Wallet.PublicKey())
+	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
+	txBuilder.SetVaultPeriodAccount(vaultPeriod)
+	txBuilder.SetParams(dcaVault.InitializeVaultPeriodParams{
+		PeriodId: uint64(vaultPeriodID),
+	})
+
+	recent, err := w.Client.GetRecentBlockhash(ctx, rpc.CommitmentConfirmed)
+	if err != nil {
+		return err
+	}
+	logFields := logrus.Fields{"vault": config.Vault, "vaultPeriodID": vaultPeriodID, "blocks": recent.Value.Blockhash}
+
+	tx, err := solana.NewTransaction(
+		[]solana.Instruction{txBuilder.Build()},
+		recent.Value.Blockhash,
+		solana.TransactionPayer(w.Wallet.PublicKey()),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create InitVaultPeriod transaction, err %s", err)
+	}
+	logrus.WithFields(logFields).Infof("built InitVaultPeriod transaction")
+
+	if _, err := tx.Sign(
+		func(key solana.PublicKey) *solana.PrivateKey {
+			if w.Wallet.PublicKey().Equals(key) {
+				return &w.Wallet.PrivateKey
+			}
+			return nil
+		},
+	); err != nil {
+		return fmt.Errorf("failed to sign transaction, err %s", err)
+	}
+	logrus.WithFields(logFields).Info("signed InitVaultPeriod transaction")
+
+	txHash, err := w.Client.SendTransactionWithOpts(
+		ctx, tx, false, rpc.CommitmentConfirmed,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to send transaction, err %s", err)
+	}
+	logFields["txHash"] = txHash
+
+	logrus.WithFields(logFields).Info("waiting for InitVaultPeriod transaction to confirm")
+	errC := make(chan error)
+	go checkTxHash(w.Client, txHash, errC)
+	if err := <-errC; err != nil {
+		return err
+	}
 	return nil
 }
