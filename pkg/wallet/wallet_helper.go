@@ -13,13 +13,14 @@ import (
 func InitTestWallet(
 	solClient *rpc.Client, walletProvider *WalletProvider,
 ) (uint64, error) {
-	if _, err := solClient.RequestAirdrop(
+	txHash, err := solClient.RequestAirdrop(
 		context.Background(), walletProvider.Wallet.PublicKey(),
-		solana.LAMPORTS_PER_SOL*50, rpc.CommitmentConfirmed); err != nil {
+		solana.LAMPORTS_PER_SOL*50, rpc.CommitmentConfirmed)
+	if err != nil {
 		return 0, err
 	}
 	errC := make(chan error)
-	go checkAirDrop(solClient, walletProvider.Wallet.PublicKey(), errC)
+	go checkTxHash(solClient, txHash, errC)
 	if err := <-errC; err != nil {
 		return 0, err
 	}
@@ -34,8 +35,8 @@ func InitTestWallet(
 }
 
 // TODO: This can be a generic function to check for a transaction till its confirmed
-func checkAirDrop(
-	client *rpc.Client, pubkey solana.PublicKey, done chan error,
+func checkTxHash(
+	client *rpc.Client, txHash solana.Signature, done chan error,
 ) {
 	// Should take max 13s
 	timeout := time.Second * 15
@@ -43,20 +44,20 @@ func checkAirDrop(
 	for {
 		select {
 		case <-ticker.C:
-			done <- fmt.Errorf("timeout waiting for airdrop")
+			done <- fmt.Errorf("timeout waiting for tx to confirm")
 			return
 		default:
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		balance, err := client.GetBalance(
-			ctx, pubkey, rpc.CommitmentFinalized)
+		res, err := client.GetSignatureStatuses(
+			ctx, false, txHash)
 		cancel()
-		if err == nil && balance.Value != 0 {
+		if err == nil && res != nil && len(res.Value) == 1 && res.Value[0] != nil && res.Value[0].ConfirmationStatus == rpc.ConfirmationStatusConfirmed {
 			done <- nil
 			return
 		}
 		if err != nil {
-			logrus.WithError(err).Warnf("error getting balance, retrying")
+			logrus.WithError(err).Warnf("error getting signature status, retrying")
 		}
 	}
 }
