@@ -161,12 +161,22 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 			Errorf("failed to fetch vault balance")
 		return err
 	}
+
+	vaultTokenABalance, err := strconv.ParseUint(balance.Value.Amount, 10, 64)
+	if err != nil {
+		logrus.
+			WithError(err).
+			WithField("vault", config.Vault).
+			Errorf("failed to parse vault balance")
+		return err
+	}
 	// Check if vault is empty
-	if balance.Value.Amount == "0" {
+	if vaultTokenABalance < vaultData.DripAmount || vaultData.DripAmount == 0 {
 		logrus.
 			WithField("tokenABalance", balance.Value.Amount).
+			WithField("dripAmount", vaultData.DripAmount).
 			WithField("vault", config.Vault).
-			Errorf("exiting, vault token A balance is empty")
+			Errorf("exiting, token balance is too low or drip amount is 0")
 		return nil
 	}
 	logrus.
