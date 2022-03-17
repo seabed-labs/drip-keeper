@@ -242,7 +242,7 @@ func (dca *DCACronService) fetchVaultPeriod(
 		[]byte(strconv.FormatInt(vaultPeriodID, 10)),
 	}, dcaVault.ProgramID)
 	if err != nil {
-		logrus.WithError(err).Errorf("failed to get vaultPeriodI %d PDA", vaultPeriod)
+		logrus.WithField("dcaProgram", dcaVault.ProgramID.String()).WithError(err).Errorf("failed to get vaultPeriodI %d PDA", vaultPeriodID)
 		return solana.PublicKey{}, err
 	}
 	// Use GetAccountInfoWithOpts so we can pass in a commitment level

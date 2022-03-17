@@ -23,7 +23,7 @@ func New(
 	solClient *rpc.Client,
 ) (*WalletProvider, error) {
 	WalletProvider := WalletProvider{Client: solClient}
-	if !configs.IsProd(config.Environment) {
+	if configs.IsLocal(config.Environment) {
 		logrus.Infof("creating and funding test wallet")
 		WalletProvider.Wallet = solana.NewWallet()
 		if _, err := InitTestWallet(solClient, &WalletProvider); err != nil {
