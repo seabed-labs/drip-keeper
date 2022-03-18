@@ -152,6 +152,25 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 
 	var vaultData dcaVault.Vault
 	vaultPubKey := solana.MustPublicKeyFromBase58(config.Vault)
+	// Use GetAccountInfoWithOpts so we can pass in a commitment level
+	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, vaultPubKey, &rpc.GetAccountInfoOpts{
+		Encoding:   solana.EncodingBase64,
+		Commitment: "confirmed",
+		DataSlice:  nil,
+	})
+	if err != nil {
+		return err
+	}
+	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&vaultData); err != nil {
+		return err
+	}
+	if vaultData.DripAmount == 0 {
+		logrus.
+			WithField("dripAmount", vaultData.DripAmount).
+			WithField("vault", config.Vault).
+			Errorf("exiting, drip amount is 0")
+		return nil
+	}
 
 	balance, err := dca.solClient.GetTokenAccountBalance(ctx, solana.MustPublicKeyFromBase58(config.VaultTokenAAccount), rpc.CommitmentConfirmed)
 	if err != nil || balance == nil || balance.Value == nil {
@@ -171,12 +190,12 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 		return err
 	}
 	// Check if vault is empty
-	if vaultTokenABalance < vaultData.DripAmount || vaultData.DripAmount == 0 {
+	if vaultTokenABalance == 0 || vaultTokenABalance < vaultData.DripAmount {
 		logrus.
 			WithField("tokenABalance", balance.Value.Amount).
 			WithField("dripAmount", vaultData.DripAmount).
 			WithField("vault", config.Vault).
-			Errorf("exiting, token balance is too low or drip amount is 0")
+			Errorf("exiting, token balance is too low")
 		return nil
 	}
 	logrus.
@@ -185,24 +204,6 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 		WithField("tokenAMint", config.TokenAMint).
 		WithField("vaultTokenAAcount", config.VaultTokenAAccount).
 		Info("fetched vault token a balance")
-
-	// Use GetAccountInfoWithOpts so we can pass in a commitment level
-	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, vaultPubKey, &rpc.GetAccountInfoOpts{
-		Encoding:   solana.EncodingBase64,
-		Commitment: "confirmed",
-		DataSlice:  nil,
-	})
-	if err != nil {
-		logrus.WithError(err).Errorf("failed to get vault account info")
-		return err
-	}
-	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&vaultData); err != nil {
-		logrus.WithError(err).Errorf("failed to decode vault account data")
-	}
-	logrus.WithFields(
-		logrus.Fields{
-			"vaultData": fmt.Sprintf("%+v", vaultData),
-		}).Infof("fetched vault")
 
 	lastVaultPeriod := int64(vaultData.LastDcaPeriod)
 	vaultPeriodI, err := dca.fetchVaultPeriod(ctx, config, vaultPubKey, lastVaultPeriod)
