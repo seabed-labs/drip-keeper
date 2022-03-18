@@ -1,0 +1,14 @@
+environment: DEVNET
+triggerDCA:
+  - vault: 4QUinWs3ieS83bmkoJcgUE3cWLowWSwsZY8EMHxRRnjD
+    vaultProtoConfig: DztQU46V3LhEaPQJsoFsXAiTHo5vhEFSe16bqngcdQm
+    vaultTokenAAccount: ExncQDAAQp2nXdhQymkHwJGwXkVeoRY5CwnxtaCRYHBo
+    vaultTokenBAccount: 9N3A5SQCjbnBZrVMfuiYXn5WVPmqGMTb9TnrCJPx3WF1
+    tokenAMint: 72HBqn7K1wu6dbxY3L9FNe6aLetwN9KfmB4RFDPR14Y3
+    tokenBMint: B5bofMWM87jfjPA2QuzAjvQf1Li4osGQcCwjsVxMU5hu
+    swapTokenMint: HpCdYffp2kK2t7DjdLo5ZLiieic98vDZxSoU37Dr7tmL
+    swapTokenAAccount: 8x74oGu3DipcntEdzxiKeewPLfUy965WWvo8aoFzkpH8
+    swapTokenBAccount: 22QaxLMWPaNPDYXwznaMbn4kTtngsA1imynYzYLeqtve
+    swapFeeAccount: CMSmFokafNc2mRhiyEJ5GnitLHA5yQZTar1J74udVQsr
+    swapAuthority: DnUB1VtfuyaSKw3Lx5Rex9Yj6enpPzfGjxz8cQd7pU8p
+    swap: 7B8rbz5vV7vKLmHPM5QrWz6gfRPgGHacvW1DWJ6QPD4r

@@ -1,26 +1,23 @@
 environment: DEV
+wallet: "[216, 60, 0, 123, 113, 181, 69, 130, 81, 204, 60, 123, 65, 228, 166, 145, 232, 58, 244, 49, 134, 39, 168, 119, 186, 210, 29, 95, 7, 82, 155, 31, 153, 34, 132, 127, 153, 118, 237, 243, 159, 1, 71, 139, 173, 124, 79, 68, 53, 247, 136, 228, 81, 191, 228, 224, 253, 79, 48, 77, 32, 119, 107, 77]"
 triggerDCA:
-  - vault: "123"
-    vaultProtoConfig: "123"
-    vaultTokenAAccount: "123"
-    vaultTokenBAccount: "123"
-    tokenAMint: "123"
-    tokenBMint: "123"
-    swapTokenMint: "123"
-    swapTokenAAccount: "123"
-    swapTokenBAccount: "123"
-    swapFeeAccount: "123"
-    swapAuthority: "123"
-    swap: "123"
-  - vault: "456"
-    vaultProtoConfig: "456"
-    vaultTokenAAccount: "456"
-    vaultTokenBAccount: "456"
-    tokenAMint: "456"
-    tokenBMint: "456"
-    swapTokenMint: "456"
-    swapTokenAAccount: "456"
-    swapTokenBAccount: "456"
-    swapFeeAccount: "456"
-    swapAuthority: "456"
-    swap: "456"
+  - vault: 8NmRaD8gvZiomrzoXsuJRFU742WK6DBaW4Wanw1xAbPX
+    vaultProtoConfig: 6s5BvnrZVKNpawJuSE2ciL8d1Cd3vNVNVCSoA7PY6LH5
+    vaultTokenAAccount: 9dUmwxgMYPGohtwAyBMQcu3fzxrYPsPVptuAX1MEoJG1
+    vaultTokenBAccount: GQzed1JdQYEn5uKJXYSpKbrEaax3fzziaZos6gkgUTsR
+    tokenAMint: 3btAv45JmtLu8W8ySwYqxyY1P27xcgFTc4jr3shLyfvE
+    tokenBMint: 6fhWUnc2Bgc2KmTooRV3xqc2wF2M6ozZWw6FUhi8kk3C
+    swapTokenMint: Gm582YP3Ehurn3r5mpBNkomgUHc8PhKC3RmWFxy4KwYe
+    swapTokenAAccount: CUt2B67e1qrZW2tLJg6FjhZ71SJXvxRXReFuK21zARWa
+    swapTokenBAccount: CCrDfAjWohocVGukF6h8HCZUyRAuad93M9J2Z1pVKXG4
+    swapFeeAccount: 81r3CwUgPfczn3KhPJJdePzuLWufncWmssBRv1TryktV
+    swapAuthority: HNLX1WjBp23wi7gn2KB87FvQS1mA7HFEDbXJio9jEKsX
+    swap: 7gD5SQN8Kr5JrVo7tHNENEV6rRcrsdYEwr8pFge83VD
+
+    # "vault": "8NmRaD8gvZiomrzoXsuJRFU742WK6DBaW4Wanw1xAbPX",
+    # "vaultProtoConfig": "6s5BvnrZVKNpawJuSE2ciL8d1Cd3vNVNVCSoA7PY6LH5",
+    # "vaultProtoConfigGranularity": "60",
+    # "tokenAMint": "3btAv45JmtLu8W8ySwYqxyY1P27xcgFTc4jr3shLyfvE",
+    # "tokenASymbol": "DOGE",
+    # "tokenBMint": "6fhWUnc2Bgc2KmTooRV3xqc2wF2M6ozZWw6FUhi8kk3C",
+    # "tokenBSymbol": "COW"
