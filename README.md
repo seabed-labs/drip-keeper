@@ -14,3 +14,10 @@ Setup the `.env` file:
 Run the Bot: `go run cmd/bot/main.go`
 
 Generate IDL (assumes solana-program is a sibling of keeper-bot): `anchor-go --src=../solana-programs/target/idl/dca_vault.json`
+
+## Devnet
+
+To run the bot in devnet run:
+`ENV=DEVNET go run cmd/bot/main.go`.
+
+This will use the `devnet.yaml` config (the output of the solana-programs `yarn setup:dev`).
