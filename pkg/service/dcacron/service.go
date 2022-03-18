@@ -158,6 +158,9 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 		Commitment: "confirmed",
 		DataSlice:  nil,
 	})
+	if err != nil {
+		return err
+	}
 	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&vaultData); err != nil {
 		return err
 	}
