@@ -95,6 +95,8 @@ func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*cron.Cr
 	runWithConfig := func() {
 		dca.runWithRetry(config, 0, 5, 1)
 	}
+	// Run the first trigger dca right now and schedule the rest in the future
+	runWithConfig()
 	if _, err := cron.AddFunc(fmt.Sprintf("@every %ds", vaultProtoConfigData.Granularity), runWithConfig); err != nil {
 		return nil, err
 	}
