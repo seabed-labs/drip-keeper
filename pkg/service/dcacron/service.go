@@ -205,19 +205,26 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 		WithField("vaultTokenAAcount", config.VaultTokenAAccount).
 		Info("fetched vault token a balance")
 
+	var instructions []solana.Instruction
 	lastVaultPeriod := int64(vaultData.LastDcaPeriod)
-	vaultPeriodI, err := dca.fetchVaultPeriod(ctx, config, vaultPubKey, lastVaultPeriod)
+	vaultPeriodI, instruction, err := dca.fetchVaultPeriod(ctx, config, vaultPubKey, lastVaultPeriod)
 	if err != nil {
 		logrus.WithError(err).Errorf("failed to get vaultPeriodI %d PDA", lastVaultPeriod)
 		return err
 	}
+	if instruction != nil {
+		instructions = append(instructions, instruction)
+	}
 	logrus.WithField("publicKey", vaultPeriodI.String()).Infof("fetched vaultPeriod %d PDA", lastVaultPeriod)
 
 	currentVaultPeriod := lastVaultPeriod + 1
-	vaultPeriodJ, err := dca.fetchVaultPeriod(ctx, config, vaultPubKey, currentVaultPeriod)
+	vaultPeriodJ, instruction, err := dca.fetchVaultPeriod(ctx, config, vaultPubKey, currentVaultPeriod)
 	if err != nil {
 		logrus.WithError(err).Errorf("failed to get vaultPeriodJ %d PDA", currentVaultPeriod)
 		return err
+	}
+	if instruction != nil {
+		instructions = append(instructions, instruction)
 	}
 	logrus.WithField("publicKey", vaultPeriodJ.String()).Infof("fetched vaultPeriod %d PDA", currentVaultPeriod)
 
@@ -231,11 +238,13 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 		"vaultPeriodJ": vaultPeriodJ,
 	}).Info("running dca")
 
-	if err := dca.walletProvider.TriggerDCA(ctx, config, vaultPeriodI, vaultPeriodJ); err != nil {
+	instructions = append(instructions, dca.walletProvider.TriggerDCA(ctx, config, vaultPeriodI, vaultPeriodJ))
+	if err := dca.walletProvider.Send(ctx, instructions...); err != nil {
 		logrus.
-			WithFields(logrus.Fields{"vault": config.Vault}).
+			WithField("vault", config.Vault).
+			WithField("numInstructions", len(instructions)).
 			WithError(err).
-			Errorf("failed to trigger DCA")
+			Errorf("failed to trigger dca")
 		return err
 	}
 	logrus.
@@ -246,7 +255,7 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 
 func (dca *DCACronService) fetchVaultPeriod(
 	ctx context.Context, config configs.TriggerDCAConfig, vaultPubKey solana.PublicKey, vaultPeriodID int64,
-) (solana.PublicKey, error) {
+) (solana.PublicKey, solana.Instruction, error) {
 	vaultPeriod, _, err := solana.FindProgramAddress([][]byte{
 		[]byte("vault_period"),
 		vaultPubKey[:],
@@ -254,25 +263,21 @@ func (dca *DCACronService) fetchVaultPeriod(
 	}, dcaVault.ProgramID)
 	if err != nil {
 		logrus.WithField("dcaProgram", dcaVault.ProgramID.String()).WithError(err).Errorf("failed to get vaultPeriodI %d PDA", vaultPeriodID)
-		return solana.PublicKey{}, err
+		return solana.PublicKey{}, nil, err
 	}
+	var instruction solana.Instruction
 	// Use GetAccountInfoWithOpts so we can pass in a commitment level
-	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, vaultPeriod, &rpc.GetAccountInfoOpts{
+	if resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, vaultPeriod, &rpc.GetAccountInfoOpts{
 		Encoding:   solana.EncodingBase64,
 		Commitment: "confirmed",
 		DataSlice:  nil,
-	})
-	// Failure is likely because the vault period is not initialized
-	if err != nil {
-		if err := dca.walletProvider.InitVaultPeriod(ctx, config, vaultPeriod, vaultPeriodID); err != nil {
-			logrus.WithField("vaultPeriodID", vaultPeriodID).Infof("failed to initialize vault period")
-			return solana.PublicKey{}, err
-		}
-		logrus.WithField("vaultPeriodID", vaultPeriodID).Infof("initialized vault period")
+	}); err != nil {
+		// Failure is likely because the vault period is not initialized
+		instruction = dca.walletProvider.InitVaultPeriod(ctx, config, vaultPeriod, vaultPeriodID)
 	} else {
 		var vaultPeriodData dcaVault.VaultPeriod
 		if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&vaultPeriodData); err != nil {
-			return solana.PublicKey{}, err
+			return solana.PublicKey{}, nil, err
 		}
 		logrus.
 			WithField("vaultPeriodID", vaultPeriodID).
@@ -280,5 +285,5 @@ func (dca *DCACronService) fetchVaultPeriod(
 			WithField("twap", vaultPeriodData.Twap).
 			Infof("fetched vault period")
 	}
-	return vaultPeriod, nil
+	return vaultPeriod, instruction, nil
 }
