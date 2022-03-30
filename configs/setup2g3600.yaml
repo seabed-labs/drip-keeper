@@ -1,14 +1,15 @@
 environment: DEVNET
 triggerDCA:
-  - vault: 61ku9YPLiSARZEqvvpazsrNKb2dpiKacusyUR16wQcjK
-    vaultProtoConfig: 7c2SyuYAaGWxRgp8w7DzZh2Qg2gw71uETpLKH1sKctP7
-    vaultTokenAAccount: teFFKdBqZSmwb4ZJzmTY3TvyHEGzfmzSbNJJmWCqTiD
-    vaultTokenBAccount: CS59hzxsM9uyrqp481b4nEsL92Ajxm781ij1hmwVfvRm
-    tokenAMint: 72HBqn7K1wu6dbxY3L9FNe6aLetwN9KfmB4RFDPR14Y3
-    tokenBMint: B5bofMWM87jfjPA2QuzAjvQf1Li4osGQcCwjsVxMU5hu
-    swapTokenMint: HpCdYffp2kK2t7DjdLo5ZLiieic98vDZxSoU37Dr7tmL
-    swapTokenAAccount: 8x74oGu3DipcntEdzxiKeewPLfUy965WWvo8aoFzkpH8
-    swapTokenBAccount: 22QaxLMWPaNPDYXwznaMbn4kTtngsA1imynYzYLeqtve
-    swapFeeAccount: CMSmFokafNc2mRhiyEJ5GnitLHA5yQZTar1J74udVQsr
-    swapAuthority: DnUB1VtfuyaSKw3Lx5Rex9Yj6enpPzfGjxz8cQd7pU8p
-    swap: 7B8rbz5vV7vKLmHPM5QrWz6gfRPgGHacvW1DWJ6QPD4r
+  - vault: HHnwJP68CkUfmxkkdsC7vGYg1UqGBfWDvnYnFAMMjXGc
+    vaultProtoConfig: 32QVuN4Qqv9fqM1Ld3xm1gK9HELbBBe6eLBvVwfzT3P5
+    vaultTokenAAccount: 6NFNwDhUHVM77xDvUSi2yeT1bi1TNenDKLT4fQ74bMCF
+    vaultTokenBAccount: 48LwhujAF78ror75MyLS1NeB9rVSjNmewrSpDTvsMvAY
+    vaultTreasuryTokenBAccount: 6p3xzaY4N2tbgVyTYKvWntd53F5F5bPqJtvAnm33VQAV
+    tokenAMint: 2tfR3MXUBzyfvrdzEiK26J7mpGhrzS1rRHe1owtinpxo
+    tokenBMint: 2VFEeEx9k5GVpVGvzJ3x1nLnxoNy5NDbQLoz3M78sjjX
+    swapTokenMint: 8irTwMvdnVWVrNCYzo2MDumAqo4SSoe5YRK7eXNBiXMC
+    swapTokenAAccount: BTp5D889NCWnGhJdxyXC1M7SsydwbNBGJBjqww9wDr6w
+    swapTokenBAccount: CKm22gxRiEnUQr2QxwQ8GitwGDnS2ccrd6ruq33pZaeM
+    swapFeeAccount: 9kvhHLhu5qXzawze5dhMtCBaQQVJ2TWr4zVgJUiitN7a
+    swapAuthority: EUzpdbc6HKpreiPVindUMbuLoq8nBbgobtEpnVKJyJN7
+    swap: HxFqKvZaJwEmbRmWwdZwbBx9sQ9tdtynbLT2kd5i6hrj
