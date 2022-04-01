@@ -8,6 +8,7 @@ import (
 	"github.com/Dcaf-Protocol/keeper-bot/configs"
 	dcaVault "github.com/Dcaf-Protocol/keeper-bot/generated/dca_vault"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/mr-tron/base58"
 	"github.com/sirupsen/logrus"
@@ -49,11 +50,11 @@ func New(
 
 // TODO(Mocha): These don't need to rely on the wallet
 func (w *WalletProvider) TriggerDCA(
-	ctx context.Context, config configs.TriggerDCAConfig, vaultPeriodI, vaultPeriodJ solana.PublicKey,
-) solana.Instruction {
-
+	ctx context.Context, config configs.TriggerDCAConfig, vaultPeriodI, vaultPeriodJ, botTokenAAccount solana.PublicKey,
+) (solana.Instruction, error) {
 	txBuilder := dcaVault.NewTriggerDcaInstructionBuilder()
 	txBuilder.SetDcaTriggerSourceAccount(w.Wallet.PublicKey())
+	txBuilder.SetDcaTriggerFeeTokenAAccountAccount(botTokenAAccount)
 	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58(config.Vault))
 	txBuilder.SetVaultProtoConfigAccount(solana.MustPublicKeyFromBase58(config.VaultProtoConfig))
 	txBuilder.SetLastVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriodI.String()))
@@ -73,14 +74,13 @@ func (w *WalletProvider) TriggerDCA(
 	txBuilder.SetAssociatedTokenProgramAccount(solana.SPLAssociatedTokenAccountProgramID)
 	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
 	txBuilder.SetRentAccount(solana.SysVarRentPubkey)
-
-	return txBuilder.Build()
+	return txBuilder.ValidateAndBuild()
 }
 
 // TODO(Mocha): These don't need to rely on the wallet
 func (w *WalletProvider) InitVaultPeriod(
 	ctx context.Context, config configs.TriggerDCAConfig, vaultPeriod solana.PublicKey, vaultPeriodID int64,
-) solana.Instruction {
+) (solana.Instruction, error) {
 	txBuilder := dcaVault.NewInitVaultPeriodInstructionBuilder()
 	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58(config.Vault))
 	txBuilder.SetTokenAMintAccount(solana.MustPublicKeyFromBase58(config.TokenAMint))
@@ -92,7 +92,17 @@ func (w *WalletProvider) InitVaultPeriod(
 	txBuilder.SetParams(dcaVault.InitializeVaultPeriodParams{
 		PeriodId: uint64(vaultPeriodID),
 	})
-	return txBuilder.Build()
+	return txBuilder.ValidateAndBuild()
+}
+
+func (w *WalletProvider) CreateTokenAccount(
+	ctx context.Context, tokenMint string,
+) (solana.Instruction, error) {
+	txBuilder := token.NewInitializeAccountInstructionBuilder()
+	txBuilder.SetMintAccount(solana.MustPublicKeyFromBase58(tokenMint))
+	txBuilder.SetOwnerAccount(w.Wallet.PublicKey())
+	txBuilder.SetSysVarRentPubkeyAccount(solana.SysVarRentPubkey)
+	return txBuilder.ValidateAndBuild()
 }
 
 func (w *WalletProvider) Send(

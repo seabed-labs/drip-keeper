@@ -12,7 +12,7 @@ import (
 	ag_treeout "github.com/gagliardetto/treeout"
 )
 
-var ProgramID ag_solanago.PublicKey = ag_solanago.MustPublicKeyFromBase58("3Q1eJ9m3jYJ3F32gcJYL7gMPn9kj87MzzjgoAL7VSN6E")
+var ProgramID ag_solanago.PublicKey = ag_solanago.MustPublicKeyFromBase58("AahZjZGD5Lv9HGPYUXZRS5GpeFFF13Wvx1fAFgwUxxDR")
 
 func SetProgramID(pubkey ag_solanago.PublicKey) {
 	ProgramID = pubkey
