@@ -13,7 +13,7 @@ import (
 // TriggerDca is the `triggerDca` instruction.
 type TriggerDca struct {
 
-	// [0] = [WRITE, SIGNER] dcaTriggerSource
+	// [0] = [SIGNER] dcaTriggerSource
 	//
 	// [1] = [WRITE] vault
 	//
@@ -39,33 +39,35 @@ type TriggerDca struct {
 	//
 	// [12] = [WRITE] swapFeeAccount
 	//
-	// [13] = [WRITE] swap
+	// [13] = [WRITE] dcaTriggerFeeTokenAAccount
 	//
-	// [14] = [WRITE] swapAuthority
+	// [14] = [] swap
 	//
-	// [15] = [] tokenSwapProgram
+	// [15] = [] swapAuthority
 	//
-	// [16] = [] tokenProgram
+	// [16] = [] tokenSwapProgram
 	//
-	// [17] = [] associatedTokenProgram
+	// [17] = [] tokenProgram
 	//
-	// [18] = [] systemProgram
+	// [18] = [] associatedTokenProgram
 	//
-	// [19] = [] rent
+	// [19] = [] systemProgram
+	//
+	// [20] = [] rent
 	ag_solanago.AccountMetaSlice `bin:"-" borsh_skip:"true"`
 }
 
 // NewTriggerDcaInstructionBuilder creates a new `TriggerDca` instruction builder.
 func NewTriggerDcaInstructionBuilder() *TriggerDca {
 	nd := &TriggerDca{
-		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 20),
+		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 21),
 	}
 	return nd
 }
 
 // SetDcaTriggerSourceAccount sets the "dcaTriggerSource" account.
 func (inst *TriggerDca) SetDcaTriggerSourceAccount(dcaTriggerSource ag_solanago.PublicKey) *TriggerDca {
-	inst.AccountMetaSlice[0] = ag_solanago.Meta(dcaTriggerSource).WRITE().SIGNER()
+	inst.AccountMetaSlice[0] = ag_solanago.Meta(dcaTriggerSource).SIGNER()
 	return inst
 }
 
@@ -206,81 +208,92 @@ func (inst *TriggerDca) GetSwapFeeAccountAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice[12]
 }
 
+// SetDcaTriggerFeeTokenAAccountAccount sets the "dcaTriggerFeeTokenAAccount" account.
+func (inst *TriggerDca) SetDcaTriggerFeeTokenAAccountAccount(dcaTriggerFeeTokenAAccount ag_solanago.PublicKey) *TriggerDca {
+	inst.AccountMetaSlice[13] = ag_solanago.Meta(dcaTriggerFeeTokenAAccount).WRITE()
+	return inst
+}
+
+// GetDcaTriggerFeeTokenAAccountAccount gets the "dcaTriggerFeeTokenAAccount" account.
+func (inst *TriggerDca) GetDcaTriggerFeeTokenAAccountAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice[13]
+}
+
 // SetSwapAccount sets the "swap" account.
 func (inst *TriggerDca) SetSwapAccount(swap ag_solanago.PublicKey) *TriggerDca {
-	inst.AccountMetaSlice[13] = ag_solanago.Meta(swap).WRITE()
+	inst.AccountMetaSlice[14] = ag_solanago.Meta(swap)
 	return inst
 }
 
 // GetSwapAccount gets the "swap" account.
 func (inst *TriggerDca) GetSwapAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice[13]
+	return inst.AccountMetaSlice[14]
 }
 
 // SetSwapAuthorityAccount sets the "swapAuthority" account.
 func (inst *TriggerDca) SetSwapAuthorityAccount(swapAuthority ag_solanago.PublicKey) *TriggerDca {
-	inst.AccountMetaSlice[14] = ag_solanago.Meta(swapAuthority).WRITE()
+	inst.AccountMetaSlice[15] = ag_solanago.Meta(swapAuthority)
 	return inst
 }
 
 // GetSwapAuthorityAccount gets the "swapAuthority" account.
 func (inst *TriggerDca) GetSwapAuthorityAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice[14]
+	return inst.AccountMetaSlice[15]
 }
 
 // SetTokenSwapProgramAccount sets the "tokenSwapProgram" account.
 func (inst *TriggerDca) SetTokenSwapProgramAccount(tokenSwapProgram ag_solanago.PublicKey) *TriggerDca {
-	inst.AccountMetaSlice[15] = ag_solanago.Meta(tokenSwapProgram)
+	inst.AccountMetaSlice[16] = ag_solanago.Meta(tokenSwapProgram)
 	return inst
 }
 
 // GetTokenSwapProgramAccount gets the "tokenSwapProgram" account.
 func (inst *TriggerDca) GetTokenSwapProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice[15]
+	return inst.AccountMetaSlice[16]
 }
 
 // SetTokenProgramAccount sets the "tokenProgram" account.
 func (inst *TriggerDca) SetTokenProgramAccount(tokenProgram ag_solanago.PublicKey) *TriggerDca {
-	inst.AccountMetaSlice[16] = ag_solanago.Meta(tokenProgram)
+	inst.AccountMetaSlice[17] = ag_solanago.Meta(tokenProgram)
 	return inst
 }
 
 // GetTokenProgramAccount gets the "tokenProgram" account.
 func (inst *TriggerDca) GetTokenProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice[16]
+	return inst.AccountMetaSlice[17]
 }
 
 // SetAssociatedTokenProgramAccount sets the "associatedTokenProgram" account.
 func (inst *TriggerDca) SetAssociatedTokenProgramAccount(associatedTokenProgram ag_solanago.PublicKey) *TriggerDca {
-	inst.AccountMetaSlice[17] = ag_solanago.Meta(associatedTokenProgram)
+	inst.AccountMetaSlice[18] = ag_solanago.Meta(associatedTokenProgram)
 	return inst
 }
 
 // GetAssociatedTokenProgramAccount gets the "associatedTokenProgram" account.
 func (inst *TriggerDca) GetAssociatedTokenProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice[17]
+	return inst.AccountMetaSlice[18]
 }
 
 // SetSystemProgramAccount sets the "systemProgram" account.
 func (inst *TriggerDca) SetSystemProgramAccount(systemProgram ag_solanago.PublicKey) *TriggerDca {
-	inst.AccountMetaSlice[18] = ag_solanago.Meta(systemProgram)
+	inst.AccountMetaSlice[19] = ag_solanago.Meta(systemProgram)
 	return inst
 }
 
 // GetSystemProgramAccount gets the "systemProgram" account.
 func (inst *TriggerDca) GetSystemProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice[18]
+	return inst.AccountMetaSlice[19]
 }
 
 // SetRentAccount sets the "rent" account.
 func (inst *TriggerDca) SetRentAccount(rent ag_solanago.PublicKey) *TriggerDca {
-	inst.AccountMetaSlice[19] = ag_solanago.Meta(rent)
+	inst.AccountMetaSlice[20] = ag_solanago.Meta(rent)
 	return inst
 }
 
 // GetRentAccount gets the "rent" account.
 func (inst *TriggerDca) GetRentAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice[19]
+	return inst.AccountMetaSlice[20]
 }
 
 func (inst TriggerDca) Build() *Instruction {
@@ -343,24 +356,27 @@ func (inst *TriggerDca) Validate() error {
 			return errors.New("accounts.SwapFeeAccount is not set")
 		}
 		if inst.AccountMetaSlice[13] == nil {
-			return errors.New("accounts.Swap is not set")
+			return errors.New("accounts.DcaTriggerFeeTokenAAccount is not set")
 		}
 		if inst.AccountMetaSlice[14] == nil {
-			return errors.New("accounts.SwapAuthority is not set")
+			return errors.New("accounts.Swap is not set")
 		}
 		if inst.AccountMetaSlice[15] == nil {
-			return errors.New("accounts.TokenSwapProgram is not set")
+			return errors.New("accounts.SwapAuthority is not set")
 		}
 		if inst.AccountMetaSlice[16] == nil {
-			return errors.New("accounts.TokenProgram is not set")
+			return errors.New("accounts.TokenSwapProgram is not set")
 		}
 		if inst.AccountMetaSlice[17] == nil {
-			return errors.New("accounts.AssociatedTokenProgram is not set")
+			return errors.New("accounts.TokenProgram is not set")
 		}
 		if inst.AccountMetaSlice[18] == nil {
-			return errors.New("accounts.SystemProgram is not set")
+			return errors.New("accounts.AssociatedTokenProgram is not set")
 		}
 		if inst.AccountMetaSlice[19] == nil {
+			return errors.New("accounts.SystemProgram is not set")
+		}
+		if inst.AccountMetaSlice[20] == nil {
 			return errors.New("accounts.Rent is not set")
 		}
 	}
@@ -379,7 +395,7 @@ func (inst *TriggerDca) EncodeToTree(parent ag_treeout.Branches) {
 					instructionBranch.Child("Params[len=0]").ParentFunc(func(paramsBranch ag_treeout.Branches) {})
 
 					// Accounts of the instruction:
-					instructionBranch.Child("Accounts[len=20]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
+					instructionBranch.Child("Accounts[len=21]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
 						accountsBranch.Child(ag_format.Meta("      dcaTriggerSource", inst.AccountMetaSlice[0]))
 						accountsBranch.Child(ag_format.Meta("                 vault", inst.AccountMetaSlice[1]))
 						accountsBranch.Child(ag_format.Meta("      vaultProtoConfig", inst.AccountMetaSlice[2]))
@@ -393,13 +409,14 @@ func (inst *TriggerDca) EncodeToTree(parent ag_treeout.Branches) {
 						accountsBranch.Child(ag_format.Meta("            swapTokenA", inst.AccountMetaSlice[10]))
 						accountsBranch.Child(ag_format.Meta("            swapTokenB", inst.AccountMetaSlice[11]))
 						accountsBranch.Child(ag_format.Meta("               swapFee", inst.AccountMetaSlice[12]))
-						accountsBranch.Child(ag_format.Meta("                  swap", inst.AccountMetaSlice[13]))
-						accountsBranch.Child(ag_format.Meta("         swapAuthority", inst.AccountMetaSlice[14]))
-						accountsBranch.Child(ag_format.Meta("      tokenSwapProgram", inst.AccountMetaSlice[15]))
-						accountsBranch.Child(ag_format.Meta("          tokenProgram", inst.AccountMetaSlice[16]))
-						accountsBranch.Child(ag_format.Meta("associatedTokenProgram", inst.AccountMetaSlice[17]))
-						accountsBranch.Child(ag_format.Meta("         systemProgram", inst.AccountMetaSlice[18]))
-						accountsBranch.Child(ag_format.Meta("                  rent", inst.AccountMetaSlice[19]))
+						accountsBranch.Child(ag_format.Meta("   dcaTriggerFeeTokenA", inst.AccountMetaSlice[13]))
+						accountsBranch.Child(ag_format.Meta("                  swap", inst.AccountMetaSlice[14]))
+						accountsBranch.Child(ag_format.Meta("         swapAuthority", inst.AccountMetaSlice[15]))
+						accountsBranch.Child(ag_format.Meta("      tokenSwapProgram", inst.AccountMetaSlice[16]))
+						accountsBranch.Child(ag_format.Meta("          tokenProgram", inst.AccountMetaSlice[17]))
+						accountsBranch.Child(ag_format.Meta("associatedTokenProgram", inst.AccountMetaSlice[18]))
+						accountsBranch.Child(ag_format.Meta("         systemProgram", inst.AccountMetaSlice[19]))
+						accountsBranch.Child(ag_format.Meta("                  rent", inst.AccountMetaSlice[20]))
 					})
 				})
 		})
@@ -428,6 +445,7 @@ func NewTriggerDcaInstruction(
 	swapTokenAAccount ag_solanago.PublicKey,
 	swapTokenBAccount ag_solanago.PublicKey,
 	swapFeeAccount ag_solanago.PublicKey,
+	dcaTriggerFeeTokenAAccount ag_solanago.PublicKey,
 	swap ag_solanago.PublicKey,
 	swapAuthority ag_solanago.PublicKey,
 	tokenSwapProgram ag_solanago.PublicKey,
@@ -449,6 +467,7 @@ func NewTriggerDcaInstruction(
 		SetSwapTokenAAccountAccount(swapTokenAAccount).
 		SetSwapTokenBAccountAccount(swapTokenBAccount).
 		SetSwapFeeAccountAccount(swapFeeAccount).
+		SetDcaTriggerFeeTokenAAccountAccount(dcaTriggerFeeTokenAAccount).
 		SetSwapAccount(swap).
 		SetSwapAuthorityAccount(swapAuthority).
 		SetTokenSwapProgramAccount(tokenSwapProgram).

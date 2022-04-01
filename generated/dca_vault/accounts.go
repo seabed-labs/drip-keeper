@@ -236,7 +236,9 @@ func (obj *VaultPeriod) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err er
 }
 
 type VaultProtoConfig struct {
-	Granularity uint64
+	Granularity          uint64
+	TriggerDcaSpread     uint16
+	BaseWithdrawalSpread uint16
 }
 
 var VaultProtoConfigDiscriminator = [8]byte{173, 22, 36, 165, 190, 3, 142, 199}
@@ -249,6 +251,16 @@ func (obj VaultProtoConfig) MarshalWithEncoder(encoder *ag_binary.Encoder) (err 
 	}
 	// Serialize `Granularity` param:
 	err = encoder.Encode(obj.Granularity)
+	if err != nil {
+		return err
+	}
+	// Serialize `TriggerDcaSpread` param:
+	err = encoder.Encode(obj.TriggerDcaSpread)
+	if err != nil {
+		return err
+	}
+	// Serialize `BaseWithdrawalSpread` param:
+	err = encoder.Encode(obj.BaseWithdrawalSpread)
 	if err != nil {
 		return err
 	}
@@ -274,6 +286,16 @@ func (obj *VaultProtoConfig) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (e
 	if err != nil {
 		return err
 	}
+	// Deserialize `TriggerDcaSpread`:
+	err = decoder.Decode(&obj.TriggerDcaSpread)
+	if err != nil {
+		return err
+	}
+	// Deserialize `BaseWithdrawalSpread`:
+	err = decoder.Decode(&obj.BaseWithdrawalSpread)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -283,6 +305,7 @@ type Vault struct {
 	TokenBMint             ag_solanago.PublicKey
 	TokenAAccount          ag_solanago.PublicKey
 	TokenBAccount          ag_solanago.PublicKey
+	TreasuryTokenBAccount  ag_solanago.PublicKey
 	LastDcaPeriod          uint64
 	DripAmount             uint64
 	DcaActivationTimestamp int64
@@ -319,6 +342,11 @@ func (obj Vault) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 	}
 	// Serialize `TokenBAccount` param:
 	err = encoder.Encode(obj.TokenBAccount)
+	if err != nil {
+		return err
+	}
+	// Serialize `TreasuryTokenBAccount` param:
+	err = encoder.Encode(obj.TreasuryTokenBAccount)
 	if err != nil {
 		return err
 	}
@@ -381,6 +409,11 @@ func (obj *Vault) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 	}
 	// Deserialize `TokenBAccount`:
 	err = decoder.Decode(&obj.TokenBAccount)
+	if err != nil {
+		return err
+	}
+	// Deserialize `TreasuryTokenBAccount`:
+	err = decoder.Decode(&obj.TreasuryTokenBAccount)
 	if err != nil {
 		return err
 	}
