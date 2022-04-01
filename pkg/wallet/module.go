@@ -8,7 +8,7 @@ import (
 	"github.com/Dcaf-Protocol/keeper-bot/configs"
 	dcaVault "github.com/Dcaf-Protocol/keeper-bot/generated/dca_vault"
 	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/programs/token"
+	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/mr-tron/base58"
 	"github.com/sirupsen/logrus"
@@ -98,10 +98,10 @@ func (w *WalletProvider) InitVaultPeriod(
 func (w *WalletProvider) CreateTokenAccount(
 	ctx context.Context, tokenMint string,
 ) (solana.Instruction, error) {
-	txBuilder := token.NewInitializeAccountInstructionBuilder()
-	txBuilder.SetMintAccount(solana.MustPublicKeyFromBase58(tokenMint))
-	txBuilder.SetOwnerAccount(w.Wallet.PublicKey())
-	txBuilder.SetSysVarRentPubkeyAccount(solana.SysVarRentPubkey)
+	txBuilder := associatedtokenaccount.NewCreateInstructionBuilder()
+	txBuilder.SetMint(solana.MustPublicKeyFromBase58(tokenMint))
+	txBuilder.SetPayer(w.Wallet.PublicKey())
+	txBuilder.SetWallet(w.Wallet.PublicKey())
 	return txBuilder.ValidateAndBuild()
 }
 
