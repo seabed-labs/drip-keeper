@@ -4,7 +4,7 @@ on:
   push: { branches: main }
 
 env:
-  CLI_CACHE_KEY: anchor-v0.22.dev-7b86aed-solana-1.8.5
+  CLI_CACHE_KEY: anchor-v0.22.dev-7b86aed-solana-1.10.5
   ENV: ${{ secrets.ENV }}
   SOLANA_PROGRAMS: f13f47f08c40b79c83e83e3dd57c5561f74ee7e3
   GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
@@ -37,7 +37,7 @@ jobs:
 
       - name: Install Solana Tools
         if: steps.cache-cli-deps.outputs.cache-hit != 'true'
-        run: sh -c "$(curl -sSfL https://release.solana.com/v1.8.5/install)"
+        run: sh -c "$(curl -sSfL https://release.solana.com/v1.10.5/install)"
 
       - run: echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$PATH" >> $GITHUB_ENV
 
@@ -77,7 +77,7 @@ jobs:
           go-version: 1.17.8
 
       - name: Build
-        run: go build cmd/bot/main.go
+        run: go build main.go
 
   # build_api:
   #   name: Build API Server

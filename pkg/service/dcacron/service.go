@@ -95,6 +95,8 @@ func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*cron.Cr
 	runWithConfig := func() {
 		dca.runWithRetry(config, 0, 5, 1)
 	}
+	// Run the first trigger dca right now and schedule the rest in the future
+	runWithConfig()
 	if _, err := cron.AddFunc(fmt.Sprintf("@every %ds", vaultProtoConfigData.Granularity), runWithConfig); err != nil {
 		return nil, err
 	}
@@ -168,7 +170,7 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 		logrus.
 			WithField("dripAmount", vaultData.DripAmount).
 			WithField("vault", config.Vault).
-			Errorf("exiting, drip amount is 0")
+			Info("exiting, drip amount is 0")
 		return nil
 	}
 
@@ -205,37 +207,65 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 		WithField("vaultTokenAAcount", config.VaultTokenAAccount).
 		Info("fetched vault token a balance")
 
+	var instructions []solana.Instruction
 	lastVaultPeriod := int64(vaultData.LastDcaPeriod)
-	vaultPeriodI, err := dca.fetchVaultPeriod(ctx, config, vaultPubKey, lastVaultPeriod)
+	vaultPeriodI, instruction, err := dca.fetchVaultPeriod(ctx, config, vaultPubKey, lastVaultPeriod)
 	if err != nil {
 		logrus.WithError(err).Errorf("failed to get vaultPeriodI %d PDA", lastVaultPeriod)
 		return err
 	}
+	if instruction != nil {
+		instructions = append(instructions, instruction)
+	}
 	logrus.WithField("publicKey", vaultPeriodI.String()).Infof("fetched vaultPeriod %d PDA", lastVaultPeriod)
 
 	currentVaultPeriod := lastVaultPeriod + 1
-	vaultPeriodJ, err := dca.fetchVaultPeriod(ctx, config, vaultPubKey, currentVaultPeriod)
+	vaultPeriodJ, instruction, err := dca.fetchVaultPeriod(ctx, config, vaultPubKey, currentVaultPeriod)
 	if err != nil {
 		logrus.WithError(err).Errorf("failed to get vaultPeriodJ %d PDA", currentVaultPeriod)
 		return err
 	}
+	if instruction != nil {
+		instructions = append(instructions, instruction)
+	}
 	logrus.WithField("publicKey", vaultPeriodJ.String()).Infof("fetched vaultPeriod %d PDA", currentVaultPeriod)
 
+	botTokenAAccount, instruction, err := dca.fetchBotTokenAAccount(ctx, config.TokenAMint)
+	if err != nil {
+		logrus.WithError(err).Errorf("failed to get botTokenAAccount")
+		return err
+	}
+	if instruction != nil {
+		instructions = append(instructions, instruction)
+	}
+	logrus.WithField("publicKey", botTokenAAccount.String()).Infof("fetched botTokenAAccount")
+
 	logrus.WithFields(logrus.Fields{
-		"vault":        config.Vault,
-		"tokenAMint":   config.TokenAMint,
-		"tokenBMint":   config.TokenBMint,
-		"i":            vaultData.LastDcaPeriod,
-		"j":            vaultData.LastDcaPeriod + 1,
-		"vaultPeriodI": vaultPeriodI,
-		"vaultPeriodJ": vaultPeriodJ,
+		"vault":            config.Vault,
+		"tokenAMint":       config.TokenAMint,
+		"tokenBMint":       config.TokenBMint,
+		"i":                vaultData.LastDcaPeriod,
+		"j":                vaultData.LastDcaPeriod + 1,
+		"vaultPeriodI":     vaultPeriodI.String(),
+		"vaultPeriodJ":     vaultPeriodJ.String(),
+		"botTokenAAccount": botTokenAAccount.String(),
 	}).Info("running dca")
 
-	if err := dca.walletProvider.TriggerDCA(ctx, config, vaultPeriodI, vaultPeriodJ); err != nil {
+	instruction, err = dca.walletProvider.TriggerDCA(ctx, config, vaultPeriodI, vaultPeriodJ, botTokenAAccount)
+	if err != nil {
 		logrus.
-			WithFields(logrus.Fields{"vault": config.Vault}).
 			WithError(err).
-			Errorf("failed to trigger DCA")
+			WithField("dcaProgram", dcaVault.ProgramID.String()).
+			Errorf("failed to create TriggerDCA instruction")
+		return err
+	}
+	instructions = append(instructions, instruction)
+	if err := dca.walletProvider.Send(ctx, instructions...); err != nil {
+		logrus.
+			WithField("vault", config.Vault).
+			WithField("numInstructions", len(instructions)).
+			WithError(err).
+			Errorf("failed to trigger dca")
 		return err
 	}
 	logrus.
@@ -246,33 +276,41 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 
 func (dca *DCACronService) fetchVaultPeriod(
 	ctx context.Context, config configs.TriggerDCAConfig, vaultPubKey solana.PublicKey, vaultPeriodID int64,
-) (solana.PublicKey, error) {
+) (solana.PublicKey, solana.Instruction, error) {
 	vaultPeriod, _, err := solana.FindProgramAddress([][]byte{
 		[]byte("vault_period"),
 		vaultPubKey[:],
 		[]byte(strconv.FormatInt(vaultPeriodID, 10)),
 	}, dcaVault.ProgramID)
 	if err != nil {
-		logrus.WithField("dcaProgram", dcaVault.ProgramID.String()).WithError(err).Errorf("failed to get vaultPeriodI %d PDA", vaultPeriodID)
-		return solana.PublicKey{}, err
+		logrus.
+			WithError(err).
+			WithField("dcaProgram", dcaVault.ProgramID.String()).
+			WithField("vaultPeriodID", vaultPeriodID).
+			Errorf("failed to get vaultPeriodI PDA")
+		return solana.PublicKey{}, nil, err
 	}
+	var instruction solana.Instruction
 	// Use GetAccountInfoWithOpts so we can pass in a commitment level
-	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, vaultPeriod, &rpc.GetAccountInfoOpts{
+	if resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, vaultPeriod, &rpc.GetAccountInfoOpts{
 		Encoding:   solana.EncodingBase64,
 		Commitment: "confirmed",
 		DataSlice:  nil,
-	})
-	// Failure is likely because the vault period is not initialized
-	if err != nil {
-		if err := dca.walletProvider.InitVaultPeriod(ctx, config, vaultPeriod, vaultPeriodID); err != nil {
-			logrus.WithField("vaultPeriodID", vaultPeriodID).Infof("failed to initialize vault period")
-			return solana.PublicKey{}, err
+	}); err != nil {
+		// Failure is likely because the vault period is not initialized
+		instruction, err = dca.walletProvider.InitVaultPeriod(ctx, config, vaultPeriod, vaultPeriodID)
+		if err != nil {
+			logrus.
+				WithError(err).
+				WithField("dcaProgram", dcaVault.ProgramID.String()).
+				WithField("vaultPeriodID", vaultPeriodID).
+				Errorf("failed to create InitVaultPeriod instruction")
+			return solana.PublicKey{}, nil, err
 		}
-		logrus.WithField("vaultPeriodID", vaultPeriodID).Infof("initialized vault period")
 	} else {
 		var vaultPeriodData dcaVault.VaultPeriod
 		if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&vaultPeriodData); err != nil {
-			return solana.PublicKey{}, err
+			return solana.PublicKey{}, nil, err
 		}
 		logrus.
 			WithField("vaultPeriodID", vaultPeriodID).
@@ -280,5 +318,43 @@ func (dca *DCACronService) fetchVaultPeriod(
 			WithField("twap", vaultPeriodData.Twap).
 			Infof("fetched vault period")
 	}
-	return vaultPeriod, nil
+	return vaultPeriod, instruction, nil
+}
+
+func (dca *DCACronService) fetchBotTokenAAccount(
+	ctx context.Context, tokenAMint string,
+) (solana.PublicKey, solana.Instruction, error) {
+
+	botTokenAAccount, _, err := solana.FindAssociatedTokenAddress(
+		dca.walletProvider.Wallet.PublicKey(),
+		solana.MustPublicKeyFromBase58(tokenAMint),
+	)
+	if err != nil {
+		logrus.
+			WithError(err).
+			WithField("dcaProgram", dcaVault.ProgramID.String()).
+			WithField("mint", tokenAMint).
+			Errorf("failed to get botTokenAAccount")
+		return solana.PublicKey{}, nil, err
+	}
+	var instruction solana.Instruction
+
+	if resp, err := dca.solClient.GetTokenAccountBalance(ctx, botTokenAAccount, "confirmed"); err != nil {
+		instruction, err = dca.walletProvider.CreateTokenAccount(ctx, tokenAMint)
+		if err != nil {
+			logrus.
+				WithError(err).
+				WithField("dcaProgram", dcaVault.ProgramID.String()).
+				WithField("mint", tokenAMint).
+				Errorf("failed to create createTokenAccount instruction")
+			return solana.PublicKey{}, nil, err
+		}
+	} else {
+		logrus.
+			WithField("botTokenAAccount", botTokenAAccount.String()).
+			WithField("balance", resp.Value.Amount).
+			WithField("decimals", resp.Value.Decimals).
+			Info("fetched vault period")
+	}
+	return botTokenAAccount, instruction, nil
 }

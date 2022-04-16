@@ -41,17 +41,16 @@ const (
 
 const KEEPER_BOT_WALLET = "KEEPER_BOT_WALLET"
 const ENV = "ENV"
+const PROJECT_ROOT_OVERRIDE = "PROJECT_ROOT_OVERRIDE"
 
 func New() (*Config, error) {
 	LoadEnv()
 
 	environment := Environment(os.Getenv(ENV))
-	configFileName := "./configs/localnet.yaml"
-	if IsProd(environment) {
-		configFileName = "./configs/mainnet.yaml"
-	} else if IsDev(environment) {
-		configFileName = "./configs/devnet.yaml"
+	if environment == NilEnv {
+		environment = LocalnetEnv
 	}
+	configFileName := fmt.Sprintf("./configs/%s.yaml", environment)
 	configFileName = fmt.Sprintf("%s/%s", GetProjectRoot(), configFileName)
 
 	logrus.WithField("configFileName", configFileName).Infof("loading config file")

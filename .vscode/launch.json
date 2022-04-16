@@ -16,7 +16,7 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "cmd/bot/main.go"
+      "program": "main.go"
     }
   ]
 }

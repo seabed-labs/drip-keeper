@@ -60,12 +60,24 @@ func (obj *InitializeVaultPeriodParams) UnmarshalWithDecoder(decoder *ag_binary.
 }
 
 type InitVaultProtoConfigParams struct {
-	Granularity uint64
+	Granularity          uint64
+	TriggerDcaSpread     uint16
+	BaseWithdrawalSpread uint16
 }
 
 func (obj InitVaultProtoConfigParams) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 	// Serialize `Granularity` param:
 	err = encoder.Encode(obj.Granularity)
+	if err != nil {
+		return err
+	}
+	// Serialize `TriggerDcaSpread` param:
+	err = encoder.Encode(obj.TriggerDcaSpread)
+	if err != nil {
+		return err
+	}
+	// Serialize `BaseWithdrawalSpread` param:
+	err = encoder.Encode(obj.BaseWithdrawalSpread)
 	if err != nil {
 		return err
 	}
@@ -75,6 +87,16 @@ func (obj InitVaultProtoConfigParams) MarshalWithEncoder(encoder *ag_binary.Enco
 func (obj *InitVaultProtoConfigParams) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 	// Deserialize `Granularity`:
 	err = decoder.Decode(&obj.Granularity)
+	if err != nil {
+		return err
+	}
+	// Deserialize `TriggerDcaSpread`:
+	err = decoder.Decode(&obj.TriggerDcaSpread)
+	if err != nil {
+		return err
+	}
+	// Deserialize `BaseWithdrawalSpread`:
+	err = decoder.Decode(&obj.BaseWithdrawalSpread)
 	if err != nil {
 		return err
 	}
