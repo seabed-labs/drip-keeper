@@ -4,7 +4,12 @@ import (
 	"context"
 	"github.com/Dcaf-Protocol/keeper-bot/configs"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/gagliardetto/solana-go/rpc/jsonrpc"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/time/rate"
+	"net/http"
+	"time"
 )
 
 func NewSolanaClient(
@@ -12,21 +17,20 @@ func NewSolanaClient(
 ) (*rpc.Client, error) {
 	url := getURL(config.Environment)
 	//// Maximum number of requests per 10 seconds per IP for a single RPC: 40
-	//rateLimiter := rate.NewLimiter(rate.Every(time.Second*10/40), 1)
-	//httpClient := retryablehttp.NewClient()
-	//httpClient.RetryWaitMin = time.Second * 5
-	//httpClient.RetryMax = 3
-	//httpClient.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, retry int) {
-	//	if err := rateLimiter.Wait(context.Background()); err != nil {
-	//		logrus.WithField("err", err.Error()).Warnf("waiting for rate limit")
-	//		return
-	//	}
-	//}
-	//solClient := rpc.NewWithCustomRPCClient(jsonrpc.NewClientWithOpts(url, &jsonrpc.RPCClientOpts{
-	//	HTTPClient:    httpClient.StandardClient(),
-	//	CustomHeaders: nil,
-	//}))
-	solClient := rpc.New(url)
+	rateLimiter := rate.NewLimiter(rate.Every(time.Second*10/40), 1)
+	httpClient := retryablehttp.NewClient()
+	httpClient.RetryWaitMin = time.Second * 5
+	httpClient.RetryMax = 3
+	httpClient.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, retry int) {
+		if err := rateLimiter.Wait(context.Background()); err != nil {
+			logrus.WithField("err", err.Error()).Warnf("waiting for rate limit")
+			return
+		}
+	}
+	solClient := rpc.NewWithCustomRPCClient(jsonrpc.NewClientWithOpts(url, &jsonrpc.RPCClientOpts{
+		HTTPClient:    httpClient.StandardClient(),
+		CustomHeaders: nil,
+	}))
 	resp, err := solClient.GetVersion(context.Background())
 	if err != nil {
 		logrus.WithError(err).Fatalf("failed to get client version info")
