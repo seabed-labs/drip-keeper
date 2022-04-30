@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-
 	"github.com/Dcaf-Protocol/keeper-bot/configs"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
@@ -12,7 +11,22 @@ func NewSolanaClient(
 	config *configs.Config,
 ) (*rpc.Client, error) {
 	url := getURL(config.Environment)
-	solClient := *rpc.New(url)
+	//// Maximum number of requests per 10 seconds per IP for a single RPC: 40
+	//rateLimiter := rate.NewLimiter(rate.Every(time.Second*10/40), 1)
+	//httpClient := retryablehttp.NewClient()
+	//httpClient.RetryWaitMin = time.Second * 5
+	//httpClient.RetryMax = 3
+	//httpClient.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, retry int) {
+	//	if err := rateLimiter.Wait(context.Background()); err != nil {
+	//		logrus.WithField("err", err.Error()).Warnf("waiting for rate limit")
+	//		return
+	//	}
+	//}
+	//solClient := rpc.NewWithCustomRPCClient(jsonrpc.NewClientWithOpts(url, &jsonrpc.RPCClientOpts{
+	//	HTTPClient:    httpClient.StandardClient(),
+	//	CustomHeaders: nil,
+	//}))
+	solClient := rpc.New(url)
 	resp, err := solClient.GetVersion(context.Background())
 	if err != nil {
 		logrus.WithError(err).Fatalf("failed to get client version info")
@@ -23,7 +37,7 @@ func NewSolanaClient(
 			"version": resp.SolanaCore,
 			"url":     url}).
 		Info("created solClient")
-	return &solClient, nil
+	return solClient, nil
 }
 
 func getURL(env configs.Environment) string {

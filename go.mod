@@ -8,10 +8,12 @@ require (
 	github.com/gagliardetto/gofuzz v1.2.2
 	github.com/gagliardetto/solana-go v1.0.2
 	github.com/gagliardetto/treeout v0.1.4
+	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/ilyakaznacheev/cleanenv v1.2.6
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.8.1
 	go.uber.org/fx v1.15.0
+	golang.org/x/time v0.0.0-20220411224347-583f2d630306
 )
 
 require (
@@ -23,6 +25,7 @@ require (
 	github.com/dfuse-io/logging v0.0.0-20210109005628-b97a57253f70 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.1 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
