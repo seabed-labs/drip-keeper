@@ -3,9 +3,9 @@ package test
 import (
 	"context"
 
-	"github.com/Dcaf-Protocol/keeper-bot/configs"
-	"github.com/Dcaf-Protocol/keeper-bot/pkg/client"
-	"github.com/Dcaf-Protocol/keeper-bot/pkg/wallet"
+	"github.com/Dcaf-Protocol/drip-keeper/configs"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/client"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )

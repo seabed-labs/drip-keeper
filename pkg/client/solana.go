@@ -2,14 +2,15 @@ package client
 
 import (
 	"context"
-	"github.com/Dcaf-Protocol/keeper-bot/configs"
+	"net/http"
+	"time"
+
+	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/gagliardetto/solana-go/rpc/jsonrpc"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
-	"net/http"
-	"time"
 )
 
 func NewSolanaClient(

@@ -1,4 +1,4 @@
-module github.com/Dcaf-Protocol/keeper-bot
+module github.com/Dcaf-Protocol/drip-keeper
 
 // +heroku goVersion go1.18
 go 1.18

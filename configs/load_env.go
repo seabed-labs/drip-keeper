@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const PROJECT_DIR = "keeper-bot"
+const PROJECT_DIR = "drip-keeper"
 
 // LoadEnv loads env vars from .env at root of repo
 func GetProjectRoot() string {

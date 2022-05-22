@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Dcaf-Protocol/keeper-bot/configs"
-	dcaVault "github.com/Dcaf-Protocol/keeper-bot/generated/dca_vault"
+	"github.com/Dcaf-Protocol/drip-keeper/configs"
+	dcaVault "github.com/Dcaf-Protocol/drip-keeper/generated/dca_vault"
 	"github.com/gagliardetto/solana-go"
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	"github.com/gagliardetto/solana-go/rpc"
