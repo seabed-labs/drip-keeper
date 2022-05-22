@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Dcaf-Protocol/keeper-bot/pkg/test"
-	walletPkg "github.com/Dcaf-Protocol/keeper-bot/pkg/wallet"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/test"
+	walletPkg "github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/assert"
 )

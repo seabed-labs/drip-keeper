@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Dcaf-Protocol/keeper-bot/configs"
-	dcaVault "github.com/Dcaf-Protocol/keeper-bot/generated/dca_vault"
-	"github.com/Dcaf-Protocol/keeper-bot/pkg/wallet"
+	"github.com/Dcaf-Protocol/drip-keeper/configs"
+	dcaVault "github.com/Dcaf-Protocol/drip-keeper/generated/dca_vault"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"

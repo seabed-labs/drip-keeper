@@ -163,11 +163,11 @@ jobs:
         run: go test -coverprofile ./c.out $(go list ./...) || exit $?
 
       - name: Format Code Coverage File
-        run: cc-test-reporter format-coverage -t gocov --prefix github.com/Dcaf-Protocol/keeper-bot c.out
+        run: cc-test-reporter format-coverage -t gocov --prefix github.com/Dcaf-Protocol/drip-keeper c.out
 
       - name: Code Coverage After Build
         if: ${{ github.event_name != 'pull_request' }}
-        run: cc-test-reporter after-build --prefix github.com/Dcaf-Protocol/keeper-bot --exit-code $?
+        run: cc-test-reporter after-build --prefix github.com/Dcaf-Protocol/drip-keeper --exit-code $?
 
   lint:
     name: Lint

@@ -1,1 +1,1 @@
-worker: keeper-bot
+worker: drip-keeper

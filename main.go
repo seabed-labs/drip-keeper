@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 
-	"github.com/Dcaf-Protocol/keeper-bot/configs"
-	"github.com/Dcaf-Protocol/keeper-bot/pkg/client"
-	dca "github.com/Dcaf-Protocol/keeper-bot/pkg/service/dcacron"
-	"github.com/Dcaf-Protocol/keeper-bot/pkg/wallet"
+	"github.com/Dcaf-Protocol/drip-keeper/configs"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/client"
+	dca "github.com/Dcaf-Protocol/drip-keeper/pkg/service/dcacron"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
