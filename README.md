@@ -1,6 +1,7 @@
 # drip-keeper
 
-[![Build and Test](https://github.com/Dcaf-Protocol/drip-keeper/actions/workflows/build-and-test.yaml/badge.svg)](https://github.com/Dcaf-Protocol/drip-keeper/actions/workflows/build-and-test.yaml)
+[![Build and Test](https://github.com/dcaf-labs/drip-keeper/actions/workflows/build-and-test.yaml/badge.svg?branch=main)](https://github.com/dcaf-labs/drip-keeper/actions/workflows/build-and-test.yaml)
+[![Deploy](https://github.com/dcaf-labs/drip-keeper/actions/workflows/deploy-devnet.yaml/badge.svg?branch=main)](https://github.com/dcaf-labs/drip-keeper/actions/workflows/deploy-devnet.yaml)
 [![Maintainability](https://api.codeclimate.com/v1/badges/5b6787b16c4570e6b052/maintainability)](https://codeclimate.com/repos/61a44f1543298e01a1003151/maintainability)
 [![Code Coverage](https://api.codeclimate.com/v1/badges/5b6787b16c4570e6b052/test_coverage)](https://codeclimate.com/repos/61a44f1543298e01a1003151/test_coverage)
 
