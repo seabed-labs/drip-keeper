@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Dcaf-Protocol/drip-keeper/generated/drip"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	dcaVault "github.com/Dcaf-Protocol/drip-keeper/generated/dca_vault"
 	"github.com/gagliardetto/solana-go"
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -52,7 +52,7 @@ func New(
 func (w *WalletProvider) TriggerDCA(
 	ctx context.Context, config configs.TriggerDCAConfig, vaultPeriodI, vaultPeriodJ, botTokenAAccount solana.PublicKey,
 ) (solana.Instruction, error) {
-	txBuilder := dcaVault.NewTriggerDcaInstructionBuilder()
+	txBuilder := drip.NewTriggerDcaInstructionBuilder()
 	txBuilder.SetDcaTriggerSourceAccount(w.Wallet.PublicKey())
 	txBuilder.SetDcaTriggerFeeTokenAAccountAccount(botTokenAAccount)
 	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58(config.Vault))
@@ -81,7 +81,7 @@ func (w *WalletProvider) TriggerDCA(
 func (w *WalletProvider) InitVaultPeriod(
 	ctx context.Context, config configs.TriggerDCAConfig, vaultPeriod solana.PublicKey, vaultPeriodID int64,
 ) (solana.Instruction, error) {
-	txBuilder := dcaVault.NewInitVaultPeriodInstructionBuilder()
+	txBuilder := drip.NewInitVaultPeriodInstructionBuilder()
 	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58(config.Vault))
 	txBuilder.SetTokenAMintAccount(solana.MustPublicKeyFromBase58(config.TokenAMint))
 	txBuilder.SetTokenBMintAccount(solana.MustPublicKeyFromBase58(config.TokenBMint))
@@ -89,7 +89,7 @@ func (w *WalletProvider) InitVaultPeriod(
 	txBuilder.SetCreatorAccount(w.Wallet.PublicKey())
 	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
 	txBuilder.SetVaultPeriodAccount(vaultPeriod)
-	txBuilder.SetParams(dcaVault.InitializeVaultPeriodParams{
+	txBuilder.SetParams(drip.InitializeVaultPeriodParams{
 		PeriodId: uint64(vaultPeriodID),
 	})
 	return txBuilder.ValidateAndBuild()

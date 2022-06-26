@@ -3,17 +3,17 @@ package dca
 import (
 	"context"
 	"fmt"
+	"github.com/Dcaf-Protocol/drip-keeper/configs"
+	"github.com/Dcaf-Protocol/drip-keeper/generated/drip"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
+	"github.com/gagliardetto/solana-go"
+	"github.com/robfig/cron/v3"
 	"runtime/debug"
 	"strconv"
 	"time"
 
-	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	dcaVault "github.com/Dcaf-Protocol/drip-keeper/generated/dca_vault"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
 	bin "github.com/gagliardetto/binary"
-	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
@@ -35,7 +35,6 @@ func NewDCACron(
 	solClient *rpc.Client,
 	walletProvider *wallet.WalletProvider,
 ) (*DCACronService, error) {
-
 	dcaCronService := DCACronService{walletProvider: walletProvider, solClient: solClient}
 	var dcaCrons []DCACron
 
@@ -77,7 +76,7 @@ func NewDCACron(
 
 // TODO(Mocha): We can cache the vault proto configs
 func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*cron.Cron, error) {
-	var vaultProtoConfigData dcaVault.VaultProtoConfig
+	var vaultProtoConfigData drip.VaultProtoConfig
 	vaultProtoConfigPubKey, err := solana.PublicKeyFromBase58(config.VaultProtoConfig)
 	if err != nil {
 		return nil, err
@@ -152,7 +151,7 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var vaultData dcaVault.Vault
+	var vaultData drip.Vault
 	vaultPubKey := solana.MustPublicKeyFromBase58(config.Vault)
 	// Use GetAccountInfoWithOpts so we can pass in a commitment level
 	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, vaultPubKey, &rpc.GetAccountInfoOpts{
@@ -255,7 +254,7 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 	if err != nil {
 		logrus.
 			WithError(err).
-			WithField("dcaProgram", dcaVault.ProgramID.String()).
+			WithField("dcaProgram", drip.ProgramID.String()).
 			Errorf("failed to create TriggerDCA instruction")
 		return err
 	}
@@ -281,11 +280,11 @@ func (dca *DCACronService) fetchVaultPeriod(
 		[]byte("vault_period"),
 		vaultPubKey[:],
 		[]byte(strconv.FormatInt(vaultPeriodID, 10)),
-	}, dcaVault.ProgramID)
+	}, drip.ProgramID)
 	if err != nil {
 		logrus.
 			WithError(err).
-			WithField("dcaProgram", dcaVault.ProgramID.String()).
+			WithField("dcaProgram", drip.ProgramID.String()).
 			WithField("vaultPeriodID", vaultPeriodID).
 			Errorf("failed to get vaultPeriodI PDA")
 		return solana.PublicKey{}, nil, err
@@ -302,13 +301,13 @@ func (dca *DCACronService) fetchVaultPeriod(
 		if err != nil {
 			logrus.
 				WithError(err).
-				WithField("dcaProgram", dcaVault.ProgramID.String()).
+				WithField("dcaProgram", drip.ProgramID.String()).
 				WithField("vaultPeriodID", vaultPeriodID).
 				Errorf("failed to create InitVaultPeriod instruction")
 			return solana.PublicKey{}, nil, err
 		}
 	} else {
-		var vaultPeriodData dcaVault.VaultPeriod
+		var vaultPeriodData drip.VaultPeriod
 		if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&vaultPeriodData); err != nil {
 			return solana.PublicKey{}, nil, err
 		}
@@ -324,7 +323,6 @@ func (dca *DCACronService) fetchVaultPeriod(
 func (dca *DCACronService) fetchBotTokenAAccount(
 	ctx context.Context, tokenAMint string,
 ) (solana.PublicKey, solana.Instruction, error) {
-
 	botTokenAAccount, _, err := solana.FindAssociatedTokenAddress(
 		dca.walletProvider.Wallet.PublicKey(),
 		solana.MustPublicKeyFromBase58(tokenAMint),
@@ -332,7 +330,7 @@ func (dca *DCACronService) fetchBotTokenAAccount(
 	if err != nil {
 		logrus.
 			WithError(err).
-			WithField("dcaProgram", dcaVault.ProgramID.String()).
+			WithField("dcaProgram", drip.ProgramID.String()).
 			WithField("mint", tokenAMint).
 			Errorf("failed to get botTokenAAccount")
 		return solana.PublicKey{}, nil, err
@@ -344,7 +342,7 @@ func (dca *DCACronService) fetchBotTokenAAccount(
 		if err != nil {
 			logrus.
 				WithError(err).
-				WithField("dcaProgram", dcaVault.ProgramID.String()).
+				WithField("dcaProgram", drip.ProgramID.String()).
 				WithField("mint", tokenAMint).
 				Errorf("failed to create createTokenAccount instruction")
 			return solana.PublicKey{}, nil, err
