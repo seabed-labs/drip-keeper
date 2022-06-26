@@ -13,7 +13,11 @@ Setup the `.env` file:
 
 Run the Bot: `go run main.go`
 
+<<<<<<< HEAD
 Generate IDL (assumes solana-program is a sibling of drip-keeper): `anchor-go --src=../solana-programs/target/idl/dca_vault.json`
+=======
+Generate IDL (assumes solana-program is a sibling of keeper-bot): `anchor-go --src=../drip-program/target/idl/drip.json`
+>>>>>>> 7042e97 (chore: update anchor code gen)
 
 ## Devnet
 
