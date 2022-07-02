@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/client/solana"
+	dca "github.com/Dcaf-Protocol/drip-keeper/pkg/service/dcacron"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/eventbus"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/vaultprovider"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/client"
-	dca "github.com/Dcaf-Protocol/drip-keeper/pkg/service/dcacron"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
@@ -16,11 +18,14 @@ func main() {
 	fxApp := fx.New(
 		fx.Provide(
 			configs.New,
-			client.NewSolanaClient,
+			solana.NewSolanaClient,
 			wallet.New,
+			eventbus.NewEventBus,
 		),
 		fx.Invoke(
+			// NewDCACron should be invoked first
 			dca.NewDCACron,
+			vaultprovider.NewVaultProvider,
 		),
 		fx.NopLogger,
 	)

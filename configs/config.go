@@ -10,9 +10,11 @@ import (
 )
 
 type Config struct {
-	Environment       Environment        `yaml:"environment" env:"ENV"`
-	Wallet            string             `yaml:"wallet"      env:"KEEPER_BOT_WALLET"`
-	TriggerDCAConfigs []TriggerDCAConfig `yaml:"triggerDCA"`
+	Environment              Environment        `yaml:"environment" env:"ENV" env-default:"DEVNET"`
+	Wallet                   string             `yaml:"wallet"      env:"KEEPER_BOT_WALLET"`
+	ShouldDiscoverNewConfigs bool               `yaml:"shouldDiscoverNewConfigs"      env-default:"true"`
+	DiscoveryURL             string             `yaml:"discoveryURL" env:"DISCOVERY_URL" env-default:"devnet.api.drip.dcaf.so"`
+	TriggerDCAConfigs        []TriggerDCAConfig `yaml:"triggerDCA"`
 }
 
 type TriggerDCAConfig struct {
@@ -65,9 +67,9 @@ func New() (*Config, error) {
 		return nil, err
 	}
 
-	logrus.WithFields(logrus.Fields{
-		"TriggerDCAConfigs": fmt.Sprintf("%+v", config.TriggerDCAConfigs),
-	}).Info("loaded trigger dca configs")
+	//logrus.WithFields(logrus.Fields{
+	//	"TriggerDCAConfigs": fmt.Sprintf("%+v", config.TriggerDCAConfigs),
+	//}).Info("loaded trigger dca configs")
 
 	return &config, nil
 }
