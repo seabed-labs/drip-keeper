@@ -23,7 +23,7 @@ type VaultProvider interface {
 }
 
 const (
-	discoveryPeriod = 5
+	discoveryPeriod = 10
 )
 
 func NewVaultProvider(
@@ -50,7 +50,7 @@ func NewVaultProvider(
 				vaultProviderImpl.eventBus.Publish(string(eventbus.VaultConfigTopic), dcaConfig)
 			}
 			if config.ShouldDiscoverNewConfigs {
-				if _, err := vaultProviderImpl.cron.AddFunc(fmt.Sprintf("@every %dh", discoveryPeriod), vaultProviderImpl.discoverConfigs); err != nil {
+				if _, err := vaultProviderImpl.cron.AddFunc(fmt.Sprintf("@every %dm", discoveryPeriod), vaultProviderImpl.discoverConfigs); err != nil {
 					return err
 				}
 				vaultProviderImpl.cron.Start()
