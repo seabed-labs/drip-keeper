@@ -9,6 +9,7 @@ import (
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
 	"github.com/asaskevich/EventBus"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/token"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/robfig/cron/v3"
 	"runtime/debug"
@@ -78,8 +79,14 @@ func NewDCACron(
 
 // TODO(Mocha): We can cache the vault proto configs
 func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*DCACron, error) {
-	logrus.WithField("vault", config.Vault).Info("recieved vault config")
-	if _, ok := dca.DCACrons.Get(config.Vault); ok {
+	logrus.WithField("vault", config.Vault).Info("received vault config")
+	if v, ok := dca.DCACrons.Get(config.Vault); ok {
+		dcaCron := v.(*DCACron)
+		if dcaCron.Config.Swap != config.Swap {
+			logrus.WithField("vault", config.Vault).Info("vault already registered, overriding swap")
+			dca.DCACrons.Set(config.Vault, &dcaCron)
+			return dcaCron, nil
+		}
 		logrus.WithField("vault", config.Vault).Info("vault already registered, skipping cron creation")
 		return nil, nil
 	}
@@ -100,10 +107,8 @@ func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*DCACron
 
 	cronJob := cron.New()
 	runWithConfig := func() {
-		dca.runWithRetry(config, 0, 5, 1)
+		dca.runWithRetry(config.Vault, 0, 5, 1)
 	}
-	// Run the first trigger dca right now and schedule the rest in the future
-	runWithConfig()
 	if _, err := cronJob.AddFunc(fmt.Sprintf("@every %ds", vaultProtoConfigData.Granularity), runWithConfig); err != nil {
 		return nil, err
 	}
@@ -112,6 +117,8 @@ func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*DCACron
 		Cron:   cronJob,
 	}
 	dca.DCACrons.Set(config.Vault, &dcaCron)
+	// Run the first trigger dca right now in case we created this cron past the lastDCAActivation timestamp
+	go runWithConfig()
 	dcaCron.Cron.Start()
 	return &dcaCron, nil
 }
@@ -134,7 +141,20 @@ func (dca *DCACronService) stopCron(
 	return nil
 }
 
-func (dca *DCACronService) runWithRetry(config configs.TriggerDCAConfig, try, maxTry int, timeout int64) {
+func (dca *DCACronService) runWithRetry(vault string, try, maxTry int, timeout int64) {
+	v, ok := dca.DCACrons.Get(vault)
+	if !ok {
+		logrus.
+			WithField("try", try).
+			WithField("maxTry", maxTry).
+			WithField("timeout", timeout).
+			WithField("vault", vault).
+			Error("failed to get dcaCron from DCACrons")
+		return
+	}
+	dcaCron := v.(*DCACron)
+	config := dcaCron.Config
+
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.
@@ -154,7 +174,7 @@ func (dca *DCACronService) runWithRetry(config configs.TriggerDCAConfig, try, ma
 		}
 		logrus.WithError(err).WithField("timeout", timeout).WithField("try", try).Info("waiting before retrying DCA")
 		time.Sleep(time.Duration(timeout) * time.Second)
-		dca.runWithRetry(config, try+1, maxTry, timeout*timeout)
+		dca.runWithRetry(config.Vault, try+1, maxTry, timeout*timeout)
 	}
 }
 
@@ -259,15 +279,25 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 	}
 	logrus.WithField("publicKey", botTokenAAccount.String()).Infof("fetched botTokenAAccount")
 
+	swapTokenAAccount, swapTokenBAccount, err := dca.fetchSwapTokenAccounts(ctx, config)
+	if err != nil {
+		logrus.WithError(err).Errorf("failed to get swap token accounts")
+		return err
+	}
+	config.SwapTokenAAccount = swapTokenAAccount
+	config.SwapTokenBAccount = swapTokenBAccount
+
 	logrus.WithFields(logrus.Fields{
-		"vault":            config.Vault,
-		"tokenAMint":       config.TokenAMint,
-		"tokenBMint":       config.TokenBMint,
-		"i":                vaultData.LastDcaPeriod,
-		"j":                vaultData.LastDcaPeriod + 1,
-		"vaultPeriodI":     vaultPeriodI.String(),
-		"vaultPeriodJ":     vaultPeriodJ.String(),
-		"botTokenAAccount": botTokenAAccount.String(),
+		"vault":             config.Vault,
+		"tokenAMint":        config.TokenAMint,
+		"tokenBMint":        config.TokenBMint,
+		"swapTokenAAcount":  config.SwapTokenAAccount,
+		"swapTokenBAccount": config.SwapTokenBAccount,
+		"i":                 vaultData.LastDcaPeriod,
+		"j":                 vaultData.LastDcaPeriod + 1,
+		"vaultPeriodI":      vaultPeriodI.String(),
+		"vaultPeriodJ":      vaultPeriodJ.String(),
+		"botTokenAAccount":  botTokenAAccount.String(),
 	}).Info("running dca")
 
 	instruction, err = dca.walletProvider.TriggerDCA(ctx, config, vaultPeriodI, vaultPeriodJ, botTokenAAccount)
@@ -375,4 +405,54 @@ func (dca *DCACronService) fetchBotTokenAAccount(
 			Info("fetched vault period")
 	}
 	return botTokenAAccount, instruction, nil
+}
+
+func (dca *DCACronService) fetchSwapTokenAccounts(ctx context.Context, config configs.TriggerDCAConfig) (string, string, error) {
+	// Fetch Token A
+	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, solana.MustPublicKeyFromBase58(config.SwapTokenAAccount), &rpc.GetAccountInfoOpts{
+		Encoding:   solana.EncodingBase64,
+		Commitment: "confirmed",
+		DataSlice:  nil,
+	})
+	if err != nil {
+		return "", "", err
+	}
+	var swapTokenAAccount token.Account
+	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&swapTokenAAccount); err != nil {
+		return "", "", err
+	}
+
+	// Fetch token B
+	resp, err = dca.solClient.GetAccountInfoWithOpts(ctx, solana.MustPublicKeyFromBase58(config.SwapTokenBAccount), &rpc.GetAccountInfoOpts{
+		Encoding:   solana.EncodingBase64,
+		Commitment: "confirmed",
+		DataSlice:  nil,
+	})
+	if err != nil {
+		return "", "", err
+	}
+	var swapTokenBAccount token.Account
+	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&swapTokenBAccount); err != nil {
+		return "", "", err
+	}
+
+	if swapTokenAAccount.Mint.String() == config.TokenAMint && swapTokenBAccount.Mint.String() == config.TokenBMint {
+		// Normal A -> b
+		return config.SwapTokenAAccount, config.SwapTokenBAccount, nil
+	} else if swapTokenAAccount.Mint.String() == config.TokenBMint && swapTokenBAccount.Mint.String() == config.TokenAMint {
+		// Need to swap token accounts for inverse
+		return config.SwapTokenBAccount, config.SwapTokenAAccount, nil
+	}
+	err = fmt.Errorf("token swap token accounts do not match config mints, or the inverse of the config mints")
+	logrus.
+		WithField("swapTokenAAccount", config.SwapTokenAAccount).
+		WithField("swapTokenBAccount", config.SwapTokenBAccount).
+		WithField("swapTokenAMint", swapTokenAAccount.Mint.String()).
+		WithField("swapTokenBMint", swapTokenBAccount.Mint.String()).
+		WithField("configTokenAMint", config.TokenAMint).
+		WithField("configTokenBMint", config.TokenBMint).
+		WithField("vault", config.Vault).
+		WithError(err).
+		Error("failed to get swap token accounts")
+	return "", "", err
 }
