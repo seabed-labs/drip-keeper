@@ -86,10 +86,9 @@ func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*DCACron
 			logrus.WithField("vault", config.Vault).Info("vault already registered, overriding swap")
 			dca.DCACrons.Set(config.Vault, &dcaCron)
 			return dcaCron, nil
-		} else {
-			logrus.WithField("vault", config.Vault).Info("vault already registered, skipping cron creation")
-			return nil, nil
 		}
+		logrus.WithField("vault", config.Vault).Info("vault already registered, skipping cron creation")
+		return nil, nil
 	}
 	logrus.WithField("vault", config.Vault).Info("creating cron")
 	var vaultProtoConfigData drip.VaultProtoConfig
@@ -108,10 +107,8 @@ func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*DCACron
 
 	cronJob := cron.New()
 	runWithConfig := func() {
-		dca.runWithRetry(config, 0, 5, 1)
+		dca.runWithRetry(config.Vault, 0, 5, 1)
 	}
-	// Run the first trigger dca right now and schedule the rest in the future
-	runWithConfig()
 	if _, err := cronJob.AddFunc(fmt.Sprintf("@every %ds", vaultProtoConfigData.Granularity), runWithConfig); err != nil {
 		return nil, err
 	}
@@ -120,6 +117,8 @@ func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*DCACron
 		Cron:   cronJob,
 	}
 	dca.DCACrons.Set(config.Vault, &dcaCron)
+	// Run the first trigger dca right now in case we created this cron past the lastDCAActivation timestamp
+	go runWithConfig()
 	dcaCron.Cron.Start()
 	return &dcaCron, nil
 }
@@ -142,7 +141,20 @@ func (dca *DCACronService) stopCron(
 	return nil
 }
 
-func (dca *DCACronService) runWithRetry(config configs.TriggerDCAConfig, try, maxTry int, timeout int64) {
+func (dca *DCACronService) runWithRetry(vault string, try, maxTry int, timeout int64) {
+	v, ok := dca.DCACrons.Get(vault)
+	if !ok {
+		logrus.
+			WithField("try", try).
+			WithField("maxTry", maxTry).
+			WithField("timeout", timeout).
+			WithField("vault", vault).
+			Error("failed to get dcaCron from DCACrons")
+		return
+	}
+	dcaCron := v.(*DCACron)
+	config := dcaCron.Config
+
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.
@@ -162,7 +174,7 @@ func (dca *DCACronService) runWithRetry(config configs.TriggerDCAConfig, try, ma
 		}
 		logrus.WithError(err).WithField("timeout", timeout).WithField("try", try).Info("waiting before retrying DCA")
 		time.Sleep(time.Duration(timeout) * time.Second)
-		dca.runWithRetry(config, try+1, maxTry, timeout*timeout)
+		dca.runWithRetry(config.Vault, try+1, maxTry, timeout*timeout)
 	}
 }
 
