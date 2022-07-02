@@ -1,4 +1,4 @@
-package client
+package solana
 
 import (
 	"context"
@@ -17,7 +17,7 @@ func NewSolanaClient(
 	config *configs.Config,
 ) (*rpc.Client, error) {
 	url := getURL(config.Environment)
-	//// Maximum number of requests per 10 seconds per IP for a single RPC: 40
+	// Maximum number of requests per 10 seconds per IP for a single RPC: 40
 	rateLimiter := rate.NewLimiter(rate.Every(time.Second*10/40), 1)
 	httpClient := retryablehttp.NewClient()
 	httpClient.RetryWaitMin = time.Second * 5

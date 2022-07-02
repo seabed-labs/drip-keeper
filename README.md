@@ -14,7 +14,11 @@ Setup the `.env` file:
 
 Run the Bot: `go run main.go`
 
-Generate IDL (assumes solana-program is a sibling of keeper-bot): `anchor-go --src=../drip-program/target/idl/drip.json`
+Generate IDL (assumes solana-program is a sibling of drip-kepper): `anchor-go --src=../drip-program/target/idl/drip.json`
+
+Generate Drip Client (assumes drip-backend is a sibling of drip-keeper): `openapi-generator generate -i ../drip-backend/docs/swagger.yaml -g go -o pkg/client/drip --additional-properties=generateInterfaces=true --additional-properties=isGoSubmodule=true --additional-properties=packageName=drip`
+
+TODO(Mocha): Figure out how to generate drip-client as a pkg or instead create a new repo for this
 
 ## Devnet
 

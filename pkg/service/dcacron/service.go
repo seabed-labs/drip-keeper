@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/Dcaf-Protocol/drip-keeper/generated/drip"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/eventbus"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
+	"github.com/asaskevich/EventBus"
 	"github.com/gagliardetto/solana-go"
+	cmap "github.com/orcaman/concurrent-map"
 	"github.com/robfig/cron/v3"
 	"runtime/debug"
 	"strconv"
@@ -19,7 +22,7 @@ import (
 )
 
 type DCACronService struct {
-	DCACrons       []DCACron
+	DCACrons       cmap.ConcurrentMap
 	solClient      *rpc.Client
 	walletProvider *wallet.WalletProvider
 }
@@ -32,40 +35,39 @@ type DCACron struct {
 func NewDCACron(
 	lc fx.Lifecycle,
 	config *configs.Config,
+	eventBus EventBus.Bus,
 	solClient *rpc.Client,
 	walletProvider *wallet.WalletProvider,
 ) (*DCACronService, error) {
-	dcaCronService := DCACronService{walletProvider: walletProvider, solClient: solClient}
-	var dcaCrons []DCACron
-
-	for i := range config.TriggerDCAConfigs {
-		config := config.TriggerDCAConfigs[i]
-		cron, err := dcaCronService.createCron(config)
-		if err != nil {
-			logrus.WithError(err).WithField("vault", config.Vault).Error("failed to create dca cron job")
-			continue
-		}
-		dcaCron := DCACron{
-			Config: config,
-			Cron:   cron,
-		}
-		dcaCrons = append(dcaCrons, dcaCron)
+	logrus.Info("initializing dca cron service")
+	dcaCronService := DCACronService{
+		DCACrons:       cmap.New(),
+		solClient:      solClient,
+		walletProvider: walletProvider,
 	}
-	dcaCronService.DCACrons = dcaCrons
-
+	// Start this before lifecycle to ensure it is subscribed as soon as invoke is called
+	if err := eventBus.Subscribe(string(eventbus.VaultConfigTopic), dcaCronService.createCron); err != nil {
+		return nil, err
+	}
 	lc.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
-			for i := range dcaCronService.DCACrons {
-				dcaCron := dcaCronService.DCACrons[i]
-				dcaCron.Cron.Start()
-			}
-			return nil
-		},
 		OnStop: func(ctx context.Context) error {
-			for i := range dcaCronService.DCACrons {
-				dcaCron := dcaCronService.DCACrons[i]
-				if err := dcaCronService.stopCron(ctx, dcaCron.Cron); err != nil {
-					logrus.WithError(err).WithField("vault", dcaCron.Config.Vault).Error("failed to stop dca cron job")
+			for !dcaCronService.DCACrons.IsEmpty() {
+				if config.ShouldDiscoverNewConfigs {
+					// Don't return err if this fails
+					// we need to stop the cronJobs
+					if err := eventBus.Unsubscribe(string(eventbus.VaultConfigTopic), dcaCronService.createCron); err != nil {
+						logrus.WithError(err).WithField("bus", eventbus.VaultConfigTopic).Error("failed to unsubscribe to event bus")
+					}
+				}
+				for _, key := range dcaCronService.DCACrons.Keys() {
+					v, ok := dcaCronService.DCACrons.Pop(key)
+					if !ok {
+						continue
+					}
+					dcaCron := v.(*DCACron)
+					if err := dcaCronService.stopCron(ctx, dcaCron.Cron); err != nil {
+						logrus.WithError(err).WithField("vault", dcaCron.Config.Vault).Error("failed to stop dca cron job")
+					}
 				}
 			}
 			return nil
@@ -75,7 +77,13 @@ func NewDCACron(
 }
 
 // TODO(Mocha): We can cache the vault proto configs
-func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*cron.Cron, error) {
+func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*DCACron, error) {
+	logrus.WithField("vault", config.Vault).Info("recieved vault config")
+	if _, ok := dca.DCACrons.Get(config.Vault); ok {
+		logrus.WithField("vault", config.Vault).Info("vault already registered, skipping cron creation")
+		return nil, nil
+	}
+	logrus.WithField("vault", config.Vault).Info("creating cron")
 	var vaultProtoConfigData drip.VaultProtoConfig
 	vaultProtoConfigPubKey, err := solana.PublicKeyFromBase58(config.VaultProtoConfig)
 	if err != nil {
@@ -90,16 +98,22 @@ func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*cron.Cr
 	}
 	logrus.WithField("vaultProtoConfig", fmt.Sprintf("%+v", vaultProtoConfigData)).Info("fetched vault proto config")
 
-	cron := cron.New()
+	cronJob := cron.New()
 	runWithConfig := func() {
 		dca.runWithRetry(config, 0, 5, 1)
 	}
 	// Run the first trigger dca right now and schedule the rest in the future
 	runWithConfig()
-	if _, err := cron.AddFunc(fmt.Sprintf("@every %ds", vaultProtoConfigData.Granularity), runWithConfig); err != nil {
+	if _, err := cronJob.AddFunc(fmt.Sprintf("@every %ds", vaultProtoConfigData.Granularity), runWithConfig); err != nil {
 		return nil, err
 	}
-	return cron, nil
+	dcaCron := DCACron{
+		Config: config,
+		Cron:   cronJob,
+	}
+	dca.DCACrons.Set(config.Vault, &dcaCron)
+	dcaCron.Cron.Start()
+	return &dcaCron, nil
 }
 
 func (dca *DCACronService) stopCron(
@@ -142,7 +156,6 @@ func (dca *DCACronService) runWithRetry(config configs.TriggerDCAConfig, try, ma
 		time.Sleep(time.Duration(timeout) * time.Second)
 		dca.runWithRetry(config, try+1, maxTry, timeout*timeout)
 	}
-
 }
 
 func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
@@ -170,6 +183,13 @@ func (dca *DCACronService) run(config configs.TriggerDCAConfig) error {
 			WithField("dripAmount", vaultData.DripAmount).
 			WithField("vault", config.Vault).
 			Info("exiting, drip amount is 0")
+		return nil
+	}
+	if vaultData.DcaActivationTimestamp > time.Now().Unix() {
+		logrus.
+			WithField("DcaActivationTimestamp", time.Unix(vaultData.DcaActivationTimestamp, 0).String()).
+			WithField("vault", config.Vault).
+			Info("exiting, dca already triggered")
 		return nil
 	}
 
