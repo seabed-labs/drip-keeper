@@ -78,7 +78,7 @@ func NewDCACron(
 
 // TODO(Mocha): We can cache the vault proto configs
 func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*DCACron, error) {
-	logrus.WithField("vault", config.Vault).Info("recieved vault config")
+	logrus.WithField("vault", config.Vault).Info("received vault config")
 	if _, ok := dca.DCACrons.Get(config.Vault); ok {
 		logrus.WithField("vault", config.Vault).Info("vault already registered, skipping cron creation")
 		return nil, nil
