@@ -83,8 +83,12 @@ func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*DCACron
 	if v, ok := dca.DCACrons.Get(config.Vault); ok {
 		dcaCron := v.(*DCACron)
 		if dcaCron.Config.Swap != config.Swap {
-			logrus.WithField("vault", config.Vault).Info("vault already registered, overriding swap")
-			dca.DCACrons.Set(config.Vault, &dcaCron)
+			logrus.
+				WithField("vault", config.Vault).
+				WithField("oldSwap", dcaCron.Config.Swap).
+				WithField("newSwap", config.Swap).
+				Info("vault already registered, overriding swap")
+			dca.DCACrons.Set(config.Vault, dcaCron)
 			return dcaCron, nil
 		}
 		logrus.WithField("vault", config.Vault).Info("vault already registered, skipping cron creation")

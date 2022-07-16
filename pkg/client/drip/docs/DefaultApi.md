@@ -1,25 +1,92 @@
-# \InfoApi
+# \DefaultApi
 
 All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**PositionsGet**](InfoApi.md#PositionsGet) | **Get** /positions | Get User Positions
-[**ProtoconfigsGet**](InfoApi.md#ProtoconfigsGet) | **Get** /protoconfigs | Get Proto Configs
-[**RootGet**](InfoApi.md#RootGet) | **Get** / | Health Check
-[**SwaggerJsonGet**](InfoApi.md#SwaggerJsonGet) | **Get** /swagger.json | Swagger spec
-[**SwapConfigsGet**](InfoApi.md#SwapConfigsGet) | **Get** /swapConfigs | Get Token Swaps Configs
-[**SwapsGet**](InfoApi.md#SwapsGet) | **Get** /swaps | Get Token Swaps
-[**TokenpairsGet**](InfoApi.md#TokenpairsGet) | **Get** /tokenpairs | Get Token Pairs
-[**TokensGet**](InfoApi.md#TokensGet) | **Get** /tokens | Get Tokens
-[**VaultperiodsGet**](InfoApi.md#VaultperiodsGet) | **Get** /vaultperiods | Get Vault Periods
-[**VaultsGet**](InfoApi.md#VaultsGet) | **Get** /vaults | Get Supported Vaults
+[**MintPost**](DefaultApi.md#MintPost) | **Post** /mint | Mint tokens (DEVNET ONLY)
+[**PositionsGet**](DefaultApi.md#PositionsGet) | **Get** /positions | Get User Positions
+[**ProtoconfigsGet**](DefaultApi.md#ProtoconfigsGet) | **Get** /protoconfigs | Get Proto Configs
+[**RootGet**](DefaultApi.md#RootGet) | **Get** / | Health Check
+[**SwaggerJsonGet**](DefaultApi.md#SwaggerJsonGet) | **Get** /swagger.json | Swagger spec
+[**SwapConfigsGet**](DefaultApi.md#SwapConfigsGet) | **Get** /swapConfigs | Get Token Swaps Configs
+[**SwapsGet**](DefaultApi.md#SwapsGet) | **Get** /swaps | Get Token Swaps
+[**TokenpairsGet**](DefaultApi.md#TokenpairsGet) | **Get** /tokenpairs | Get Token Pairs
+[**TokensGet**](DefaultApi.md#TokensGet) | **Get** /tokens | Get Tokens
+[**VaultperiodsGet**](DefaultApi.md#VaultperiodsGet) | **Get** /vaultperiods | Get Vault Periods
+[**VaultsGet**](DefaultApi.md#VaultsGet) | **Get** /vaults | Get Supported Vaults
 
+
+
+## MintPost
+
+> MintResponse MintPost(ctx).MintRequest(mintRequest).Execute()
+
+Mint tokens (DEVNET ONLY)
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "./openapi"
+)
+
+func main() {
+    mintRequest := *openapiclient.NewMintRequest("Mint_example", "Wallet_example", "Amount_example") // MintRequest | Pet to add to the store
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.DefaultApi.MintPost(context.Background()).MintRequest(mintRequest).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `DefaultApi.MintPost``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `MintPost`: MintResponse
+    fmt.Fprintf(os.Stdout, "Response from `DefaultApi.MintPost`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiMintPostRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **mintRequest** | [**MintRequest**](MintRequest.md) | Pet to add to the store | 
+
+### Return type
+
+[**MintResponse**](MintResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
 
 
 ## PositionsGet
 
-> []ListPositionsInner PositionsGet(ctx).Wallet(wallet).Execute()
+> []Position PositionsGet(ctx).Wallet(wallet).Execute()
 
 Get User Positions
 
@@ -42,13 +109,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.InfoApi.PositionsGet(context.Background()).Wallet(wallet).Execute()
+    resp, r, err := apiClient.DefaultApi.PositionsGet(context.Background()).Wallet(wallet).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `InfoApi.PositionsGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `DefaultApi.PositionsGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `PositionsGet`: []ListPositionsInner
-    fmt.Fprintf(os.Stdout, "Response from `InfoApi.PositionsGet`: %v\n", resp)
+    // response from `PositionsGet`: []Position
+    fmt.Fprintf(os.Stdout, "Response from `DefaultApi.PositionsGet`: %v\n", resp)
 }
 ```
 
@@ -67,7 +134,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]ListPositionsInner**](ListPositionsInner.md)
+[**[]Position**](Position.md)
 
 ### Authorization
 
@@ -85,7 +152,7 @@ No authorization required
 
 ## ProtoconfigsGet
 
-> []ListProtoConfigsInner ProtoconfigsGet(ctx).TokenA(tokenA).TokenB(tokenB).Execute()
+> []ProtoConfig ProtoconfigsGet(ctx).TokenA(tokenA).TokenB(tokenB).Execute()
 
 Get Proto Configs
 
@@ -109,13 +176,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.InfoApi.ProtoconfigsGet(context.Background()).TokenA(tokenA).TokenB(tokenB).Execute()
+    resp, r, err := apiClient.DefaultApi.ProtoconfigsGet(context.Background()).TokenA(tokenA).TokenB(tokenB).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `InfoApi.ProtoconfigsGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `DefaultApi.ProtoconfigsGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `ProtoconfigsGet`: []ListProtoConfigsInner
-    fmt.Fprintf(os.Stdout, "Response from `InfoApi.ProtoconfigsGet`: %v\n", resp)
+    // response from `ProtoconfigsGet`: []ProtoConfig
+    fmt.Fprintf(os.Stdout, "Response from `DefaultApi.ProtoconfigsGet`: %v\n", resp)
 }
 ```
 
@@ -135,7 +202,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]ListProtoConfigsInner**](ListProtoConfigsInner.md)
+[**[]ProtoConfig**](ProtoConfig.md)
 
 ### Authorization
 
@@ -175,13 +242,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.InfoApi.RootGet(context.Background()).Execute()
+    resp, r, err := apiClient.DefaultApi.RootGet(context.Background()).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `InfoApi.RootGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `DefaultApi.RootGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
     // response from `RootGet`: PingResponse
-    fmt.Fprintf(os.Stdout, "Response from `InfoApi.RootGet`: %v\n", resp)
+    fmt.Fprintf(os.Stdout, "Response from `DefaultApi.RootGet`: %v\n", resp)
 }
 ```
 
@@ -234,13 +301,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.InfoApi.SwaggerJsonGet(context.Background()).Execute()
+    resp, r, err := apiClient.DefaultApi.SwaggerJsonGet(context.Background()).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `InfoApi.SwaggerJsonGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `DefaultApi.SwaggerJsonGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
     // response from `SwaggerJsonGet`: map[string]interface{}
-    fmt.Fprintf(os.Stdout, "Response from `InfoApi.SwaggerJsonGet`: %v\n", resp)
+    fmt.Fprintf(os.Stdout, "Response from `DefaultApi.SwaggerJsonGet`: %v\n", resp)
 }
 ```
 
@@ -273,7 +340,7 @@ No authorization required
 
 ## SwapConfigsGet
 
-> []ListSwapConfigsInner SwapConfigsGet(ctx).Vault(vault).Execute()
+> []SwapConfig SwapConfigsGet(ctx).Vault(vault).Execute()
 
 Get Token Swaps Configs
 
@@ -296,13 +363,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.InfoApi.SwapConfigsGet(context.Background()).Vault(vault).Execute()
+    resp, r, err := apiClient.DefaultApi.SwapConfigsGet(context.Background()).Vault(vault).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `InfoApi.SwapConfigsGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `DefaultApi.SwapConfigsGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `SwapConfigsGet`: []ListSwapConfigsInner
-    fmt.Fprintf(os.Stdout, "Response from `InfoApi.SwapConfigsGet`: %v\n", resp)
+    // response from `SwapConfigsGet`: []SwapConfig
+    fmt.Fprintf(os.Stdout, "Response from `DefaultApi.SwapConfigsGet`: %v\n", resp)
 }
 ```
 
@@ -321,7 +388,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]ListSwapConfigsInner**](ListSwapConfigsInner.md)
+[**[]SwapConfig**](SwapConfig.md)
 
 ### Authorization
 
@@ -339,7 +406,7 @@ No authorization required
 
 ## SwapsGet
 
-> []ListTokenSwapsInner SwapsGet(ctx).TokenPair(tokenPair).Execute()
+> []TokenSwap SwapsGet(ctx).TokenPair(tokenPair).Execute()
 
 Get Token Swaps
 
@@ -362,13 +429,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.InfoApi.SwapsGet(context.Background()).TokenPair(tokenPair).Execute()
+    resp, r, err := apiClient.DefaultApi.SwapsGet(context.Background()).TokenPair(tokenPair).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `InfoApi.SwapsGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `DefaultApi.SwapsGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `SwapsGet`: []ListTokenSwapsInner
-    fmt.Fprintf(os.Stdout, "Response from `InfoApi.SwapsGet`: %v\n", resp)
+    // response from `SwapsGet`: []TokenSwap
+    fmt.Fprintf(os.Stdout, "Response from `DefaultApi.SwapsGet`: %v\n", resp)
 }
 ```
 
@@ -387,7 +454,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]ListTokenSwapsInner**](ListTokenSwapsInner.md)
+[**[]TokenSwap**](TokenSwap.md)
 
 ### Authorization
 
@@ -405,7 +472,7 @@ No authorization required
 
 ## TokenpairsGet
 
-> []ListTokenPairsInner TokenpairsGet(ctx).TokenA(tokenA).TokenB(tokenB).Execute()
+> []TokenPair TokenpairsGet(ctx).TokenA(tokenA).TokenB(tokenB).Execute()
 
 Get Token Pairs
 
@@ -429,13 +496,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.InfoApi.TokenpairsGet(context.Background()).TokenA(tokenA).TokenB(tokenB).Execute()
+    resp, r, err := apiClient.DefaultApi.TokenpairsGet(context.Background()).TokenA(tokenA).TokenB(tokenB).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `InfoApi.TokenpairsGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `DefaultApi.TokenpairsGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `TokenpairsGet`: []ListTokenPairsInner
-    fmt.Fprintf(os.Stdout, "Response from `InfoApi.TokenpairsGet`: %v\n", resp)
+    // response from `TokenpairsGet`: []TokenPair
+    fmt.Fprintf(os.Stdout, "Response from `DefaultApi.TokenpairsGet`: %v\n", resp)
 }
 ```
 
@@ -455,7 +522,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]ListTokenPairsInner**](ListTokenPairsInner.md)
+[**[]TokenPair**](TokenPair.md)
 
 ### Authorization
 
@@ -473,7 +540,7 @@ No authorization required
 
 ## TokensGet
 
-> []ListTokensInner TokensGet(ctx).TokenA(tokenA).TokenB(tokenB).Execute()
+> []Token TokensGet(ctx).TokenA(tokenA).TokenB(tokenB).Execute()
 
 Get Tokens
 
@@ -497,13 +564,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.InfoApi.TokensGet(context.Background()).TokenA(tokenA).TokenB(tokenB).Execute()
+    resp, r, err := apiClient.DefaultApi.TokensGet(context.Background()).TokenA(tokenA).TokenB(tokenB).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `InfoApi.TokensGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `DefaultApi.TokensGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `TokensGet`: []ListTokensInner
-    fmt.Fprintf(os.Stdout, "Response from `InfoApi.TokensGet`: %v\n", resp)
+    // response from `TokensGet`: []Token
+    fmt.Fprintf(os.Stdout, "Response from `DefaultApi.TokensGet`: %v\n", resp)
 }
 ```
 
@@ -523,7 +590,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]ListTokensInner**](ListTokensInner.md)
+[**[]Token**](Token.md)
 
 ### Authorization
 
@@ -541,7 +608,7 @@ No authorization required
 
 ## VaultperiodsGet
 
-> []ListVaultPeriodsInner VaultperiodsGet(ctx).Vault(vault).VaultPeriod(vaultPeriod).Offset(offset).Limit(limit).Execute()
+> []VaultPeriod VaultperiodsGet(ctx).Vault(vault).VaultPeriod(vaultPeriod).Offset(offset).Limit(limit).Execute()
 
 Get Vault Periods
 
@@ -567,13 +634,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.InfoApi.VaultperiodsGet(context.Background()).Vault(vault).VaultPeriod(vaultPeriod).Offset(offset).Limit(limit).Execute()
+    resp, r, err := apiClient.DefaultApi.VaultperiodsGet(context.Background()).Vault(vault).VaultPeriod(vaultPeriod).Offset(offset).Limit(limit).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `InfoApi.VaultperiodsGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `DefaultApi.VaultperiodsGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `VaultperiodsGet`: []ListVaultPeriodsInner
-    fmt.Fprintf(os.Stdout, "Response from `InfoApi.VaultperiodsGet`: %v\n", resp)
+    // response from `VaultperiodsGet`: []VaultPeriod
+    fmt.Fprintf(os.Stdout, "Response from `DefaultApi.VaultperiodsGet`: %v\n", resp)
 }
 ```
 
@@ -595,7 +662,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]ListVaultPeriodsInner**](ListVaultPeriodsInner.md)
+[**[]VaultPeriod**](VaultPeriod.md)
 
 ### Authorization
 
@@ -613,7 +680,7 @@ No authorization required
 
 ## VaultsGet
 
-> []ListVaultsInner VaultsGet(ctx).TokenA(tokenA).TokenB(tokenB).ProtoConfig(protoConfig).Execute()
+> []Vault VaultsGet(ctx).TokenA(tokenA).TokenB(tokenB).ProtoConfig(protoConfig).Execute()
 
 Get Supported Vaults
 
@@ -638,13 +705,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.InfoApi.VaultsGet(context.Background()).TokenA(tokenA).TokenB(tokenB).ProtoConfig(protoConfig).Execute()
+    resp, r, err := apiClient.DefaultApi.VaultsGet(context.Background()).TokenA(tokenA).TokenB(tokenB).ProtoConfig(protoConfig).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `InfoApi.VaultsGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `DefaultApi.VaultsGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `VaultsGet`: []ListVaultsInner
-    fmt.Fprintf(os.Stdout, "Response from `InfoApi.VaultsGet`: %v\n", resp)
+    // response from `VaultsGet`: []Vault
+    fmt.Fprintf(os.Stdout, "Response from `DefaultApi.VaultsGet`: %v\n", resp)
 }
 ```
 
@@ -665,7 +732,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]ListVaultsInner**](ListVaultsInner.md)
+[**[]Vault**](Vault.md)
 
 ### Authorization
 

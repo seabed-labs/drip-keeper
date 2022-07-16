@@ -1,4 +1,4 @@
-# ListTokenSwapsInner
+# TokenSwap
 
 ## Properties
 
@@ -14,159 +14,159 @@ Name | Type | Description | Notes
 
 ## Methods
 
-### NewListTokenSwapsInner
+### NewTokenSwap
 
-`func NewListTokenSwapsInner(pubkey string, mint string, authority string, feeAccount string, tokenAAccount string, tokenBAccount string, pair string, ) *ListTokenSwapsInner`
+`func NewTokenSwap(pubkey string, mint string, authority string, feeAccount string, tokenAAccount string, tokenBAccount string, pair string, ) *TokenSwap`
 
-NewListTokenSwapsInner instantiates a new ListTokenSwapsInner object
+NewTokenSwap instantiates a new TokenSwap object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewListTokenSwapsInnerWithDefaults
+### NewTokenSwapWithDefaults
 
-`func NewListTokenSwapsInnerWithDefaults() *ListTokenSwapsInner`
+`func NewTokenSwapWithDefaults() *TokenSwap`
 
-NewListTokenSwapsInnerWithDefaults instantiates a new ListTokenSwapsInner object
+NewTokenSwapWithDefaults instantiates a new TokenSwap object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
 ### GetPubkey
 
-`func (o *ListTokenSwapsInner) GetPubkey() string`
+`func (o *TokenSwap) GetPubkey() string`
 
 GetPubkey returns the Pubkey field if non-nil, zero value otherwise.
 
 ### GetPubkeyOk
 
-`func (o *ListTokenSwapsInner) GetPubkeyOk() (*string, bool)`
+`func (o *TokenSwap) GetPubkeyOk() (*string, bool)`
 
 GetPubkeyOk returns a tuple with the Pubkey field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetPubkey
 
-`func (o *ListTokenSwapsInner) SetPubkey(v string)`
+`func (o *TokenSwap) SetPubkey(v string)`
 
 SetPubkey sets Pubkey field to given value.
 
 
 ### GetMint
 
-`func (o *ListTokenSwapsInner) GetMint() string`
+`func (o *TokenSwap) GetMint() string`
 
 GetMint returns the Mint field if non-nil, zero value otherwise.
 
 ### GetMintOk
 
-`func (o *ListTokenSwapsInner) GetMintOk() (*string, bool)`
+`func (o *TokenSwap) GetMintOk() (*string, bool)`
 
 GetMintOk returns a tuple with the Mint field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetMint
 
-`func (o *ListTokenSwapsInner) SetMint(v string)`
+`func (o *TokenSwap) SetMint(v string)`
 
 SetMint sets Mint field to given value.
 
 
 ### GetAuthority
 
-`func (o *ListTokenSwapsInner) GetAuthority() string`
+`func (o *TokenSwap) GetAuthority() string`
 
 GetAuthority returns the Authority field if non-nil, zero value otherwise.
 
 ### GetAuthorityOk
 
-`func (o *ListTokenSwapsInner) GetAuthorityOk() (*string, bool)`
+`func (o *TokenSwap) GetAuthorityOk() (*string, bool)`
 
 GetAuthorityOk returns a tuple with the Authority field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetAuthority
 
-`func (o *ListTokenSwapsInner) SetAuthority(v string)`
+`func (o *TokenSwap) SetAuthority(v string)`
 
 SetAuthority sets Authority field to given value.
 
 
 ### GetFeeAccount
 
-`func (o *ListTokenSwapsInner) GetFeeAccount() string`
+`func (o *TokenSwap) GetFeeAccount() string`
 
 GetFeeAccount returns the FeeAccount field if non-nil, zero value otherwise.
 
 ### GetFeeAccountOk
 
-`func (o *ListTokenSwapsInner) GetFeeAccountOk() (*string, bool)`
+`func (o *TokenSwap) GetFeeAccountOk() (*string, bool)`
 
 GetFeeAccountOk returns a tuple with the FeeAccount field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetFeeAccount
 
-`func (o *ListTokenSwapsInner) SetFeeAccount(v string)`
+`func (o *TokenSwap) SetFeeAccount(v string)`
 
 SetFeeAccount sets FeeAccount field to given value.
 
 
 ### GetTokenAAccount
 
-`func (o *ListTokenSwapsInner) GetTokenAAccount() string`
+`func (o *TokenSwap) GetTokenAAccount() string`
 
 GetTokenAAccount returns the TokenAAccount field if non-nil, zero value otherwise.
 
 ### GetTokenAAccountOk
 
-`func (o *ListTokenSwapsInner) GetTokenAAccountOk() (*string, bool)`
+`func (o *TokenSwap) GetTokenAAccountOk() (*string, bool)`
 
 GetTokenAAccountOk returns a tuple with the TokenAAccount field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTokenAAccount
 
-`func (o *ListTokenSwapsInner) SetTokenAAccount(v string)`
+`func (o *TokenSwap) SetTokenAAccount(v string)`
 
 SetTokenAAccount sets TokenAAccount field to given value.
 
 
 ### GetTokenBAccount
 
-`func (o *ListTokenSwapsInner) GetTokenBAccount() string`
+`func (o *TokenSwap) GetTokenBAccount() string`
 
 GetTokenBAccount returns the TokenBAccount field if non-nil, zero value otherwise.
 
 ### GetTokenBAccountOk
 
-`func (o *ListTokenSwapsInner) GetTokenBAccountOk() (*string, bool)`
+`func (o *TokenSwap) GetTokenBAccountOk() (*string, bool)`
 
 GetTokenBAccountOk returns a tuple with the TokenBAccount field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTokenBAccount
 
-`func (o *ListTokenSwapsInner) SetTokenBAccount(v string)`
+`func (o *TokenSwap) SetTokenBAccount(v string)`
 
 SetTokenBAccount sets TokenBAccount field to given value.
 
 
 ### GetPair
 
-`func (o *ListTokenSwapsInner) GetPair() string`
+`func (o *TokenSwap) GetPair() string`
 
 GetPair returns the Pair field if non-nil, zero value otherwise.
 
 ### GetPairOk
 
-`func (o *ListTokenSwapsInner) GetPairOk() (*string, bool)`
+`func (o *TokenSwap) GetPairOk() (*string, bool)`
 
 GetPairOk returns a tuple with the Pair field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetPair
 
-`func (o *ListTokenSwapsInner) SetPair(v string)`
+`func (o *TokenSwap) SetPair(v string)`
 
 SetPair sets Pair field to given value.
 

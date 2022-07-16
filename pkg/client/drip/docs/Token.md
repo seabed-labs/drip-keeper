@@ -1,88 +1,93 @@
-# ListTokensInner
+# Token
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Pubkey** | **string** |  | 
-**Symbol** | **string** |  | 
+**Symbol** | Pointer to **string** |  | [optional] 
 **Decimals** | **int32** |  | 
 
 ## Methods
 
-### NewListTokensInner
+### NewToken
 
-`func NewListTokensInner(pubkey string, symbol string, decimals int32, ) *ListTokensInner`
+`func NewToken(pubkey string, decimals int32, ) *Token`
 
-NewListTokensInner instantiates a new ListTokensInner object
+NewToken instantiates a new Token object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewListTokensInnerWithDefaults
+### NewTokenWithDefaults
 
-`func NewListTokensInnerWithDefaults() *ListTokensInner`
+`func NewTokenWithDefaults() *Token`
 
-NewListTokensInnerWithDefaults instantiates a new ListTokensInner object
+NewTokenWithDefaults instantiates a new Token object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
 ### GetPubkey
 
-`func (o *ListTokensInner) GetPubkey() string`
+`func (o *Token) GetPubkey() string`
 
 GetPubkey returns the Pubkey field if non-nil, zero value otherwise.
 
 ### GetPubkeyOk
 
-`func (o *ListTokensInner) GetPubkeyOk() (*string, bool)`
+`func (o *Token) GetPubkeyOk() (*string, bool)`
 
 GetPubkeyOk returns a tuple with the Pubkey field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetPubkey
 
-`func (o *ListTokensInner) SetPubkey(v string)`
+`func (o *Token) SetPubkey(v string)`
 
 SetPubkey sets Pubkey field to given value.
 
 
 ### GetSymbol
 
-`func (o *ListTokensInner) GetSymbol() string`
+`func (o *Token) GetSymbol() string`
 
 GetSymbol returns the Symbol field if non-nil, zero value otherwise.
 
 ### GetSymbolOk
 
-`func (o *ListTokensInner) GetSymbolOk() (*string, bool)`
+`func (o *Token) GetSymbolOk() (*string, bool)`
 
 GetSymbolOk returns a tuple with the Symbol field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetSymbol
 
-`func (o *ListTokensInner) SetSymbol(v string)`
+`func (o *Token) SetSymbol(v string)`
 
 SetSymbol sets Symbol field to given value.
 
+### HasSymbol
+
+`func (o *Token) HasSymbol() bool`
+
+HasSymbol returns a boolean if a field has been set.
 
 ### GetDecimals
 
-`func (o *ListTokensInner) GetDecimals() int32`
+`func (o *Token) GetDecimals() int32`
 
 GetDecimals returns the Decimals field if non-nil, zero value otherwise.
 
 ### GetDecimalsOk
 
-`func (o *ListTokensInner) GetDecimalsOk() (*int32, bool)`
+`func (o *Token) GetDecimalsOk() (*int32, bool)`
 
 GetDecimalsOk returns a tuple with the Decimals field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetDecimals
 
-`func (o *ListTokensInner) SetDecimals(v int32)`
+`func (o *Token) SetDecimals(v int32)`
 
 SetDecimals sets Decimals field to given value.
 
