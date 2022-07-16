@@ -88,6 +88,7 @@ func (dca *DCACronService) createCron(config configs.TriggerDCAConfig) (*DCACron
 				WithField("oldSwap", dcaCron.Config.Swap).
 				WithField("newSwap", config.Swap).
 				Info("vault already registered, overriding swap")
+			dcaCron.Config = config
 			dca.DCACrons.Set(config.Vault, dcaCron)
 			return dcaCron, nil
 		}
