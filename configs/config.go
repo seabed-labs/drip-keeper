@@ -1,14 +1,15 @@
 package configs
 
 import (
-	"os"
-
+	"github.com/Dcaf-Protocol/drip-keeper/generated/drip"
+	ag_solanago "github.com/gagliardetto/solana-go"
 	"github.com/ilyakaznacheev/cleanenv"
 	_ "github.com/joho/godotenv/autoload"
 )
 
 type Config struct {
 	Environment              Environment        `yaml:"environment" env:"ENV" env-default:"DEVNET"`
+	DripProgramID            string             `yaml:"dripProgramID" env:"DRIP_PROGRAM_ID"  env-default:"4VBtW5cjQJk8tme9fXMiok6xAfDSwv5Qp7LN6arWEP7x"`
 	Wallet                   string             `yaml:"wallet"      env:"KEEPER_BOT_WALLET"`
 	ShouldDiscoverNewConfigs bool               `yaml:"shouldDiscoverNewConfigs"      env-default:"true"`
 	DiscoveryURL             string             `yaml:"discoveryURL" env:"DISCOVERY_URL" env-default:"devnet.api.drip.dcaf.so"`
@@ -46,10 +47,6 @@ const PROJECT_ROOT_OVERRIDE = "PROJECT_ROOT_OVERRIDE"
 func New() (*Config, error) {
 	LoadEnv()
 
-	environment := Environment(os.Getenv(ENV))
-	if environment == NilEnv {
-		environment = LocalnetEnv
-	}
 	// EXAMPLE: Load from config
 	// configFileName := "config.yaml"
 	// logrus.WithField("configFileName", configFileName).Infof("loading config file")
@@ -63,6 +60,7 @@ func New() (*Config, error) {
 	if err := cleanenv.ReadEnv(&config); err != nil {
 		return nil, err
 	}
+	drip.ProgramID = ag_solanago.MustPublicKeyFromBase58(config.DripProgramID)
 	return &config, nil
 }
 
