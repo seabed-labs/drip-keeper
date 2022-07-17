@@ -1,12 +1,8 @@
 package configs
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/ilyakaznacheev/cleanenv"
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/sirupsen/logrus"
 )
 
 type Config struct {
@@ -47,30 +43,10 @@ const PROJECT_ROOT_OVERRIDE = "PROJECT_ROOT_OVERRIDE"
 
 func New() (*Config, error) {
 	LoadEnv()
-
-	environment := Environment(os.Getenv(ENV))
-	if environment == NilEnv {
-		environment = LocalnetEnv
-	}
-	configFileName := fmt.Sprintf("./configs/%s.yaml", environment)
-	configFileName = fmt.Sprintf("%s/%s", GetProjectRoot(), configFileName)
-
-	logrus.WithField("configFileName", configFileName).Infof("loading config file")
-	configFile, err := os.Open(configFileName)
-	if err != nil {
-		return nil, err
-	}
-	defer configFile.Close()
-
 	var config Config
-	if err := cleanenv.ReadConfig(configFileName, &config); err != nil {
+	if err := cleanenv.ReadEnv(&config); err != nil {
 		return nil, err
 	}
-
-	//logrus.WithFields(logrus.Fields{
-	//	"TriggerDCAConfigs": fmt.Sprintf("%+v", config.TriggerDCAConfigs),
-	//}).Info("loaded trigger dca configs")
-
 	return &config, nil
 }
 
