@@ -1,6 +1,8 @@
 package configs
 
 import (
+	"os"
+
 	"github.com/ilyakaznacheev/cleanenv"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -43,6 +45,20 @@ const PROJECT_ROOT_OVERRIDE = "PROJECT_ROOT_OVERRIDE"
 
 func New() (*Config, error) {
 	LoadEnv()
+
+	environment := Environment(os.Getenv(ENV))
+	if environment == NilEnv {
+		environment = LocalnetEnv
+	}
+	// EXAMPLE: Load from config
+	// configFileName := "config.yaml"
+	// logrus.WithField("configFileName", configFileName).Infof("loading config file")
+	// configFile, err := os.Open(configFileName)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// defer configFile.Close()
+
 	var config Config
 	if err := cleanenv.ReadEnv(&config); err != nil {
 		return nil, err
