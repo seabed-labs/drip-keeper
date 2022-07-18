@@ -17,13 +17,13 @@ func NewHeartbeatWorker(
 		logrus.Info("heartbeat url is empty")
 		return nil
 	}
-	log := logrus.WithField("heartbeatURL", *config.HeartbeatURL)
+	log := logrus.WithField("heartbeatURL", config.HeartbeatURL)
 	log.Info("initializing heartbeat worker")
 	cronJob := cron.New()
 	cronFunc := func() {
 		log.
 			Info("logging heartbeat")
-		resp, err := http.Get(*config.HeartbeatURL)
+		resp, err := http.Get(config.HeartbeatURL)
 		if err != nil {
 			log.WithError(err).Error("failed to ping heartbeat")
 		} else {
