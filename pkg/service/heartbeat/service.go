@@ -13,7 +13,7 @@ func NewHeartbeatWorker(
 	lc fx.Lifecycle,
 	config *configs.Config,
 ) error {
-	if config.HeartbeatURL == nil || *config.HeartbeatURL == "" {
+	if config.HeartbeatURL == "" {
 		logrus.Info("heartbeat url is empty")
 		return nil
 	}
