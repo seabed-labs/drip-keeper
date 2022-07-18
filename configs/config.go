@@ -14,7 +14,7 @@ type Config struct {
 	ShouldDiscoverNewConfigs bool               `yaml:"shouldDiscoverNewConfigs"      env-default:"true"`
 	TriggerDCAConfigs        []TriggerDCAConfig `yaml:"triggerDCA"`
 	DiscoveryURL             string             `yaml:"discoveryURL" env:"DISCOVERY_URL" env-default:"devnet.api.drip.dcaf.so"`
-	HeartbeatURL             *string            `yaml:"HeartbeatURL" env:"HEARTBEAT_URL"`
+	HeartbeatURL             string             `yaml:"HeartbeatURL" env:"HEARTBEAT_URL"`
 }
 
 type TriggerDCAConfig struct {
