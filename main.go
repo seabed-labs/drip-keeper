@@ -5,6 +5,7 @@ import (
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/client/solana"
 	dca "github.com/Dcaf-Protocol/drip-keeper/pkg/service/dcacron"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/eventbus"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/heartbeat"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/vaultprovider"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
@@ -26,6 +27,7 @@ func main() {
 			// NewDCACron should be invoked first
 			dca.NewDCACron,
 			vaultprovider.NewVaultProvider,
+			heartbeat.NewHeartbeatWorker,
 		),
 		fx.NopLogger,
 	)

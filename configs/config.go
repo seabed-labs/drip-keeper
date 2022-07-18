@@ -12,8 +12,9 @@ type Config struct {
 	DripProgramID            string             `yaml:"dripProgramID" env:"DRIP_PROGRAM_ID"  env-default:"4VBtW5cjQJk8tme9fXMiok6xAfDSwv5Qp7LN6arWEP7x"`
 	Wallet                   string             `yaml:"wallet"      env:"KEEPER_BOT_WALLET"`
 	ShouldDiscoverNewConfigs bool               `yaml:"shouldDiscoverNewConfigs"      env-default:"true"`
-	DiscoveryURL             string             `yaml:"discoveryURL" env:"DISCOVERY_URL" env-default:"devnet.api.drip.dcaf.so"`
 	TriggerDCAConfigs        []TriggerDCAConfig `yaml:"triggerDCA"`
+	DiscoveryURL             string             `yaml:"discoveryURL" env:"DISCOVERY_URL" env-default:"devnet.api.drip.dcaf.so"`
+	HeartbeatURL             *string            `yaml:"HeartbeatURL" env:"HEARTBEAT_URL"`
 }
 
 type TriggerDCAConfig struct {

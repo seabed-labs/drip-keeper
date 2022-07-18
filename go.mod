@@ -6,12 +6,14 @@ go 1.18
 replace github.com/dfuse-io/logging => github.com/streamingfast/logging v0.0.0-20210109005628-b97a57253f70
 
 require (
+	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/gagliardetto/binary v0.6.1
 	github.com/gagliardetto/gofuzz v1.2.2
 	github.com/gagliardetto/solana-go v1.4.0
 	github.com/gagliardetto/treeout v0.1.4
 	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/ilyakaznacheev/cleanenv v1.2.6
+	github.com/orcaman/concurrent-map v1.0.0
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.8.1
 	go.uber.org/fx v1.15.0
@@ -23,7 +25,6 @@ require (
 	contrib.go.opencensus.io/exporter/stackdriver v0.13.4 // indirect
 	github.com/BurntSushi/toml v1.0.0 // indirect
 	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
-	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
 	github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
 	github.com/dfuse-io/logging v0.0.0-20210109005628-b97a57253f70 // indirect
@@ -40,7 +41,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mostynb/zstdpool-freelist v0.0.0-20201229113212-927304c0c3b1 // indirect
-	github.com/orcaman/concurrent-map v1.0.0 // indirect
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125 // indirect
 	github.com/tidwall/gjson v1.9.3 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
