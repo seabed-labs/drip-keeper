@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/client/solana"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/alert"
 	dca "github.com/Dcaf-Protocol/drip-keeper/pkg/service/dcacron"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/eventbus"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/heartbeat"
@@ -22,6 +23,7 @@ func main() {
 			solana.NewSolanaClient,
 			wallet.New,
 			eventbus.NewEventBus,
+			alert.NewService,
 		),
 		fx.Invoke(
 			// NewDCACron should be invoked first

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/Dcaf-Protocol/drip-keeper/generated/drip"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/alert"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/eventbus"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
 	"github.com/asaskevich/EventBus"
@@ -26,6 +27,7 @@ type DCACronService struct {
 	DCACrons       cmap.ConcurrentMap
 	solClient      *rpc.Client
 	walletProvider *wallet.WalletProvider
+	alertService   alert.Service
 }
 
 type DCACron struct {
@@ -39,12 +41,14 @@ func NewDCACron(
 	eventBus EventBus.Bus,
 	solClient *rpc.Client,
 	walletProvider *wallet.WalletProvider,
+	alertService alert.Service,
 ) (*DCACronService, error) {
 	logrus.Info("initializing dca cron service")
 	dcaCronService := DCACronService{
 		DCACrons:       cmap.New(),
 		solClient:      solClient,
 		walletProvider: walletProvider,
+		alertService:   alertService,
 	}
 	// Start this before lifecycle to ensure it is subscribed as soon as invoke is called
 	if err := eventBus.Subscribe(string(eventbus.VaultConfigTopic), dcaCronService.createCron); err != nil {
@@ -162,6 +166,7 @@ func (dca *DCACronService) runWithRetry(vault string, try, maxTry int, timeout i
 
 	defer func() {
 		if r := recover(); r != nil {
+			_ = dca.alertService.SendError(context.Background(), fmt.Errorf("panic in runWithRetry"))
 			logrus.
 				WithField("r", r).
 				WithField("stackTrace", string(debug.Stack())).
@@ -173,6 +178,7 @@ func (dca *DCACronService) runWithRetry(vault string, try, maxTry int, timeout i
 		}
 	}()
 	if err := dca.run(config); err != nil {
+		_ = dca.alertService.SendError(context.Background(), fmt.Errorf("err in runWithRetry, try %d, maxTry %d, err %w", try, maxTry, err))
 		if try >= maxTry {
 			logrus.WithField("try", try).WithField("maxTry", maxTry).WithField("timeout", timeout).Info("failed to DCA with retry")
 			return

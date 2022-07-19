@@ -15,6 +15,9 @@ type Config struct {
 	TriggerDCAConfigs        []TriggerDCAConfig `yaml:"triggerDCA"`
 	DiscoveryURL             string             `yaml:"discoveryURL" env:"DISCOVERY_URL" env-default:"devnet.api.drip.dcaf.so"`
 	HeartbeatURL             string             `yaml:"HeartbeatURL" env:"HEARTBEAT_URL"`
+	// Discord Compatible webhook URL
+	DiscordWebhookID          string `yaml:"DiscordWebhookID" env:"DISCORD_WEBHOOK_ID"`
+	DiscordWebhookAccessToken string `yaml:"DiscordWebhookAccessToken" env:"DISCORD_ACCESS_TOKEN"`
 }
 
 type TriggerDCAConfig struct {
