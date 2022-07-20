@@ -1,8 +1,5 @@
 name: Build and Test
 
-env:
-  GOPRIVATE: github.com/dcaf-labs/solana-go-clients,github.com/dcaf-labs/drip-client/drip-go
-
 on:
   pull_request:
   push: { branches: main }
@@ -12,6 +9,7 @@ env:
   ENV: ${{ secrets.ENV }}
   SOLANA_PROGRAMS: f13f47f08c40b79c83e83e3dd57c5561f74ee7e3
   GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+  GOPRIVATE: github.com/dcaf-labs/solana-go-clients,github.com/dcaf-labs/drip-client/drip-go
 
 jobs:
   build_cli_deps:
