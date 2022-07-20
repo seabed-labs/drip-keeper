@@ -2,14 +2,15 @@ package alert
 
 import (
 	"context"
+	"strconv"
+	"time"
+
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/disgoorg/disgo/webhook"
 	"github.com/disgoorg/snowflake/v2"
 	"github.com/sirupsen/logrus"
-	"strconv"
-	"time"
 )
 
 type Service interface {
@@ -48,7 +49,6 @@ func NewService(
 
 type serviceImpl struct {
 	enabled                   bool
-	alertURL                  string
 	client                    webhook.Client
 	discordWebhookAccessToken string
 	discordWebhookID          string
