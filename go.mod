@@ -7,18 +7,18 @@ replace github.com/dfuse-io/logging => github.com/streamingfast/logging v0.0.0-2
 
 require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
+	github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220720031734-3bbf122037a2
+	github.com/dcaf-labs/solana-go-clients v0.0.0-20220718230302-c0c931c67f32
 	github.com/disgoorg/disgo v0.13.5
+	github.com/disgoorg/snowflake/v2 v2.0.0
 	github.com/gagliardetto/binary v0.6.1
-	github.com/gagliardetto/gofuzz v1.2.2
 	github.com/gagliardetto/solana-go v1.4.0
-	github.com/gagliardetto/treeout v0.1.4
 	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/ilyakaznacheev/cleanenv v1.2.6
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.9.0
 	go.uber.org/fx v1.15.0
-	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306
 )
 
@@ -28,12 +28,10 @@ require (
 	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
 	github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
-	github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220720031734-3bbf122037a2 // indirect
-	github.com/dcaf-labs/solana-go-clients v0.0.0-20220718230302-c0c931c67f32 // indirect
 	github.com/dfuse-io/logging v0.0.0-20210109005628-b97a57253f70 // indirect
 	github.com/disgoorg/log v1.2.0 // indirect
-	github.com/disgoorg/snowflake/v2 v2.0.0 // indirect
 	github.com/fatih/color v1.9.0 // indirect
+	github.com/gagliardetto/treeout v0.1.4 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.1 // indirect
@@ -56,6 +54,7 @@ require (
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20211013180041-c96bc1413d57 // indirect
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
+	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558 // indirect
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/tools v0.1.8-0.20211029000441-d6a9af8af023 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
@@ -65,7 +64,7 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
-	github.com/davecgh/go-spew v1.1.1
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/joho/godotenv v1.4.0
 	github.com/mr-tron/base58 v1.2.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect

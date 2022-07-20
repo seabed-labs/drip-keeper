@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Dcaf-Protocol/drip-keeper/generated/drip"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
+	"github.com/dcaf-labs/solana-go-clients/pkg/drip"
 	"github.com/gagliardetto/solana-go"
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	"github.com/gagliardetto/solana-go/rpc"

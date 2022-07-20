@@ -1,7 +1,7 @@
 package configs
 
 import (
-	"github.com/Dcaf-Protocol/drip-keeper/generated/drip"
+	"github.com/dcaf-labs/solana-go-clients/pkg/drip"
 	ag_solanago "github.com/gagliardetto/solana-go"
 	"github.com/ilyakaznacheev/cleanenv"
 	_ "github.com/joho/godotenv/autoload"
