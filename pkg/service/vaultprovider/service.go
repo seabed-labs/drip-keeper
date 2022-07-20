@@ -3,10 +3,11 @@ package vaultprovider
 import (
 	"context"
 	"fmt"
+
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/client/drip"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/eventbus"
 	"github.com/asaskevich/EventBus"
+	"github.com/dcaf-labs/drip-client/drip-go"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
