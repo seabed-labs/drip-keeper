@@ -72,7 +72,7 @@ func NewVaultProvider(
 
 func (vaultProviderImpl vaultProviderImpl) discoverConfigs() {
 	logrus.Info("searching for new configs")
-	res, _, err := vaultProviderImpl.dripClient.DefaultApi.SwapConfigsGet(context.Background()).Execute()
+	res, _, err := vaultProviderImpl.dripClient.DefaultApi.SpltokenswapconfigsGet(context.Background()).Execute()
 	if err != nil {
 		logrus.
 			WithError(err).

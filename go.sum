@@ -87,6 +87,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220720031734-3bbf122037a2 h1:ZwIstAuyLpX+r4+PYWCObJbc8J4SczfyMtP/CBbMkFg=
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220720031734-3bbf122037a2/go.mod h1:n+pIHhLuIGB2b8+Z4SDzwLcZPS+1VCOe/wRoKdvDW5o=
+github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220725212510-669a4d25a454 h1:Q5f1rgwg0JJCPsACMQ9x22o2hfXX8ciiUgDtelRuUzI=
+github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220725212510-669a4d25a454/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220718230302-c0c931c67f32 h1:xtqtQ6pnqxAY8xL2oSKY+zB8rbqmiyB0NniP+8L5wmA=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220718230302-c0c931c67f32/go.mod h1:t4x3fOFS/BidtNeFKM+zxzH18k5cTGOgwNPbqGlaIqs=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
