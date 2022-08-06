@@ -72,29 +72,68 @@ func NewVaultProvider(
 
 func (vaultProviderImpl vaultProviderImpl) discoverConfigs() {
 	logrus.Info("searching for new configs")
-	res, _, err := vaultProviderImpl.dripClient.DefaultApi.SpltokenswapconfigsGet(context.Background()).Execute()
+	dripSPLTokenSwapConfigs, _, err := vaultProviderImpl.dripClient.DefaultApi.SpltokenswapconfigsGet(context.Background()).Execute()
 	if err != nil {
 		logrus.
 			WithError(err).
 			WithField("host", vaultProviderImpl.dripClient.GetConfig().Host).
-			Error("failed to get token swaps from backend")
+			Error("failed to get spl token swaps configs from backend")
 		return
 	}
-	for i := range res {
-		backendConfig := res[i]
-		vaultProviderImpl.eventBus.Publish(string(eventbus.VaultConfigTopic), configs.TriggerDCAConfig{
-			Vault:              backendConfig.Vault,
-			VaultProtoConfig:   backendConfig.VaultProtoConfig,
-			VaultTokenAAccount: backendConfig.VaultTokenAAccount,
-			VaultTokenBAccount: backendConfig.VaultTokenBAccount,
-			TokenAMint:         backendConfig.TokenAMint,
-			TokenBMint:         backendConfig.TokenBMint,
-			SwapTokenMint:      backendConfig.SwapTokenMint,
-			SwapTokenAAccount:  backendConfig.SwapTokenAAccount,
-			SwapTokenBAccount:  backendConfig.SwapTokenBAccount,
-			SwapFeeAccount:     backendConfig.SwapFeeAccount,
-			SwapAuthority:      backendConfig.SwapAuthority,
-			Swap:               backendConfig.Swap,
-		})
+	dripOrcaWhirlpoolConfigs, _, err := vaultProviderImpl.dripClient.DefaultApi.OrcawhirlpoolconfigsGet(context.Background()).Execute()
+	if err != nil {
+		logrus.
+			WithError(err).
+			WithField("host", vaultProviderImpl.dripClient.GetConfig().Host).
+			Error("failed to get orca whirlpool configs from backend")
+		return
+	}
+	vaultSet := make(map[string]bool)
+	splTokenSwapConfigsByVault := make(map[string]drip.SplTokenSwapConfig)
+	for i := range dripSPLTokenSwapConfigs {
+		splTokenSwapConfig := dripSPLTokenSwapConfigs[i]
+		splTokenSwapConfigsByVault[splTokenSwapConfig.Vault] = splTokenSwapConfig
+		vaultSet[splTokenSwapConfig.Vault] = true
+	}
+	orcaWhirlpoolConfigsByVault := make(map[string]drip.OrcaWhirlpoolConfig)
+	for i := range dripOrcaWhirlpoolConfigs {
+		orcaWhirlpoolConfig := dripOrcaWhirlpoolConfigs[i]
+		orcaWhirlpoolConfigsByVault[orcaWhirlpoolConfig.Vault] = orcaWhirlpoolConfig
+		vaultSet[orcaWhirlpoolConfig.Vault] = true
+	}
+	for vault := range vaultSet {
+		dripSPLTokenSwapConfig, validTokenSwapConfig := splTokenSwapConfigsByVault[vault]
+		dripOrcaWhirlpoolConfig, validOrcaWhirlpoolConfig := orcaWhirlpoolConfigsByVault[vault]
+		dripConfig := configs.DripConfig{}
+		if validTokenSwapConfig {
+			dripConfig.Vault = dripSPLTokenSwapConfig.Vault
+			dripConfig.VaultProtoConfig = dripSPLTokenSwapConfig.VaultProtoConfig
+			dripConfig.VaultTokenAAccount = dripSPLTokenSwapConfig.VaultTokenAAccount
+			dripConfig.VaultTokenBAccount = dripSPLTokenSwapConfig.VaultTokenBAccount
+			dripConfig.SPLTokenSwapConfig = configs.SPLTokenSwapConfig{
+				TokenAMint:        dripSPLTokenSwapConfig.TokenAMint,
+				TokenBMint:        dripSPLTokenSwapConfig.TokenBMint,
+				SwapTokenAAccount: dripSPLTokenSwapConfig.SwapTokenAAccount,
+				SwapTokenBAccount: dripSPLTokenSwapConfig.SwapTokenBAccount,
+				SwapTokenMint:     dripSPLTokenSwapConfig.SwapTokenMint,
+				SwapFeeAccount:    dripSPLTokenSwapConfig.SwapFeeAccount,
+				SwapAuthority:     dripSPLTokenSwapConfig.SwapAuthority,
+				Swap:              dripSPLTokenSwapConfig.Swap,
+			}
+		}
+		if validOrcaWhirlpoolConfig {
+			dripConfig.Vault = dripOrcaWhirlpoolConfig.Vault
+			dripConfig.VaultProtoConfig = dripOrcaWhirlpoolConfig.VaultProtoConfig
+			dripConfig.VaultTokenAAccount = dripOrcaWhirlpoolConfig.VaultTokenAAccount
+			dripConfig.VaultTokenBAccount = dripOrcaWhirlpoolConfig.VaultTokenBAccount
+			dripConfig.OrcaWhirlpoolConfig = configs.OrcaWhirlpoolConfig{
+				SwapTokenAAccount: dripOrcaWhirlpoolConfig.TokenVaultA,
+				SwapTokenBAccount: dripOrcaWhirlpoolConfig.TokenVaultB,
+				Oracle:            dripOrcaWhirlpoolConfig.Oracle,
+				Whirlpool:         dripOrcaWhirlpoolConfig.Whirlpool,
+			}
+		}
+
+		vaultProviderImpl.eventBus.Publish(string(eventbus.VaultConfigTopic), dripConfig)
 	}
 }

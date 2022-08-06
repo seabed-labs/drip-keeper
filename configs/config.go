@@ -8,31 +8,43 @@ import (
 )
 
 type Config struct {
-	Environment              Environment        `yaml:"environment" env:"ENV" env-default:"DEVNET"`
-	DripProgramID            string             `yaml:"dripProgramID" env:"DRIP_PROGRAM_ID"  env-default:"4VBtW5cjQJk8tme9fXMiok6xAfDSwv5Qp7LN6arWEP7x"`
-	Wallet                   string             `yaml:"wallet"      env:"KEEPER_BOT_WALLET"`
-	ShouldDiscoverNewConfigs bool               `yaml:"shouldDiscoverNewConfigs"      env-default:"true"`
-	TriggerDCAConfigs        []TriggerDCAConfig `yaml:"triggerDCA"`
-	DiscoveryURL             string             `yaml:"discoveryURL" env:"DISCOVERY_URL" env-default:"devnet.api.drip.dcaf.so"`
-	HeartbeatURL             string             `yaml:"HeartbeatURL" env:"HEARTBEAT_URL"`
+	Environment              Environment  `yaml:"environment" env:"ENV" env-default:"DEVNET"`
+	DripProgramID            string       `yaml:"dripProgramID" env:"DRIP_PROGRAM_ID"  env-default:"4VBtW5cjQJk8tme9fXMiok6xAfDSwv5Qp7LN6arWEP7x"`
+	Wallet                   string       `yaml:"wallet"      env:"KEEPER_BOT_WALLET"`
+	ShouldDiscoverNewConfigs bool         `yaml:"shouldDiscoverNewConfigs"      env-default:"true"`
+	TriggerDCAConfigs        []DripConfig `yaml:"triggerDCA"`
+	DiscoveryURL             string       `yaml:"discoveryURL" env:"DISCOVERY_URL" env-default:"devnet.api.drip.dcaf.so"`
+	HeartbeatURL             string       `yaml:"HeartbeatURL" env:"HEARTBEAT_URL"`
 	// Discord Compatible webhook URL
 	DiscordWebhookID          string `yaml:"DiscordWebhookID" env:"DISCORD_WEBHOOK_ID"`
 	DiscordWebhookAccessToken string `yaml:"DiscordWebhookAccessToken" env:"DISCORD_ACCESS_TOKEN"`
 }
 
-type TriggerDCAConfig struct {
-	Vault              string `yaml:"vault"`
-	VaultProtoConfig   string `yaml:"vaultProtoConfig"`
-	VaultTokenAAccount string `yaml:"vaultTokenAAccount"`
-	VaultTokenBAccount string `yaml:"vaultTokenBAccount"`
-	TokenAMint         string `yaml:"tokenAMint"`
-	TokenBMint         string `yaml:"tokenBMint"`
-	SwapTokenMint      string `yaml:"swapTokenMint"`
-	SwapTokenAAccount  string `yaml:"swapTokenAAccount"`
-	SwapTokenBAccount  string `yaml:"swapTokenBAccount"`
-	SwapFeeAccount     string `yaml:"swapFeeAccount"`
-	SwapAuthority      string `yaml:"swapAuthority"`
-	Swap               string `yaml:"swap"`
+type SPLTokenSwapConfig struct {
+	TokenAMint        string `yaml:"tokenAMint"`
+	TokenBMint        string `yaml:"tokenBMint"`
+	SwapTokenAAccount string `yaml:"swapTokenAAccount"`
+	SwapTokenBAccount string `yaml:"swapTokenBAccount"`
+	SwapTokenMint     string `yaml:"swapTokenMint"`
+	SwapFeeAccount    string `yaml:"swapFeeAccount"`
+	SwapAuthority     string `yaml:"swapAuthority"`
+	Swap              string `yaml:"swap"`
+}
+
+type OrcaWhirlpoolConfig struct {
+	SwapTokenAAccount string `yaml:"swapTokenAAccount"`
+	SwapTokenBAccount string `yaml:"swapTokenBAccount"`
+	Oracle            string `yaml:"oracle"`
+	Whirlpool         string `yaml:"whirlpool"`
+}
+
+type DripConfig struct {
+	Vault               string              `yaml:"vault"`
+	VaultProtoConfig    string              `yaml:"vaultProtoConfig"`
+	VaultTokenAAccount  string              `yaml:"vaultTokenAAccount"`
+	VaultTokenBAccount  string              `yaml:"vaultTokenBAccount"`
+	SPLTokenSwapConfig  SPLTokenSwapConfig  `yaml:"SPLTokenSwapConfig"`
+	OrcaWhirlpoolConfig OrcaWhirlpoolConfig `yaml:"orcaWhirlpoolConfig"`
 }
 
 type Environment string
