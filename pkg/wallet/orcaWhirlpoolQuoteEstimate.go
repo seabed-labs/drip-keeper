@@ -31,6 +31,7 @@ func GetOrcaWhirlpoolQuoteEstimate(
 	tokenAMint string,
 	tokenBMint string,
 	inputToken string,
+	tickSpacing uint16,
 	env configs.Environment,
 ) (QuoteEstimate, error) {
 	root := configs.GetProjectRoot()
@@ -40,6 +41,7 @@ func GetOrcaWhirlpoolQuoteEstimate(
 		fmt.Sprintf(" %s", tokenAMint) +
 		fmt.Sprintf(" %s", tokenBMint) +
 		fmt.Sprintf(" %s", inputToken) +
+		fmt.Sprintf(" %d", tickSpacing) +
 		fmt.Sprintf(" %s", env)
 	parts := strings.Fields(command)
 	data, err := exec.Command(parts[0], parts[1:]...).Output()

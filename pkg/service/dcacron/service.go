@@ -186,9 +186,11 @@ func (dca *DCACronService) runWithRetry(vault string, try, maxTry int, timeout i
 		}
 	}()
 	if err := dca.run(config); err != nil {
-		_ = dca.alertService.SendError(context.Background(), fmt.Errorf("err in runWithRetry, try %d, maxTry %d, err %w", try, maxTry, err))
 		if try >= maxTry {
 			logrus.WithField("try", try).WithField("maxTry", maxTry).WithField("timeout", timeout).Info("failed to DCA with retry")
+			if alertErr := dca.alertService.SendError(context.Background(), fmt.Errorf("err in runWithRetry, try %d, maxTry %d, err %w", try, maxTry, err)); alertErr != nil {
+				logrus.WithError(err).Errorf("failed to send error alert, alertErr: %s", alertErr)
+			}
 			return
 		}
 		logrus.WithError(err).WithField("timeout", timeout).WithField("try", try).Info("waiting before retrying DCA")
@@ -197,6 +199,7 @@ func (dca *DCACronService) runWithRetry(vault string, try, maxTry int, timeout i
 	}
 }
 
+//nolint:funlen
 func (dca *DCACronService) run(dripConfig configs.DripConfig) error {
 	logrus.WithField("vault", dripConfig.Vault).Info("preparing trigger dca")
 
@@ -292,18 +295,21 @@ func (dca *DCACronService) run(dripConfig configs.DripConfig) error {
 	}
 	logrus.WithField("publicKey", botTokenAFeeAccount.String()).Infof("fetched botTokenAFeeAccount")
 
-	if dripConfig.OrcaWhirlpoolConfig.Whirlpool != "" {
-		newInstructions, err := dca.dripSplTokenSwap(ctx, dripConfig, vaultData, vaultPeriodI, vaultPeriodJ, botTokenAFeeAccount)
-		if err != nil {
-			return err
-		}
-		instructions = append(instructions, newInstructions...)
-	} else if dripConfig.SPLTokenSwapConfig.Swap != "" {
+	switch {
+	case dripConfig.OrcaWhirlpoolConfig.Whirlpool != "":
 		newInstructions, err := dca.dripOrcaWhirlpool(ctx, dripConfig, vaultData, vaultPeriodI, vaultPeriodJ, botTokenAFeeAccount)
 		if err != nil {
 			return err
 		}
 		instructions = append(instructions, newInstructions...)
+	case dripConfig.SPLTokenSwapConfig.Swap != "":
+		newInstructions, err := dca.dripSplTokenSwap(ctx, dripConfig, vaultData, vaultPeriodI, vaultPeriodJ, botTokenAFeeAccount)
+		if err != nil {
+			return err
+		}
+		instructions = append(instructions, newInstructions...)
+	default:
+		logrus.WithField("vault", dripConfig.Vault).Infof("missing drip config")
 	}
 	if err := dca.walletProvider.Send(ctx, instructions...); err != nil {
 		logrus.
@@ -328,8 +334,9 @@ func (dca *DCACronService) dripOrcaWhirlpool(
 	botTokenAFeeAccount solana.PublicKey,
 ) ([]solana.Instruction, error) {
 	var instructions []solana.Instruction
-	// Get WhrilpoolsConfig
-	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, solana.MustPublicKeyFromBase58(dripConfig.OrcaWhirlpoolConfig.Whirlpool), &rpc.GetAccountInfoOpts{
+	// Get WhirlpoolsConfig
+	whirlpoolPubkey := solana.MustPublicKeyFromBase58(dripConfig.OrcaWhirlpoolConfig.Whirlpool)
+	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, whirlpoolPubkey, &rpc.GetAccountInfoOpts{
 		Encoding:   solana.EncodingBase64,
 		Commitment: "confirmed",
 		DataSlice:  nil,
@@ -344,9 +351,10 @@ func (dca *DCACronService) dripOrcaWhirlpool(
 
 	quoteEstimate, err := wallet.GetOrcaWhirlpoolQuoteEstimate(
 		whirlpoolData.WhirlpoolsConfig.String(),
+		whirlpoolData.TokenMintA.String(),
+		whirlpoolData.TokenMintB.String(),
 		vaultData.TokenAMint.String(),
-		vaultData.TokenBMint.String(),
-		vaultData.TokenAMint.String(),
+		whirlpoolData.TickSpacing,
 		dca.env,
 	)
 	if err != nil {
@@ -365,8 +373,21 @@ func (dca *DCACronService) dripOrcaWhirlpool(
 		"botTokenAFeeAccount": botTokenAFeeAccount.String(),
 	}).Info("running drip")
 
-	instruction, err := dca.walletProvider.DripOrcaWhirlpool(ctx, dripConfig,
-		vaultPeriodI, vaultPeriodJ, botTokenAFeeAccount, solana.MustPublicKeyFromBase58(quoteEstimate.TickArray0), solana.MustPublicKeyFromBase58(quoteEstimate.TickArray1), solana.MustPublicKeyFromBase58(quoteEstimate.TickArray2))
+	instruction, err := dca.walletProvider.DripOrcaWhirlpool(ctx,
+		wallet.DripOrcaWhirlpoolParams{
+			VaultData:           vaultData,
+			Vault:               solana.MustPublicKeyFromBase58(dripConfig.Vault),
+			VaultPeriodI:        vaultPeriodI,
+			VaultPeriodJ:        vaultPeriodJ,
+			BotTokenAFeeAccount: botTokenAFeeAccount,
+			WhirlpoolData:       whirlpoolData,
+			Whirlpool:           whirlpoolPubkey,
+			TickArray0:          solana.MustPublicKeyFromBase58(quoteEstimate.TickArray0),
+			TickArray1:          solana.MustPublicKeyFromBase58(quoteEstimate.TickArray1),
+			TickArray2:          solana.MustPublicKeyFromBase58(quoteEstimate.TickArray2),
+			Oracle:              solana.MustPublicKeyFromBase58(dripConfig.OrcaWhirlpoolConfig.Oracle),
+		},
+	)
 	if err != nil {
 		logrus.
 			WithError(err).

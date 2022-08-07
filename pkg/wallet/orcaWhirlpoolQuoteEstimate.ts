@@ -12,9 +12,9 @@ import { PublicKey, Keypair, Connection } from "@solana/web3.js";
 
 async function getQuote() {
     const args = process.argv.slice(2);
-    if (args.length < 5) {
+    if (args.length < 6) {
         console.log(JSON.stringify({
-            error: `invalid number of arguments ${args.length}`
+            error: `invalid number of arguments ${args.length}, expected 6`
         }));
         return;
     }
@@ -22,7 +22,8 @@ async function getQuote() {
     const tokenAMint = new PublicKey(args[1]);
     const tokenBMint = new PublicKey(args[2]);
     const inputToken = new PublicKey(args[3]);
-    const connection = args[4] === "MAINNET"? "https://api.mainnet-beta.solana.com" : "https://api.devnet.solana.com";
+    const tickSpacing = Number(args[4]);
+    const connection = args[5] === "MAINNET"? "https://api.mainnet-beta.solana.com" : "https://api.devnet.solana.com";
 
     // Don't need to sign anything, so a random keypair is fine
     const wallet = new NodeWallet(Keypair.generate());
@@ -35,13 +36,13 @@ async function getQuote() {
     // @ts-ignore - orca uses an older anchor version, so the provider is incompatible
     const ctx = WhirlpoolContext.withProvider(provider, ORCA_WHIRLPOOL_PROGRAM_ID);
     const whirlpoolClient = buildWhirlpoolClient(ctx);
-
+    // console.log(config, tokenAMint, tokenBMint, )
     const whirlpoolPda = PDAUtil.getWhirlpool(
         ORCA_WHIRLPOOL_PROGRAM_ID,
         config,
         tokenAMint,
         tokenBMint,
-        64,
+        tickSpacing,
     );
 
     const whirlpool = await whirlpoolClient.getPool(whirlpoolPda.publicKey, true);
@@ -73,10 +74,16 @@ async function getQuote() {
     console.log(JSON.stringify(swapQuoteString));
 }
 
-try {
-    getQuote();
-} catch(e) {
-    console.log(JSON.stringify({
-        error: e
-    }));
+async function main() {
+    try {
+        await getQuote();
+    } catch(e) {
+        console.log(JSON.stringify({
+            error: e.toString()
+        }));
+    }
 }
+
+main();
+
+
