@@ -20,6 +20,7 @@ func NewSolanaClient(
 	// Maximum number of requests per 10 seconds per IP for a single RPC: 40
 	rateLimiter := rate.NewLimiter(rate.Every(time.Second*10/40), 1)
 	httpClient := retryablehttp.NewClient()
+	httpClient.Logger = nil
 	httpClient.RetryWaitMin = time.Second * 5
 	httpClient.RetryMax = 3
 	httpClient.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, retry int) {
