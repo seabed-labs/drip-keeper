@@ -203,7 +203,7 @@ func (dca *DCACronService) runWithRetry(vault string, try, maxTry int, timeout i
 func (dca *DCACronService) run(dripConfig configs.DripConfig) error {
 	logrus.WithField("vault", dripConfig.Vault).Info("preparing trigger dca")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 	defer cancel()
 
 	var vaultData drip.Vault
@@ -349,6 +349,7 @@ func (dca *DCACronService) dripOrcaWhirlpool(
 		return []solana.Instruction{}, err
 	}
 
+	// TODO(Mocha): Check that the tick arrays are initialized
 	quoteEstimate, err := wallet.GetOrcaWhirlpoolQuoteEstimate(
 		whirlpoolData.WhirlpoolsConfig.String(),
 		whirlpoolData.TokenMintA.String(),
