@@ -12,17 +12,27 @@ Setup the `.env` file:
 1. Create `.env` in the root
 2. Set `KEEPER_BOT_WALLET` env var with the contents of the json from `solana-keygen`
 
+Install dependencies (needed for orca whirlpools)
+1. install node `v16.13.0`
+2. `npm i`
+
 Run the Bot: `go run main.go`
 
-Generate IDL (assumes solana-program is a sibling of drip-kepper): `anchor-go --src=../drip-program/target/idl/drip.json`
-
-Generate Drip Client (assumes drip-backend is a sibling of drip-keeper): `openapi-generator generate -i ../drip-backend/docs/swagger.yaml -g go -o pkg/client/drip --additional-properties=generateInterfaces=true --additional-properties=isGoSubmodule=true --additional-properties=packageName=drip`
-
-TODO(Mocha): Figure out how to generate drip-client as a pkg or instead create a new repo for this
 
 ## Devnet
 
-To run the bot in devnet run:
+To run the bot against devnet:
 `ENV=DEVNET go run main.go`.
 
-This will use the `devnet.yaml` config (the output of the solana-programs `yarn setup:dev`).
+## Heroku
+Enable the nodejs buildpack (needed because the bot spins off a node subprocess to use the orca SDK).
+```bash
+heroku buildpacks:add --index 1 heroku/nodejs -a keeper-bot-devnet
+# verify with
+heroku buildpacks -a keeper-bot-devnet
+# The output should look like the following (go should be last)
+# === keeper-bot-devnet Buildpack URLs
+# 1. heroku/nodejs
+# 2. heroku/go
+
+```

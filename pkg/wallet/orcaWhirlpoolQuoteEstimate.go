@@ -36,7 +36,7 @@ func GetOrcaWhirlpoolQuoteEstimate(
 ) (QuoteEstimate, error) {
 	root := configs.GetProjectRoot()
 	scriptPath := fmt.Sprintf("%s/pkg/wallet/orcaWhirlpoolQuoteEstimate.ts", root)
-	command := fmt.Sprintf("ts-node %s", scriptPath) +
+	command := fmt.Sprintf("npx ts-node %s", scriptPath) +
 		fmt.Sprintf(" %s", config) +
 		fmt.Sprintf(" %s", tokenAMint) +
 		fmt.Sprintf(" %s", tokenBMint) +

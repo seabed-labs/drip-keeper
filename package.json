@@ -8,18 +8,7 @@
     "@solana/spl-token-swap": "0.1.2",
     "buffer-layout": "1.2.2",
     "prettier": "2.5.1",
-    "should": "13.2.3",
-    "sinon": "13.0.1",
-    "yaml": "1.10.2"
-  },
-  "devDependencies": {
-    "@types/mocha": "9.1.0",
-    "husky": "7.0.4",
-    "mocha": "9.1.4",
-    "ts-mocha": "10.0.0",
+    "ts-node": "^10.9.1",
     "typescript": "4.4.4"
-  },
-  "scripts": {
-    "quote": "npm run ts-node scripts/orcaWhirlpoolQuoteEstimate.ts"
   }
 }
