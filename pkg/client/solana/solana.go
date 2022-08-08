@@ -49,9 +49,9 @@ func NewSolanaClient(
 func getURL(env configs.Environment) string {
 	switch env {
 	case configs.DevnetEnv:
-		return rpc.DevNet_RPC
+		return "https://devnet.genesysgo.net"
 	case configs.MainnetEnv:
-		return rpc.MainNetBeta_RPC
+		return "https://ssc-dao.genesysgo.net"
 	case configs.NilEnv:
 		fallthrough
 	case configs.LocalnetEnv:
