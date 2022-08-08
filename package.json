@@ -1,4 +1,6 @@
 {
+  "name": "keeper-bot-devnet",
+  "version": "1.0.0",
   "license": "UNLICENSED",
   "dependencies": {
     "@orca-so/common-sdk": "^0.1.0",
