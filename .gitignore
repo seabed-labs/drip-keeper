@@ -1,7 +1,5 @@
-solana-programs/
 **/node_modules/
 .idea/
-test-ledger/
 .env
 
 # Binaries for programs and plugins
