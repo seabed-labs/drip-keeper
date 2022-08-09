@@ -97,6 +97,25 @@ func (w *WalletProvider) DripOrcaWhirlpool(
 	return txBuilder.ValidateAndBuild()
 }
 
+type InitializeTickArrayParams struct {
+	Whirlpool  solana.PublicKey
+	StartIndex int32
+	TickArray  solana.PublicKey
+}
+
+func (w *WalletProvider) InitializeTickArray(
+	ctx context.Context,
+	params InitializeTickArrayParams,
+) (solana.Instruction, error) {
+	txBuilder := whirlpool.NewInitializeTickArrayInstructionBuilder()
+	txBuilder.SetWhirlpoolAccount(params.Whirlpool)
+	txBuilder.SetFunderAccount(w.Wallet.PublicKey())
+	txBuilder.SetTickArrayAccount(params.TickArray)
+	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
+	txBuilder.SetStartTickIndex(params.StartIndex)
+	return txBuilder.ValidateAndBuild()
+}
+
 func (w *WalletProvider) DripSPLTokenSwap(
 	ctx context.Context, config configs.DripConfig, vaultPeriodI, vaultPeriodJ, botTokenAAccount solana.PublicKey,
 ) (solana.Instruction, error) {
@@ -157,6 +176,9 @@ func (w *WalletProvider) CreateTokenAccount(
 func (w *WalletProvider) Send(
 	ctx context.Context, instructions ...solana.Instruction,
 ) error {
+	if len(instructions) == 0 {
+		return nil
+	}
 	recent, err := w.Client.GetRecentBlockhash(ctx, rpc.CommitmentConfirmed)
 	if err != nil {
 		return err
