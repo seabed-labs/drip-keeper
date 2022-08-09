@@ -3,6 +3,7 @@ package dca
 import (
 	"context"
 	"fmt"
+	"math"
 	"runtime/debug"
 	"strconv"
 	"time"
@@ -349,7 +350,9 @@ func (dca *DCACronService) dripOrcaWhirlpool(
 		return []solana.Instruction{}, err
 	}
 
-	// TODO(Mocha): Check that the tick arrays are initialized
+	if err := dca.ensureTickArrays(ctx, dripConfig, vaultData, whirlpoolData); err != nil {
+		return []solana.Instruction{}, err
+	}
 	quoteEstimate, err := wallet.GetOrcaWhirlpoolQuoteEstimate(
 		whirlpoolData.WhirlpoolsConfig.String(),
 		whirlpoolData.TokenMintA.String(),
@@ -399,6 +402,74 @@ func (dca *DCACronService) dripOrcaWhirlpool(
 	instructions = append(instructions, instruction)
 
 	return instructions, nil
+}
+
+func (dca *DCACronService) ensureTickArrays(
+	ctx context.Context,
+	dripConfig configs.DripConfig,
+	vault drip.Vault,
+	whirlpoolData whirlpool.Whirlpool,
+) error {
+	whirlpoolPubkey := solana.MustPublicKeyFromBase58(dripConfig.OrcaWhirlpoolConfig.Whirlpool)
+	var instructions []solana.Instruction
+	realIndex := math.Floor(float64(whirlpoolData.TickCurrentIndex) / float64(whirlpoolData.TickSpacing) / 88.0)
+	startTickIndex := int32(realIndex) * int32(whirlpoolData.TickSpacing) * 88
+
+	aToB := vault.TokenAMint.String() == whirlpoolData.TokenMintA.String()
+	var tickArrayIndexs []int32
+	if aToB {
+		tickArrayIndexs = []int32{
+			startTickIndex,
+			startTickIndex - int32(whirlpoolData.TickSpacing*88)*1,
+			startTickIndex - int32(whirlpoolData.TickSpacing*88)*2,
+		}
+	} else {
+		tickArrayIndexs = []int32{
+			startTickIndex,
+			startTickIndex + int32(whirlpoolData.TickSpacing*88)*1,
+			startTickIndex + int32(whirlpoolData.TickSpacing*88)*2,
+		}
+	}
+	for _, tickArrayIndex := range tickArrayIndexs {
+		tickArrayPubkey, _, _ := solana.FindProgramAddress([][]byte{
+			[]byte("tick_array"),
+			whirlpoolPubkey[:],
+			[]byte(strconv.FormatInt(int64(tickArrayIndex), 10)),
+		}, whirlpool.ProgramID)
+		// Use GetAccountInfoWithOpts so we can pass in a commitment level
+		if _, err := dca.solClient.GetAccountInfoWithOpts(ctx, tickArrayPubkey, &rpc.GetAccountInfoOpts{
+			Encoding:   solana.EncodingBase64,
+			Commitment: "confirmed",
+			DataSlice:  nil,
+		}); err != nil && err.Error() == "not found" {
+			initTickArrayInstruction, err := dca.walletProvider.InitializeTickArray(ctx,
+				wallet.InitializeTickArrayParams{
+					Whirlpool:  whirlpoolPubkey,
+					StartIndex: tickArrayIndex,
+					TickArray:  tickArrayPubkey,
+				})
+			if err != nil {
+				logrus.
+					WithError(err).
+					Errorf("failed to create InitializeTickArrayParams instruction")
+				return err
+			}
+			instructions = append(instructions, initTickArrayInstruction)
+		}
+	}
+	if err := dca.walletProvider.Send(ctx, instructions...); err != nil {
+		logrus.
+			WithError(err).
+			WithField("whirlpool", dripConfig.OrcaWhirlpoolConfig.Whirlpool).
+			WithField("numInstructions", len(instructions)).
+			Errorf("failed to initialize tick arrays")
+		return err
+	}
+	logrus.
+		WithField("whirlpool", dripConfig.OrcaWhirlpoolConfig.Whirlpool).
+		WithField("numInstructions", len(instructions)).
+		Info("initialized tick arrays")
+	return nil
 }
 
 func (dca *DCACronService) dripSplTokenSwap(
