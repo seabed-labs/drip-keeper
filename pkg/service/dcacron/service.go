@@ -583,7 +583,7 @@ func (dca *DCACronService) fetchBotTokenAFeeAccount(
 	var instruction solana.Instruction
 
 	if resp, err := dca.solClient.GetTokenAccountBalance(ctx, botTokenAAccount, "confirmed"); err != nil {
-		instruction, err = dca.walletProvider.CreateTokenAccount(ctx, vault.TokenAMint.String())
+		instruction, err = dca.walletProvider.CreateTokenAccount(ctx, dca.walletProvider.FeeWalletPubkey, vault.TokenAMint)
 		if err != nil {
 			logrus.
 				WithError(err).

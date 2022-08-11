@@ -171,12 +171,12 @@ func (w *WalletProvider) InitVaultPeriod(
 }
 
 func (w *WalletProvider) CreateTokenAccount(
-	ctx context.Context, tokenMint string,
+	ctx context.Context, owner solana.PublicKey, tokenMint solana.PublicKey,
 ) (solana.Instruction, error) {
 	txBuilder := associatedtokenaccount.NewCreateInstructionBuilder()
-	txBuilder.SetMint(solana.MustPublicKeyFromBase58(tokenMint))
+	txBuilder.SetMint(tokenMint)
 	txBuilder.SetPayer(w.Wallet.PublicKey())
-	txBuilder.SetWallet(w.Wallet.PublicKey())
+	txBuilder.SetWallet(owner)
 	return txBuilder.ValidateAndBuild()
 }
 
