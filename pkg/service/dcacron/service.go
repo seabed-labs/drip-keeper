@@ -568,13 +568,14 @@ func (dca *DCACronService) fetchBotTokenAFeeAccount(
 	ctx context.Context, vault drip.Vault,
 ) (solana.PublicKey, solana.Instruction, error) {
 	botTokenAAccount, _, err := solana.FindAssociatedTokenAddress(
-		dca.walletProvider.Wallet.PublicKey(),
+		dca.walletProvider.FeeWalletPubkey,
 		vault.TokenAMint,
 	)
 	if err != nil {
 		logrus.
 			WithError(err).
 			WithField("dcaProgram", drip.ProgramID.String()).
+			WithField("feeWallet", dca.walletProvider.FeeWalletPubkey.String()).
 			WithField("mint", vault.TokenAMint.String()).
 			Errorf("failed to get botTokenAAccount")
 		return solana.PublicKey{}, nil, err

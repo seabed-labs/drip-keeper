@@ -11,6 +11,7 @@ type Config struct {
 	Environment              Environment  `yaml:"environment" env:"ENV" env-default:"DEVNET"`
 	DripProgramID            string       `yaml:"dripProgramID" env:"DRIP_PROGRAM_ID"  env-default:"dripTrkvSyQKvkyWg7oi4jmeEGMA5scSYowHArJ9Vwk"`
 	Wallet                   string       `yaml:"wallet"      env:"KEEPER_BOT_WALLET"`
+	FeeWallet                string       `yaml:"feeWallet"      env:"KEEPER_BOT_FEE_WALLET" env-default:"H7pb5fjhDygia45TeyhyE1JDmQXSuC5FrdXeSjA9kQ9T"`
 	ShouldDiscoverNewConfigs bool         `yaml:"shouldDiscoverNewConfigs"      env-default:"true"`
 	TriggerDCAConfigs        []DripConfig `yaml:"triggerDCA"`
 	DiscoveryURL             string       `yaml:"discoveryURL" env:"DISCOVERY_URL" env-default:"devnet.api.drip.dcaf.so"`

@@ -16,8 +16,9 @@ import (
 )
 
 type WalletProvider struct {
-	Client *rpc.Client
-	Wallet *solana.Wallet
+	Client          *rpc.Client
+	Wallet          *solana.Wallet
+	FeeWalletPubkey solana.PublicKey
 }
 
 func New(
@@ -43,9 +44,15 @@ func New(
 		}
 		WalletProvider.Wallet = solWallet
 	}
+	if config.FeeWallet != "" {
+		WalletProvider.FeeWalletPubkey = solana.MustPublicKeyFromBase58(config.FeeWallet)
+	} else {
+		WalletProvider.FeeWalletPubkey = WalletProvider.Wallet.PublicKey()
+	}
 	logrus.
-		WithFields(logrus.Fields{"publicKey": WalletProvider.Wallet.PublicKey()}).
-		Infof("loaded wallet")
+		WithField("Wallet", WalletProvider.Wallet.PublicKey()).
+		WithField("FeeWalletPubkey", WalletProvider.FeeWalletPubkey.String()).
+		Infof("loaded wallets")
 	return &WalletProvider, nil
 }
 
