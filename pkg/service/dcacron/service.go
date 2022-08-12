@@ -3,7 +3,6 @@ package dca
 import (
 	"context"
 	"fmt"
-	"math"
 	"runtime/debug"
 	"strconv"
 	"time"
@@ -14,10 +13,8 @@ import (
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
 	"github.com/asaskevich/EventBus"
 	"github.com/dcaf-labs/solana-go-clients/pkg/drip"
-	"github.com/dcaf-labs/solana-go-clients/pkg/whirlpool"
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/robfig/cron/v3"
@@ -200,13 +197,17 @@ func (dca *DCACronService) runWithRetry(vault string, try, maxTry int, timeout i
 	}
 }
 
+// TODO(Mocha): this function shouldn't be this long
+// it should just verify the vault can drip
+// then orchestrate instructions
+// then send them
 //nolint:funlen
 func (dca *DCACronService) run(dripConfig configs.DripConfig) error {
 	logrus.WithField("vault", dripConfig.Vault).Info("preparing trigger dca")
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 	defer cancel()
-
+	// TODO(Mocha): consider moving this vault verification logic somewhere else
 	var vaultData drip.Vault
 	vaultPubKey := solana.MustPublicKeyFromBase58(dripConfig.Vault)
 	// Use GetAccountInfoWithOpts so we can pass in a commitment level
@@ -326,195 +327,7 @@ func (dca *DCACronService) run(dripConfig configs.DripConfig) error {
 	return nil
 }
 
-func (dca *DCACronService) dripOrcaWhirlpool(
-	ctx context.Context,
-	dripConfig configs.DripConfig,
-	vaultData drip.Vault,
-	vaultPeriodI solana.PublicKey,
-	vaultPeriodJ solana.PublicKey,
-	botTokenAFeeAccount solana.PublicKey,
-) ([]solana.Instruction, error) {
-	var instructions []solana.Instruction
-	// Get WhirlpoolsConfig
-	whirlpoolPubkey := solana.MustPublicKeyFromBase58(dripConfig.OrcaWhirlpoolConfig.Whirlpool)
-	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, whirlpoolPubkey, &rpc.GetAccountInfoOpts{
-		Encoding:   solana.EncodingBase64,
-		Commitment: "confirmed",
-		DataSlice:  nil,
-	})
-	if err != nil {
-		return []solana.Instruction{}, err
-	}
-	var whirlpoolData whirlpool.Whirlpool
-	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&whirlpoolData); err != nil {
-		return []solana.Instruction{}, err
-	}
-
-	if err := dca.ensureTickArrays(ctx, dripConfig, vaultData, whirlpoolData); err != nil {
-		return []solana.Instruction{}, err
-	}
-	quoteEstimate, err := wallet.GetOrcaWhirlpoolQuoteEstimate(
-		whirlpoolData.WhirlpoolsConfig.String(),
-		whirlpoolData.TokenMintA.String(),
-		whirlpoolData.TokenMintB.String(),
-		vaultData.TokenAMint.String(),
-		whirlpoolData.TickSpacing,
-		dca.env,
-	)
-	if err != nil {
-		return []solana.Instruction{}, err
-	}
-	logrus.WithFields(logrus.Fields{
-		"vault":               dripConfig.Vault,
-		"tokenAMint":          vaultData.TokenAMint.String(),
-		"tokenBMint":          vaultData.TokenBMint.String(),
-		"swapTokenAAcount":    dripConfig.OrcaWhirlpoolConfig.SwapTokenAAccount,
-		"swapTokenBAccount":   dripConfig.OrcaWhirlpoolConfig.SwapTokenBAccount,
-		"i":                   vaultData.LastDripPeriod,
-		"j":                   vaultData.LastDripPeriod + 1,
-		"vaultPeriodI":        vaultPeriodI.String(),
-		"vaultPeriodJ":        vaultPeriodJ.String(),
-		"botTokenAFeeAccount": botTokenAFeeAccount.String(),
-	}).Info("running drip")
-
-	instruction, err := dca.walletProvider.DripOrcaWhirlpool(ctx,
-		wallet.DripOrcaWhirlpoolParams{
-			VaultData:           vaultData,
-			Vault:               solana.MustPublicKeyFromBase58(dripConfig.Vault),
-			VaultPeriodI:        vaultPeriodI,
-			VaultPeriodJ:        vaultPeriodJ,
-			BotTokenAFeeAccount: botTokenAFeeAccount,
-			WhirlpoolData:       whirlpoolData,
-			Whirlpool:           whirlpoolPubkey,
-			TickArray0:          solana.MustPublicKeyFromBase58(quoteEstimate.TickArray0),
-			TickArray1:          solana.MustPublicKeyFromBase58(quoteEstimate.TickArray1),
-			TickArray2:          solana.MustPublicKeyFromBase58(quoteEstimate.TickArray2),
-			Oracle:              solana.MustPublicKeyFromBase58(dripConfig.OrcaWhirlpoolConfig.Oracle),
-		},
-	)
-	if err != nil {
-		logrus.
-			WithError(err).
-			WithField("dcaProgram", drip.ProgramID.String()).
-			Errorf("failed to create DripSPLTokenSwap instruction")
-		return []solana.Instruction{}, err
-	}
-	instructions = append(instructions, instruction)
-
-	return instructions, nil
-}
-
-func (dca *DCACronService) ensureTickArrays(
-	ctx context.Context,
-	dripConfig configs.DripConfig,
-	vault drip.Vault,
-	whirlpoolData whirlpool.Whirlpool,
-) error {
-	whirlpoolPubkey := solana.MustPublicKeyFromBase58(dripConfig.OrcaWhirlpoolConfig.Whirlpool)
-	var instructions []solana.Instruction
-	realIndex := math.Floor(float64(whirlpoolData.TickCurrentIndex) / float64(whirlpoolData.TickSpacing) / 88.0)
-	startTickIndex := int32(realIndex) * int32(whirlpoolData.TickSpacing) * 88
-
-	aToB := vault.TokenAMint.String() == whirlpoolData.TokenMintA.String()
-	var tickArrayIndexs []int32
-	if aToB {
-		tickArrayIndexs = []int32{
-			startTickIndex,
-			startTickIndex - int32(whirlpoolData.TickSpacing*88)*1,
-			startTickIndex - int32(whirlpoolData.TickSpacing*88)*2,
-		}
-	} else {
-		tickArrayIndexs = []int32{
-			startTickIndex,
-			startTickIndex + int32(whirlpoolData.TickSpacing*88)*1,
-			startTickIndex + int32(whirlpoolData.TickSpacing*88)*2,
-		}
-	}
-	for _, tickArrayIndex := range tickArrayIndexs {
-		tickArrayPubkey, _, _ := solana.FindProgramAddress([][]byte{
-			[]byte("tick_array"),
-			whirlpoolPubkey[:],
-			[]byte(strconv.FormatInt(int64(tickArrayIndex), 10)),
-		}, whirlpool.ProgramID)
-		// Use GetAccountInfoWithOpts so we can pass in a commitment level
-		if _, err := dca.solClient.GetAccountInfoWithOpts(ctx, tickArrayPubkey, &rpc.GetAccountInfoOpts{
-			Encoding:   solana.EncodingBase64,
-			Commitment: "confirmed",
-			DataSlice:  nil,
-		}); err != nil && err.Error() == "not found" {
-			initTickArrayInstruction, err := dca.walletProvider.InitializeTickArray(ctx,
-				wallet.InitializeTickArrayParams{
-					Whirlpool:  whirlpoolPubkey,
-					StartIndex: tickArrayIndex,
-					TickArray:  tickArrayPubkey,
-				})
-			if err != nil {
-				logrus.
-					WithError(err).
-					Errorf("failed to create InitializeTickArrayParams instruction")
-				return err
-			}
-			instructions = append(instructions, initTickArrayInstruction)
-		}
-	}
-	if err := dca.walletProvider.Send(ctx, instructions...); err != nil {
-		logrus.
-			WithError(err).
-			WithField("whirlpool", dripConfig.OrcaWhirlpoolConfig.Whirlpool).
-			WithField("numInstructions", len(instructions)).
-			Errorf("failed to initialize tick arrays")
-		return err
-	}
-	logrus.
-		WithField("whirlpool", dripConfig.OrcaWhirlpoolConfig.Whirlpool).
-		WithField("numInstructions", len(instructions)).
-		Info("initialized tick arrays")
-	return nil
-}
-
-func (dca *DCACronService) dripSplTokenSwap(
-	ctx context.Context,
-	dripConfig configs.DripConfig,
-	vaultData drip.Vault,
-	vaultPeriodI solana.PublicKey,
-	vaultPeriodJ solana.PublicKey,
-	botTokenAFeeAccount solana.PublicKey,
-) ([]solana.Instruction, error) {
-	var instructions []solana.Instruction
-	swapTokenAAccount, swapTokenBAccount, err := dca.fetchSplTokenSwapTokenAccounts(ctx, dripConfig)
-	if err != nil {
-		logrus.WithError(err).Errorf("failed to get swap token accounts")
-		return []solana.Instruction{}, err
-	}
-	dripConfig.SPLTokenSwapConfig.SwapTokenAAccount = swapTokenAAccount
-	dripConfig.SPLTokenSwapConfig.SwapTokenBAccount = swapTokenBAccount
-
-	logrus.WithFields(logrus.Fields{
-		"vault":               dripConfig.Vault,
-		"tokenAMint":          vaultData.TokenAMint.String(),
-		"tokenBMint":          vaultData.TokenBMint.String(),
-		"swapTokenAAcount":    dripConfig.SPLTokenSwapConfig.SwapTokenAAccount,
-		"swapTokenBAccount":   dripConfig.SPLTokenSwapConfig.SwapTokenBAccount,
-		"i":                   vaultData.LastDripPeriod,
-		"j":                   vaultData.LastDripPeriod + 1,
-		"vaultPeriodI":        vaultPeriodI.String(),
-		"vaultPeriodJ":        vaultPeriodJ.String(),
-		"botTokenAFeeAccount": botTokenAFeeAccount.String(),
-	}).Info("running drip")
-
-	instruction, err := dca.walletProvider.DripSPLTokenSwap(ctx, dripConfig, vaultPeriodI, vaultPeriodJ, botTokenAFeeAccount)
-	if err != nil {
-		logrus.
-			WithError(err).
-			WithField("dcaProgram", drip.ProgramID.String()).
-			Errorf("failed to create DripSPLTokenSwap instruction")
-		return []solana.Instruction{}, err
-	}
-	instructions = append(instructions, instruction)
-
-	return instructions, nil
-}
-
+// TODO(Mocha): consider moving this fn somewhere else
 func (dca *DCACronService) fetchVaultPeriod(
 	ctx context.Context,
 	vault, vaultProtoConfig, tokenAMint, tokenBMint solana.PublicKey,
@@ -564,6 +377,7 @@ func (dca *DCACronService) fetchVaultPeriod(
 	return vaultPeriod, instruction, nil
 }
 
+// TODO(Mocha): consider moving this fn somewhere else
 func (dca *DCACronService) fetchBotTokenAFeeAccount(
 	ctx context.Context, vault drip.Vault,
 ) (solana.PublicKey, solana.Instruction, error) {
@@ -577,80 +391,21 @@ func (dca *DCACronService) fetchBotTokenAFeeAccount(
 			WithField("dcaProgram", drip.ProgramID.String()).
 			WithField("feeWallet", dca.walletProvider.FeeWalletPubkey.String()).
 			WithField("mint", vault.TokenAMint.String()).
-			Errorf("failed to get botTokenAAccount")
+			Errorf("failed to get botTokenAAccount address")
 		return solana.PublicKey{}, nil, err
 	}
 	var instruction solana.Instruction
 
-	if resp, err := dca.solClient.GetTokenAccountBalance(ctx, botTokenAAccount, "confirmed"); err != nil {
+	// Use GetAccountInfoWithOpts so we can pass in a commitment level
+	if _, err := dca.solClient.GetAccountInfoWithOpts(ctx, botTokenAAccount, &rpc.GetAccountInfoOpts{
+		Encoding:   solana.EncodingBase64,
+		Commitment: "confirmed",
+		DataSlice:  nil,
+	}); err != nil && err.Error() == "not found" {
 		instruction, err = dca.walletProvider.CreateTokenAccount(ctx, dca.walletProvider.FeeWalletPubkey, vault.TokenAMint)
 		if err != nil {
-			logrus.
-				WithError(err).
-				WithField("dcaProgram", drip.ProgramID.String()).
-				WithField("mint", vault.TokenAMint.String()).
-				Errorf("failed to create createTokenAccount instruction")
 			return solana.PublicKey{}, nil, err
 		}
-	} else {
-		logrus.
-			WithField("botTokenAAccount", botTokenAAccount.String()).
-			WithField("balance", resp.Value.Amount).
-			WithField("decimals", resp.Value.Decimals).
-			Info("fetched vault period")
 	}
 	return botTokenAAccount, instruction, nil
-}
-
-func (dca *DCACronService) fetchSplTokenSwapTokenAccounts(
-	ctx context.Context,
-	config configs.DripConfig,
-) (string, string, error) {
-	// Fetch Token A
-	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapTokenAAccount), &rpc.GetAccountInfoOpts{
-		Encoding:   solana.EncodingBase64,
-		Commitment: "confirmed",
-		DataSlice:  nil,
-	})
-	if err != nil {
-		return "", "", err
-	}
-	var swapTokenAAccount token.Account
-	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&swapTokenAAccount); err != nil {
-		return "", "", err
-	}
-
-	// Fetch token B
-	resp, err = dca.solClient.GetAccountInfoWithOpts(ctx, solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapTokenBAccount), &rpc.GetAccountInfoOpts{
-		Encoding:   solana.EncodingBase64,
-		Commitment: "confirmed",
-		DataSlice:  nil,
-	})
-	if err != nil {
-		return "", "", err
-	}
-	var swapTokenBAccount token.Account
-	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&swapTokenBAccount); err != nil {
-		return "", "", err
-	}
-
-	if swapTokenAAccount.Mint.String() == config.SPLTokenSwapConfig.TokenAMint && swapTokenBAccount.Mint.String() == config.SPLTokenSwapConfig.TokenBMint {
-		// Normal A -> b
-		return config.SPLTokenSwapConfig.SwapTokenAAccount, config.SPLTokenSwapConfig.SwapTokenBAccount, nil
-	} else if swapTokenAAccount.Mint.String() == config.SPLTokenSwapConfig.TokenBMint && swapTokenBAccount.Mint.String() == config.SPLTokenSwapConfig.TokenAMint {
-		// Need to swap token accounts for inverse
-		return config.SPLTokenSwapConfig.SwapTokenBAccount, config.SPLTokenSwapConfig.SwapTokenAAccount, nil
-	}
-	err = fmt.Errorf("token swap token accounts do not match config mints, or the inverse of the config mints")
-	logrus.
-		WithField("swapTokenAAccount", config.SPLTokenSwapConfig.SwapTokenAAccount).
-		WithField("swapTokenBAccount", config.SPLTokenSwapConfig.SwapTokenBAccount).
-		WithField("swapTokenAMint", swapTokenAAccount.Mint.String()).
-		WithField("swapTokenBMint", swapTokenBAccount.Mint.String()).
-		WithField("configTokenAMint", config.SPLTokenSwapConfig.TokenAMint).
-		WithField("configTokenBMint", config.SPLTokenSwapConfig.TokenBMint).
-		WithField("vault", config.Vault).
-		WithError(err).
-		Error("failed to get swap token accounts")
-	return "", "", err
 }
