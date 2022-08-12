@@ -79,8 +79,6 @@ func (w *WalletProvider) DripOrcaWhirlpool(
 
 	txBuilder.SetVaultAccount(params.Vault)
 	txBuilder.SetVaultProtoConfigAccount(params.VaultData.ProtoConfig)
-	txBuilder.SetTokenAMintAccount(params.VaultData.TokenAMint)
-	txBuilder.SetTokenBMintAccount(params.VaultData.TokenBMint)
 	txBuilder.SetVaultTokenAAccountAccount(params.VaultData.TokenAAccount)
 	txBuilder.SetVaultTokenBAccountAccount(params.VaultData.TokenBAccount)
 	txBuilder.SetDripFeeTokenAAccountAccount(params.BotTokenAFeeAccount)
