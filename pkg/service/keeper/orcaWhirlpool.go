@@ -1,14 +1,12 @@
-package dca
+package keeper
 
 import (
 	"context"
 	"math"
 	"strconv"
 
-	bin "github.com/gagliardetto/binary"
-
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/wallet"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/solanaclient"
 	"github.com/dcaf-labs/solana-go-clients/pkg/drip"
 	"github.com/dcaf-labs/solana-go-clients/pkg/whirlpool"
 	"github.com/gagliardetto/solana-go"
@@ -16,7 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (dca *DCACronService) dripOrcaWhirlpool(
+func (dca *KeeperService) dripOrcaWhirlpool(
 	ctx context.Context,
 	dripConfig configs.DripConfig,
 	vaultData drip.Vault,
@@ -26,24 +24,18 @@ func (dca *DCACronService) dripOrcaWhirlpool(
 ) ([]solana.Instruction, error) {
 	var instructions []solana.Instruction
 	// Get WhirlpoolsConfig
-	whirlpoolPubkey := solana.MustPublicKeyFromBase58(dripConfig.OrcaWhirlpoolConfig.Whirlpool)
-	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, whirlpoolPubkey, &rpc.GetAccountInfoOpts{
-		Encoding:   solana.EncodingBase64,
-		Commitment: "confirmed",
-		DataSlice:  nil,
-	})
+	whirlpoolPubkey, err := solana.PublicKeyFromBase58(dripConfig.OrcaWhirlpoolConfig.Whirlpool)
 	if err != nil {
-		return []solana.Instruction{}, err
+		return nil, err
 	}
-	var whirlpoolData whirlpool.Whirlpool
-	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&whirlpoolData); err != nil {
-		return []solana.Instruction{}, err
+	whirlpoolData, err := dca.solanaClient.GetOrcaWhirlpool(ctx, whirlpoolPubkey)
+	if err != nil {
+		return nil, err
 	}
-
 	if err := dca.ensureTickArrays(ctx, dripConfig, vaultData, whirlpoolData); err != nil {
 		return []solana.Instruction{}, err
 	}
-	quoteEstimate, err := wallet.GetOrcaWhirlpoolQuoteEstimate(
+	quoteEstimate, err := solanaclient.GetOrcaWhirlpoolQuoteEstimate(
 		whirlpoolData.WhirlpoolsConfig.String(),
 		whirlpoolData.TokenMintA.String(),
 		whirlpoolData.TokenMintB.String(),
@@ -67,8 +59,8 @@ func (dca *DCACronService) dripOrcaWhirlpool(
 		"botTokenAFeeAccount": botTokenAFeeAccount.String(),
 	}).Info("running drip")
 
-	instruction, err := dca.walletProvider.DripOrcaWhirlpool(ctx,
-		wallet.DripOrcaWhirlpoolParams{
+	instruction, err := dca.solanaClient.DripOrcaWhirlpool(ctx,
+		solanaclient.DripOrcaWhirlpoolParams{
 			VaultData:           vaultData,
 			Vault:               solana.MustPublicKeyFromBase58(dripConfig.Vault),
 			VaultPeriodI:        vaultPeriodI,
@@ -94,7 +86,7 @@ func (dca *DCACronService) dripOrcaWhirlpool(
 	return instructions, nil
 }
 
-func (dca *DCACronService) ensureTickArrays(
+func (dca *KeeperService) ensureTickArrays(
 	ctx context.Context,
 	dripConfig configs.DripConfig,
 	vault drip.Vault,
@@ -127,13 +119,9 @@ func (dca *DCACronService) ensureTickArrays(
 			[]byte(strconv.FormatInt(int64(tickArrayIndex), 10)),
 		}, whirlpool.ProgramID)
 		// Use GetAccountInfoWithOpts so we can pass in a commitment level
-		if _, err := dca.solClient.GetAccountInfoWithOpts(ctx, tickArrayPubkey, &rpc.GetAccountInfoOpts{
-			Encoding:   solana.EncodingBase64,
-			Commitment: "confirmed",
-			DataSlice:  nil,
-		}); err != nil && err.Error() == "not found" {
-			initTickArrayInstruction, err := dca.walletProvider.InitializeTickArray(ctx,
-				wallet.InitializeTickArrayParams{
+		if _, err := dca.solanaClient.GetOrcaWhirlpoolTickArray(ctx, tickArrayPubkey); err != nil && err == rpc.ErrNotFound {
+			initTickArrayInstruction, err := dca.solanaClient.InitializeTickArray(ctx,
+				solanaclient.InitializeTickArrayParams{
 					Whirlpool:  whirlpoolPubkey,
 					StartIndex: tickArrayIndex,
 					TickArray:  tickArrayPubkey,
@@ -147,17 +135,19 @@ func (dca *DCACronService) ensureTickArrays(
 			instructions = append(instructions, initTickArrayInstruction)
 		}
 	}
-	if err := dca.walletProvider.Send(ctx, instructions...); err != nil {
+	if len(instructions) > 0 {
+		if err := dca.solanaClient.Send(ctx, instructions...); err != nil {
+			logrus.
+				WithError(err).
+				WithField("whirlpool", dripConfig.OrcaWhirlpoolConfig.Whirlpool).
+				WithField("numInstructions", len(instructions)).
+				Errorf("failed to initialize tick arrays")
+			return err
+		}
 		logrus.
-			WithError(err).
 			WithField("whirlpool", dripConfig.OrcaWhirlpoolConfig.Whirlpool).
 			WithField("numInstructions", len(instructions)).
-			Errorf("failed to initialize tick arrays")
-		return err
+			Info("initialized tick arrays")
 	}
-	logrus.
-		WithField("whirlpool", dripConfig.OrcaWhirlpoolConfig.Whirlpool).
-		WithField("numInstructions", len(instructions)).
-		Info("initialized tick arrays")
 	return nil
 }

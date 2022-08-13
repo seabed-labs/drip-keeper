@@ -1,4 +1,4 @@
-package wallet
+package solanaclient
 
 import (
 	"encoding/json"
@@ -35,7 +35,7 @@ func GetOrcaWhirlpoolQuoteEstimate(
 	env configs.Environment,
 ) (QuoteEstimate, error) {
 	root := configs.GetProjectRoot()
-	scriptPath := fmt.Sprintf("%s/pkg/wallet/orcaWhirlpoolQuoteEstimate.ts", root)
+	scriptPath := fmt.Sprintf("%s/pkg/solanaclient/orcaWhirlpoolQuoteEstimate.ts", root)
 	command := fmt.Sprintf("npx ts-node %s", scriptPath) +
 		fmt.Sprintf(" %s", config) +
 		fmt.Sprintf(" %s", tokenAMint) +

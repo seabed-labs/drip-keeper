@@ -1,4 +1,4 @@
-package dca
+package keeper
 
 import (
 	"context"
@@ -7,14 +7,11 @@ import (
 	"github.com/dcaf-labs/solana-go-clients/pkg/drip"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/programs/token"
-	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
 )
 
-func (dca *DCACronService) dripSplTokenSwap(
+func (dca *KeeperService) dripSplTokenSwap(
 	ctx context.Context,
 	dripConfig configs.DripConfig,
 	vaultData drip.Vault,
@@ -44,7 +41,7 @@ func (dca *DCACronService) dripSplTokenSwap(
 		"botTokenAFeeAccount": botTokenAFeeAccount.String(),
 	}).Info("running drip")
 
-	instruction, err := dca.walletProvider.DripSPLTokenSwap(ctx, dripConfig, vaultPeriodI, vaultPeriodJ, botTokenAFeeAccount)
+	instruction, err := dca.solanaClient.DripSPLTokenSwap(ctx, dripConfig, vaultPeriodI, vaultPeriodJ, botTokenAFeeAccount)
 	if err != nil {
 		logrus.
 			WithError(err).
@@ -57,54 +54,44 @@ func (dca *DCACronService) dripSplTokenSwap(
 	return instructions, nil
 }
 
-func (dca *DCACronService) fetchSplTokenSwapTokenAccounts(
+func (dca *KeeperService) fetchSplTokenSwapTokenAccounts(
 	ctx context.Context,
-	config configs.DripConfig,
+	dripConfig configs.DripConfig,
 ) (string, string, error) {
-	// Fetch Token A
-	resp, err := dca.solClient.GetAccountInfoWithOpts(ctx, solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapTokenAAccount), &rpc.GetAccountInfoOpts{
-		Encoding:   solana.EncodingBase64,
-		Commitment: "confirmed",
-		DataSlice:  nil,
-	})
+	swapTokenAAccountAddress, err := solana.PublicKeyFromBase58(dripConfig.SPLTokenSwapConfig.SwapTokenAAccount)
 	if err != nil {
 		return "", "", err
 	}
-	var swapTokenAAccount token.Account
-	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&swapTokenAAccount); err != nil {
-		return "", "", err
-	}
-
-	// Fetch token B
-	resp, err = dca.solClient.GetAccountInfoWithOpts(ctx, solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapTokenBAccount), &rpc.GetAccountInfoOpts{
-		Encoding:   solana.EncodingBase64,
-		Commitment: "confirmed",
-		DataSlice:  nil,
-	})
+	swapTokenAAccount, err := dca.solanaClient.GetTokenAccount(ctx, swapTokenAAccountAddress)
 	if err != nil {
 		return "", "", err
 	}
-	var swapTokenBAccount token.Account
-	if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&swapTokenBAccount); err != nil {
+
+	swapTokenBAccountAddress, err := solana.PublicKeyFromBase58(dripConfig.SPLTokenSwapConfig.SwapTokenBAccount)
+	if err != nil {
+		return "", "", err
+	}
+	swapTokenBAccount, err := dca.solanaClient.GetTokenAccount(ctx, swapTokenBAccountAddress)
+	if err != nil {
 		return "", "", err
 	}
 
-	if swapTokenAAccount.Mint.String() == config.SPLTokenSwapConfig.TokenAMint && swapTokenBAccount.Mint.String() == config.SPLTokenSwapConfig.TokenBMint {
+	if swapTokenAAccount.Mint.String() == dripConfig.SPLTokenSwapConfig.TokenAMint && swapTokenBAccount.Mint.String() == dripConfig.SPLTokenSwapConfig.TokenBMint {
 		// Normal A -> b
-		return config.SPLTokenSwapConfig.SwapTokenAAccount, config.SPLTokenSwapConfig.SwapTokenBAccount, nil
-	} else if swapTokenAAccount.Mint.String() == config.SPLTokenSwapConfig.TokenBMint && swapTokenBAccount.Mint.String() == config.SPLTokenSwapConfig.TokenAMint {
+		return dripConfig.SPLTokenSwapConfig.SwapTokenAAccount, dripConfig.SPLTokenSwapConfig.SwapTokenBAccount, nil
+	} else if swapTokenAAccount.Mint.String() == dripConfig.SPLTokenSwapConfig.TokenBMint && swapTokenBAccount.Mint.String() == dripConfig.SPLTokenSwapConfig.TokenAMint {
 		// Need to swap token accounts for inverse
-		return config.SPLTokenSwapConfig.SwapTokenBAccount, config.SPLTokenSwapConfig.SwapTokenAAccount, nil
+		return dripConfig.SPLTokenSwapConfig.SwapTokenBAccount, dripConfig.SPLTokenSwapConfig.SwapTokenAAccount, nil
 	}
 	err = fmt.Errorf("token swap token accounts do not match config mints, or the inverse of the config mints")
 	logrus.
-		WithField("swapTokenAAccount", config.SPLTokenSwapConfig.SwapTokenAAccount).
-		WithField("swapTokenBAccount", config.SPLTokenSwapConfig.SwapTokenBAccount).
+		WithField("swapTokenAAccount", dripConfig.SPLTokenSwapConfig.SwapTokenAAccount).
+		WithField("swapTokenBAccount", dripConfig.SPLTokenSwapConfig.SwapTokenBAccount).
 		WithField("swapTokenAMint", swapTokenAAccount.Mint.String()).
 		WithField("swapTokenBMint", swapTokenBAccount.Mint.String()).
-		WithField("configTokenAMint", config.SPLTokenSwapConfig.TokenAMint).
-		WithField("configTokenBMint", config.SPLTokenSwapConfig.TokenBMint).
-		WithField("vault", config.Vault).
+		WithField("configTokenAMint", dripConfig.SPLTokenSwapConfig.TokenAMint).
+		WithField("configTokenBMint", dripConfig.SPLTokenSwapConfig.TokenBMint).
+		WithField("vault", dripConfig.Vault).
 		WithError(err).
 		Error("failed to get swap token accounts")
 	return "", "", err

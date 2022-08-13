@@ -24,7 +24,7 @@ type VaultProvider interface {
 }
 
 const (
-	discoveryPeriod = 10
+	discoveryPeriod = 60
 )
 
 func NewVaultProvider(
@@ -55,6 +55,7 @@ func NewVaultProvider(
 					return err
 				}
 				vaultProviderImpl.cron.Start()
+				vaultProviderImpl.discoverConfigs()
 			}
 			return nil
 		},

@@ -1,60 +1,14 @@
-package wallet
+package solanaclient
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/dcaf-labs/solana-go-clients/pkg/drip"
 	"github.com/dcaf-labs/solana-go-clients/pkg/whirlpool"
 	"github.com/gagliardetto/solana-go"
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
-	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/mr-tron/base58"
-	"github.com/sirupsen/logrus"
 )
-
-type WalletProvider struct {
-	Client          *rpc.Client
-	Wallet          *solana.Wallet
-	FeeWalletPubkey solana.PublicKey
-}
-
-func New(
-	config *configs.Config,
-	solClient *rpc.Client,
-) (*WalletProvider, error) {
-	WalletProvider := WalletProvider{Client: solClient}
-	if configs.IsLocal(config.Environment) {
-		logrus.Infof("creating and funding test wallet")
-		WalletProvider.Wallet = solana.NewWallet()
-		if _, err := InitTestWallet(solClient, &WalletProvider); err != nil {
-			return nil, err
-		}
-	} else {
-		var accountBytes []byte
-		if err := json.Unmarshal([]byte(config.Wallet), &accountBytes); err != nil {
-			return nil, err
-		}
-		priv := base58.Encode(accountBytes)
-		solWallet, err := solana.WalletFromPrivateKeyBase58(priv)
-		if err != nil {
-			return nil, err
-		}
-		WalletProvider.Wallet = solWallet
-	}
-	if config.FeeWallet != "" {
-		WalletProvider.FeeWalletPubkey = solana.MustPublicKeyFromBase58(config.FeeWallet)
-	} else {
-		WalletProvider.FeeWalletPubkey = WalletProvider.Wallet.PublicKey()
-	}
-	logrus.
-		WithField("Wallet", WalletProvider.Wallet.PublicKey()).
-		WithField("FeeWalletPubkey", WalletProvider.FeeWalletPubkey.String()).
-		Infof("loaded wallets")
-	return &WalletProvider, nil
-}
 
 type DripOrcaWhirlpoolParams struct {
 	VaultData           drip.Vault
@@ -70,12 +24,12 @@ type DripOrcaWhirlpoolParams struct {
 	Oracle              solana.PublicKey
 }
 
-func (w *WalletProvider) DripOrcaWhirlpool(
+func (w *SolanaClient) DripOrcaWhirlpool(
 	ctx context.Context,
 	params DripOrcaWhirlpoolParams,
 ) (solana.Instruction, error) {
 	txBuilder := drip.NewDripOrcaWhirlpoolInstructionBuilder()
-	txBuilder.SetDripTriggerSourceAccount(w.Wallet.PublicKey())
+	txBuilder.SetDripTriggerSourceAccount(w.wallet.PublicKey())
 
 	txBuilder.SetVaultAccount(params.Vault)
 	txBuilder.SetVaultProtoConfigAccount(params.VaultData.ProtoConfig)
@@ -108,24 +62,24 @@ type InitializeTickArrayParams struct {
 	TickArray  solana.PublicKey
 }
 
-func (w *WalletProvider) InitializeTickArray(
+func (w *SolanaClient) InitializeTickArray(
 	ctx context.Context,
 	params InitializeTickArrayParams,
 ) (solana.Instruction, error) {
 	txBuilder := whirlpool.NewInitializeTickArrayInstructionBuilder()
 	txBuilder.SetWhirlpoolAccount(params.Whirlpool)
-	txBuilder.SetFunderAccount(w.Wallet.PublicKey())
+	txBuilder.SetFunderAccount(w.wallet.PublicKey())
 	txBuilder.SetTickArrayAccount(params.TickArray)
 	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
 	txBuilder.SetStartTickIndex(params.StartIndex)
 	return txBuilder.ValidateAndBuild()
 }
 
-func (w *WalletProvider) DripSPLTokenSwap(
+func (w *SolanaClient) DripSPLTokenSwap(
 	ctx context.Context, config configs.DripConfig, vaultPeriodI, vaultPeriodJ, botTokenAAccount solana.PublicKey,
 ) (solana.Instruction, error) {
 	txBuilder := drip.NewDripSplTokenSwapInstructionBuilder()
-	txBuilder.SetDripTriggerSourceAccount(w.Wallet.PublicKey())
+	txBuilder.SetDripTriggerSourceAccount(w.wallet.PublicKey())
 
 	txBuilder.SetDripFeeTokenAAccountAccount(botTokenAAccount)
 	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58(config.Vault))
@@ -150,8 +104,7 @@ func (w *WalletProvider) DripSPLTokenSwap(
 	return txBuilder.ValidateAndBuild()
 }
 
-// TODO(Mocha): These don't need to rely on the wallet
-func (w *WalletProvider) InitVaultPeriod(
+func (w *SolanaClient) InitVaultPeriod(
 	ctx context.Context, vault, vaultProtoConfig, vaultPeriod, tokenAMint, tokenBMint string, vaultPeriodID int64,
 ) (solana.Instruction, error) {
 	txBuilder := drip.NewInitVaultPeriodInstructionBuilder()
@@ -159,7 +112,7 @@ func (w *WalletProvider) InitVaultPeriod(
 	txBuilder.SetTokenAMintAccount(solana.MustPublicKeyFromBase58(tokenAMint))
 	txBuilder.SetTokenBMintAccount(solana.MustPublicKeyFromBase58(tokenBMint))
 	txBuilder.SetVaultProtoConfigAccount(solana.MustPublicKeyFromBase58(vaultProtoConfig))
-	txBuilder.SetCreatorAccount(w.Wallet.PublicKey())
+	txBuilder.SetCreatorAccount(w.wallet.PublicKey())
 	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
 	txBuilder.SetVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriod))
 	txBuilder.SetParams(drip.InitializeVaultPeriodParams{
@@ -168,63 +121,12 @@ func (w *WalletProvider) InitVaultPeriod(
 	return txBuilder.ValidateAndBuild()
 }
 
-func (w *WalletProvider) CreateTokenAccount(
+func (w *SolanaClient) CreateTokenAccount(
 	ctx context.Context, owner solana.PublicKey, tokenMint solana.PublicKey,
 ) (solana.Instruction, error) {
 	txBuilder := associatedtokenaccount.NewCreateInstructionBuilder()
 	txBuilder.SetMint(tokenMint)
-	txBuilder.SetPayer(w.Wallet.PublicKey())
+	txBuilder.SetPayer(w.wallet.PublicKey())
 	txBuilder.SetWallet(owner)
 	return txBuilder.ValidateAndBuild()
-}
-
-func (w *WalletProvider) Send(
-	ctx context.Context, instructions ...solana.Instruction,
-) error {
-	if len(instructions) == 0 {
-		return nil
-	}
-	recent, err := w.Client.GetRecentBlockhash(ctx, rpc.CommitmentConfirmed)
-	if err != nil {
-		return err
-	}
-	logFields := logrus.Fields{"numInstructions": len(instructions), "block": recent.Value.Blockhash}
-
-	tx, err := solana.NewTransaction(
-		instructions,
-		recent.Value.Blockhash,
-		solana.TransactionPayer(w.Wallet.PublicKey()),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create transaction, err %s", err)
-	}
-	logrus.WithFields(logFields).Infof("built transaction")
-
-	if _, err := tx.Sign(
-		func(key solana.PublicKey) *solana.PrivateKey {
-			if w.Wallet.PublicKey().Equals(key) {
-				return &w.Wallet.PrivateKey
-			}
-			return nil
-		},
-	); err != nil {
-		return fmt.Errorf("failed to sign transaction, err %s", err)
-	}
-	logrus.WithFields(logFields).Info("signed transaction")
-
-	txHash, err := w.Client.SendTransactionWithOpts(
-		ctx, tx, false, rpc.CommitmentConfirmed,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to send transaction, err %s", err)
-	}
-	logFields["txHash"] = txHash
-
-	logrus.WithFields(logFields).Info("waiting for transaction to confirm")
-	errC := make(chan error)
-	go checkTxHash(w.Client, txHash, errC)
-	if err := <-errC; err != nil {
-		return err
-	}
-	return nil
 }
