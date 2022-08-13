@@ -2,6 +2,7 @@ package dca
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"runtime/debug"
 	"strconv"
@@ -22,15 +23,34 @@ import (
 	"go.uber.org/fx"
 )
 
+type DripScheduler struct {
+	At    time.Time
+	Every time.Duration
+}
+
+func (s *DripScheduler) Next(t time.Time) time.Time {
+	if t.After(s.At) {
+		return t.Add(s.Every)
+	}
+	return s.At
+}
+
+func newScheduler(granularity uint64) DripScheduler {
+	return DripScheduler{time.Now().Add(-1 * time.Duration(time.Now().Unix()%int64(granularity))), time.Second * time.Duration(granularity)}
+}
+
+const ErrDripAmount0 = "drip amount is 0"
+const ErrDripAlreadyTriggered = "drip already triggered"
+
 type DCACronService struct {
-	DCACrons       cmap.ConcurrentMap
+	DripConfigs    cmap.ConcurrentMap
 	solClient      *rpc.Client
 	walletProvider *wallet.WalletProvider
 	alertService   alert.Service
 	env            configs.Environment
 }
 
-type DCACron struct {
+type DripConfig struct {
 	Cron   *cron.Cron
 	Config configs.DripConfig
 }
@@ -45,32 +65,32 @@ func NewDCACron(
 ) (*DCACronService, error) {
 	logrus.Info("initializing dca cron service")
 	dcaCronService := DCACronService{
-		DCACrons:       cmap.New(),
+		DripConfigs:    cmap.New(),
 		solClient:      solClient,
 		walletProvider: walletProvider,
 		alertService:   alertService,
 		env:            config.Environment,
 	}
 	// Start this before lifecycle to ensure it is subscribed as soon as invoke is called
-	if err := eventBus.Subscribe(string(eventbus.VaultConfigTopic), dcaCronService.createCron); err != nil {
+	if err := eventBus.Subscribe(string(eventbus.VaultConfigTopic), dcaCronService.registerDripConfig); err != nil {
 		return nil, err
 	}
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			for !dcaCronService.DCACrons.IsEmpty() {
+			for !dcaCronService.DripConfigs.IsEmpty() {
 				if config.ShouldDiscoverNewConfigs {
 					// Don't return err if this fails
 					// we need to stop the cronJobs
-					if err := eventBus.Unsubscribe(string(eventbus.VaultConfigTopic), dcaCronService.createCron); err != nil {
+					if err := eventBus.Unsubscribe(string(eventbus.VaultConfigTopic), dcaCronService.registerDripConfig); err != nil {
 						logrus.WithError(err).WithField("bus", eventbus.VaultConfigTopic).Error("failed to unsubscribe to event bus")
 					}
 				}
-				for _, key := range dcaCronService.DCACrons.Keys() {
-					v, ok := dcaCronService.DCACrons.Pop(key)
+				for _, key := range dcaCronService.DripConfigs.Keys() {
+					v, ok := dcaCronService.DripConfigs.Pop(key)
 					if !ok {
 						continue
 					}
-					dcaCron := v.(*DCACron)
+					dcaCron := v.(*DripConfig)
 					if err := dcaCronService.stopCron(ctx, dcaCron.Cron); err != nil {
 						logrus.WithError(err).WithField("vault", dcaCron.Config.Vault).Error("failed to stop dca cron job")
 					}
@@ -82,60 +102,31 @@ func NewDCACron(
 	return nil, nil
 }
 
-// TODO(Mocha): We can cache the vault proto configs
-func (dca *DCACronService) createCron(newConfig configs.DripConfig) (*DCACron, error) {
-	logrus.WithField("vault", newConfig.Vault).Info("received vault newConfig")
-	if v, ok := dca.DCACrons.Get(newConfig.Vault); ok {
-		dcaCron := v.(*DCACron)
+func (dca *DCACronService) registerDripConfig(newConfig configs.DripConfig) (*DripConfig, error) {
+	logrus.WithField("vault", newConfig.Vault).Info("received new config")
+
+	if v, ok := dca.DripConfigs.Get(newConfig.Vault); ok {
+		dripConfig := v.(*DripConfig)
 		// If there is a new whirlpool config, and it's different from what we have, set it
 		// If there is a new splTokenSwap config, and it's different from what we have, set it
-		if (newConfig.OrcaWhirlpoolConfig.Whirlpool != "" && dcaCron.Config.OrcaWhirlpoolConfig.Whirlpool != newConfig.OrcaWhirlpoolConfig.Whirlpool) ||
-			(newConfig.SPLTokenSwapConfig.Swap != "" && dcaCron.Config.SPLTokenSwapConfig.Swap != newConfig.SPLTokenSwapConfig.Swap) {
+		if (newConfig.OrcaWhirlpoolConfig.Whirlpool != "" && dripConfig.Config.OrcaWhirlpoolConfig.Whirlpool != newConfig.OrcaWhirlpoolConfig.Whirlpool) ||
+			(newConfig.SPLTokenSwapConfig.Swap != "" && dripConfig.Config.SPLTokenSwapConfig.Swap != newConfig.SPLTokenSwapConfig.Swap) {
 			logrus.
 				WithField("vault", newConfig.Vault).
-				WithField("oldSwap", dcaCron.Config.SPLTokenSwapConfig.Swap).
+				WithField("oldSwap", dripConfig.Config.SPLTokenSwapConfig.Swap).
 				WithField("newSwap", newConfig.SPLTokenSwapConfig.Swap).
-				WithField("oldSwap", dcaCron.Config.SPLTokenSwapConfig.Swap).
+				WithField("oldSwap", dripConfig.Config.SPLTokenSwapConfig.Swap).
 				WithField("newSwap", newConfig.SPLTokenSwapConfig.Swap).
 				Info("vault already registered, overriding swap")
-			dcaCron.Config = newConfig
-			dca.DCACrons.Set(newConfig.Vault, dcaCron)
-			return dcaCron, nil
+			dripConfig.Config = newConfig
+			dca.DripConfigs.Set(newConfig.Vault, dripConfig)
+			return dripConfig, nil
 		}
 		logrus.WithField("vault", newConfig.Vault).Info("vault already registered, skipping cron creation")
 		return nil, nil
 	}
 	logrus.WithField("vault", newConfig.Vault).Info("creating cron")
-	var vaultProtoConfigData drip.VaultProtoConfig
-	vaultProtoConfigPubKey, err := solana.PublicKeyFromBase58(newConfig.VaultProtoConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	if err := dca.solClient.GetAccountDataInto(ctx, vaultProtoConfigPubKey, &vaultProtoConfigData); err != nil {
-		return nil, err
-	}
-	logrus.WithField("vaultProtoConfig", fmt.Sprintf("%+v", vaultProtoConfigData)).Info("fetched vault proto newConfig")
-
-	cronJob := cron.New()
-	runWithConfig := func() {
-		dca.runWithRetry(newConfig.Vault, 0, 5, 1)
-	}
-	if _, err := cronJob.AddFunc(fmt.Sprintf("@every %ds", vaultProtoConfigData.Granularity), runWithConfig); err != nil {
-		return nil, err
-	}
-	dcaCron := DCACron{
-		Config: newConfig,
-		Cron:   cronJob,
-	}
-	dca.DCACrons.Set(newConfig.Vault, &dcaCron)
-	// Run the first trigger dca right now in case we created this cron past the lastDCAActivation timestamp
-	go runWithConfig()
-	dcaCron.Cron.Start()
-	return &dcaCron, nil
+	return dca.scheduleDrip(newConfig)
 }
 
 func (dca *DCACronService) stopCron(
@@ -157,18 +148,15 @@ func (dca *DCACronService) stopCron(
 }
 
 func (dca *DCACronService) runWithRetry(vault string, try, maxTry int, timeout int64) {
-	v, ok := dca.DCACrons.Get(vault)
+	v, ok := dca.DripConfigs.Get(vault)
 	if !ok {
 		logrus.
-			WithField("try", try).
-			WithField("maxTry", maxTry).
-			WithField("timeout", timeout).
 			WithField("vault", vault).
-			Error("failed to get dcaCron from DCACrons")
+			Error("failed to get dcaCron from DripConfigs")
 		return
 	}
-	dcaCron := v.(*DCACron)
-	config := dcaCron.Config
+	dripConfig := v.(*DripConfig)
+	config := dripConfig.Config
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -180,14 +168,24 @@ func (dca *DCACronService) runWithRetry(vault string, try, maxTry int, timeout i
 				WithField("try", try).
 				WithField("maxTry", maxTry).
 				WithField("timeOut", timeout).
-				Errorf("panic in dca cron")
+				Errorf("panic in doDrip")
 		}
 	}()
 	if err := dca.run(config); err != nil {
 		if try >= maxTry {
-			logrus.WithField("try", try).WithField("maxTry", maxTry).WithField("timeout", timeout).Info("failed to DCA with retry")
-			if alertErr := dca.alertService.SendError(context.Background(), fmt.Errorf("err in runWithRetry, try %d, maxTry %d, err %w", try, maxTry, err)); alertErr != nil {
-				logrus.WithError(err).Errorf("failed to send error alert, alertErr: %s", alertErr)
+			if err.Error() != ErrDripAmount0 && err.Error() != ErrDripAlreadyTriggered {
+				logrus.WithField("try", try).WithField("maxTry", maxTry).WithField("timeout", timeout).Info("failed to drip")
+				if alertErr := dca.alertService.SendError(context.Background(), fmt.Errorf("err in runWithRetry, try %d, maxTry %d, err %w", try, maxTry, err)); alertErr != nil {
+					logrus.WithError(err).Errorf("failed to send error alert, alertErr: %s", alertErr)
+				}
+			}
+			// first stop the current cron to avoid mem leaks
+			if err := dca.stopCron(context.Background(), dripConfig.Cron); err != nil {
+				logrus.WithError(err).Error("failed to stop cron job while trying to reschedule")
+			}
+			// create new drip handler
+			if _, err := dca.scheduleDrip(config); err != nil {
+				logrus.WithError(err).WithField("vault", config.Vault).Errorf("failed to reschedule drip")
 			}
 			return
 		}
@@ -197,10 +195,52 @@ func (dca *DCACronService) runWithRetry(vault string, try, maxTry int, timeout i
 	}
 }
 
+func (dca *DCACronService) getSchedulerFromProtoConfig(address string) (DripScheduler, uint64, error) {
+	protoConfigPubkey, err := solana.PublicKeyFromBase58(address)
+	if err != nil {
+		return DripScheduler{}, 0, err
+	}
+	var vaultProtoConfigData drip.VaultProtoConfig
+	if err := dca.solClient.GetAccountDataInto(context.Background(), protoConfigPubkey, &vaultProtoConfigData); err != nil {
+		return DripScheduler{}, 0, err
+	}
+	return newScheduler(vaultProtoConfigData.Granularity), vaultProtoConfigData.Granularity, nil
+}
+
+func (dca *DCACronService) getDripFunc(vault string) func() {
+	return func() {
+		dca.runWithRetry(vault, 0, 5, 2)
+	}
+}
+
+func (dca *DCACronService) scheduleDrip(config configs.DripConfig) (*DripConfig, error) {
+	schedule, granularity, err := dca.getSchedulerFromProtoConfig(config.VaultProtoConfig)
+	if err != nil {
+		logrus.WithError(err).Errorf("failed to getSchedulerFromProtoConfig")
+		return nil, err
+	}
+	cronJob := cron.New()
+	doDrip := dca.getDripFunc(config.Vault)
+	if _, err := cronJob.AddFunc(fmt.Sprintf("@every %ds", granularity), doDrip); err != nil {
+		logrus.WithError(err).Errorf("failed to addFunc to cronJob while trying to reschedule")
+		return nil, err
+	}
+	cronJob.Schedule(&schedule, cronJob)
+	newDripConfig := DripConfig{
+		Config: config,
+		Cron:   cronJob,
+	}
+	dca.DripConfigs.Set(config.Vault, &newDripConfig)
+	// Run the first trigger dca right now in case we created this cron past the lastDCAActivation timestamp
+	go doDrip()
+	newDripConfig.Cron.Start()
+	logrus.WithField("vault", config.Vault).Info("scheduled doDrip")
+	return &newDripConfig, nil
+}
+
 // TODO(Mocha): this function shouldn't be this long
 // it should just verify the vault can drip
-// then orchestrate instructions
-// then send them
+// then orchestrate instructions, then send them
 //nolint:funlen
 func (dca *DCACronService) run(dripConfig configs.DripConfig) error {
 	logrus.WithField("vault", dripConfig.Vault).Info("preparing trigger dca")
@@ -230,14 +270,14 @@ func (dca *DCACronService) run(dripConfig configs.DripConfig) error {
 			WithField("dripAmount", vaultData.DripAmount).
 			WithField("vault", dripConfig.Vault).
 			Info("exiting, drip amount is 0")
-		return nil
+		return errors.New(ErrDripAmount0)
 	}
 	if vaultData.DripActivationTimestamp > time.Now().Unix() {
 		logrus.
 			WithField("dripActivationTimestamp", time.Unix(vaultData.DripActivationTimestamp, 0).String()).
 			WithField("vault", dripConfig.Vault).
-			Info("exiting, dca already triggered")
-		return nil
+			Info("exiting, drip already triggered")
+		return errors.New(ErrDripAlreadyTriggered)
 	}
 	balance, err := dca.solClient.GetTokenAccountBalance(ctx, solana.MustPublicKeyFromBase58(dripConfig.VaultTokenAAccount), rpc.CommitmentConfirmed)
 	if err != nil || balance == nil || balance.Value == nil {
@@ -261,7 +301,7 @@ func (dca *DCACronService) run(dripConfig configs.DripConfig) error {
 			WithField("dripAmount", vaultData.DripAmount).
 			WithField("vault", dripConfig.Vault).
 			Errorf("exiting, token balance is too low")
-		return nil
+		return fmt.Errorf("token balance is too low")
 	}
 
 	var instructions []solana.Instruction
