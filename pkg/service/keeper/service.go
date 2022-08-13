@@ -112,11 +112,10 @@ func (dca *KeeperService) validateVault(ctx context.Context, dripConfig configs.
 		return drip.Vault{}, err
 	}
 	vaultData, err := dca.solanaClient.GetVault(ctx, vaultAddress)
+	if err != nil {
+		return drip.Vault{}, err
+	}
 	if vaultData.DripActivationTimestamp > time.Now().Unix() {
-		logrus.
-			WithField("dripActivationTimestamp", time.Unix(vaultData.DripActivationTimestamp, 0).String()).
-			WithField("vault", dripConfig.Vault).
-			Info("exiting, drip already triggered")
 		return drip.Vault{}, errors.New(ErrDripAlreadyTriggered)
 	}
 	// Check if Vault can Drip
@@ -124,7 +123,7 @@ func (dca *KeeperService) validateVault(ctx context.Context, dripConfig configs.
 		logrus.
 			WithField("dripAmount", vaultData.DripAmount).
 			WithField("vault", dripConfig.Vault).
-			Info("exiting, drip amount is 0")
+			Info("drip amount is 0")
 		return drip.Vault{}, errors.New(ErrDripAmount0)
 	}
 	vaultTokenAAccountAddress, err := solana.PublicKeyFromBase58(dripConfig.VaultTokenAAccount)
