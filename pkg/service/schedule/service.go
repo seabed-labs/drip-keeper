@@ -92,7 +92,8 @@ func NewDCACron(
 }
 
 func (dripScheduler *DripSchedulerService) registerDripConfig(newConfig configs.DripConfig) (*DripConfig, error) {
-	logrus.WithField("vault", newConfig.Vault).Info("received new config")
+	log := logrus.WithField("vault", newConfig.Vault)
+	log.Debug("received new config")
 
 	if v, ok := dripScheduler.dripConfigs.Get(newConfig.Vault); ok {
 		dripConfig := v.(*DripConfig)
@@ -111,10 +112,10 @@ func (dripScheduler *DripSchedulerService) registerDripConfig(newConfig configs.
 			dripScheduler.dripConfigs.Set(newConfig.Vault, dripConfig)
 			return dripConfig, nil
 		}
-		logrus.WithField("vault", newConfig.Vault).Info("vault already registered, skipping cron creation")
+		log.Debug("vault already registered, skipping cron creation")
 		return nil, nil
 	}
-	logrus.WithField("vault", newConfig.Vault).Info("creating cron")
+	log.Debug("creating cron")
 	return dripScheduler.scheduleDrip(newConfig, true)
 }
 
@@ -137,11 +138,14 @@ func (dripScheduler *DripSchedulerService) stopCron(
 }
 
 func (dripScheduler *DripSchedulerService) runWithRetry(vault string, try, maxTry int, timeout int64) {
+	log := logrus.
+		WithField("vault", vault).
+		WithField("try", try).
+		WithField("maxTry", maxTry).
+		WithField("timeout", timeout)
 	v, ok := dripScheduler.dripConfigs.Get(vault)
 	if !ok {
-		logrus.
-			WithField("vault", vault).
-			Error("failed to get dcaCron from dripConfigs")
+		log.Error("failed to get dcaCron from dripConfigs")
 		return
 	}
 	dripConfig := v.(*DripConfig)
@@ -150,57 +154,57 @@ func (dripScheduler *DripSchedulerService) runWithRetry(vault string, try, maxTr
 	defer func() {
 		if r := recover(); r != nil {
 			_ = dripScheduler.alertService.SendError(context.Background(), fmt.Errorf("panic in runWithRetry"))
-			logrus.
+			log.
 				WithField("r", r).
 				WithField("stackTrace", string(debug.Stack())).
 				WithField("config", config).
-				WithField("try", try).
-				WithField("maxTry", maxTry).
-				WithField("timeOut", timeout).
 				Errorf("panic in doDrip")
 		}
 	}()
 	if err := dripScheduler.keeper.Run(config); err != nil {
+		log := log.WithError(err)
 		if try >= maxTry {
 			if err.Error() != keeper.ErrDripAmount0 && err.Error() != keeper.ErrDripAlreadyTriggered {
-				logrus.WithField("try", try).WithField("maxTry", maxTry).WithField("timeout", timeout).Info("failed to drip")
+				log.Error("failed to drip")
 				if alertErr := dripScheduler.alertService.SendError(context.Background(), fmt.Errorf("err in runWithRetry, try %d, maxTry %d, err %w", try, maxTry, err)); alertErr != nil {
-					logrus.WithError(err).Errorf("failed to send error alert, alertErr: %s", alertErr)
+					log.WithField("alertErr", alertErr.Error()).Errorf("failed to send error alert")
 				}
 			}
 			// first stop the current cron to avoid mem leaks
 			if stopErr := dripScheduler.stopCron(context.Background(), dripConfig.Cron); stopErr != nil {
-				logrus.WithError(stopErr).Error("failed to stop cron job while trying to reschedule")
+				log.WithError(stopErr).Error("failed to stop cron job while trying to reschedule")
 			}
 
 			// create new drip handler
-			if err.Error() == keeper.ErrDripAlreadyTriggered {
-				if _, err := dripScheduler.scheduleDrip(config, false); err != nil {
-					logrus.WithError(err).WithField("vault", config.Vault).Errorf("failed to reschedule drip")
+			if err.Error() == keeper.ErrDripAlreadyTriggered || err.Error() == keeper.ErrDripAmount0 {
+				if _, scheduleErr := dripScheduler.scheduleDrip(config, false); scheduleErr != nil {
+					log.WithField("scheduleErr", scheduleErr.Error()).WithField("snapToBeginning", false).Errorf("failed to reschedule drip")
 				}
 			} else {
-				if _, err := dripScheduler.scheduleDrip(config, true); err != nil {
-					logrus.WithError(err).WithField("vault", config.Vault).Errorf("failed to reschedule drip")
+				if _, scheduleErr := dripScheduler.scheduleDrip(config, true); scheduleErr != nil {
+					log.WithField("scheduleErr", scheduleErr.Error()).WithField("snapToBeginning", true).Errorf("failed to reschedule drip")
 				}
 			}
 			return
 		}
-		logrus.WithError(err).WithField("timeout", timeout).WithField("try", try).Info("waiting before retrying drip")
+		log.Warn("waiting before retrying drip")
 		time.Sleep(time.Duration(timeout) * time.Second)
 		dripScheduler.runWithRetry(config.Vault, try+1, maxTry, timeout*timeout)
 	}
 }
 
 func (dripScheduler *DripSchedulerService) scheduleDrip(config configs.DripConfig, snapToBeginning bool) (*DripConfig, error) {
+	log := logrus.WithField("vault", config.Vault).WithField("snapToBeginning", snapToBeginning)
 	schedule, granularity, err := dripScheduler.getSchedulerFromProtoConfig(config.VaultProtoConfig, snapToBeginning)
 	if err != nil {
-		logrus.WithError(err).Errorf("failed to getSchedulerFromProtoConfig")
+		log.WithError(err).Error("failed to getSchedulerFromProtoConfig")
 		return nil, err
 	}
+	log.WithField("nextSchedule", schedule.At.String())
 	cronJob := cron.New()
 	doDrip := dripScheduler.getDripFunc(config.Vault)
 	if _, err := cronJob.AddFunc(fmt.Sprintf("@every %ds", granularity), doDrip); err != nil {
-		logrus.WithError(err).Errorf("failed to addFunc to cronJob while trying to reschedule")
+		log.WithError(err).Error("failed to addFunc to cronJob while trying to reschedule")
 		return nil, err
 	}
 	cronJob.Schedule(&schedule, cronJob)
@@ -212,7 +216,7 @@ func (dripScheduler *DripSchedulerService) scheduleDrip(config configs.DripConfi
 	// Run the first trigger dca right now in case we created this cron past the lastDCAActivation timestamp
 	go doDrip()
 	newDripConfig.Cron.Start()
-	logrus.WithField("vault", config.Vault).Info("scheduled doDrip")
+	log.WithField("vault", config.Vault).Info("scheduled doDrip")
 	return &newDripConfig, nil
 }
 
@@ -237,7 +241,6 @@ func (dripScheduler *DripSchedulerService) getSchedulerFromProtoConfig(address s
 func newScheduler(granularity uint64, snapToBeginning bool) Scheduler {
 	if snapToBeginning {
 		return Scheduler{time.Now().Add(-1 * time.Duration(time.Now().Unix()%int64(granularity))), time.Second * time.Duration(granularity)}
-	} else {
-		return Scheduler{time.Now().Add(time.Duration(time.Now().Unix() % int64(granularity))), time.Second * time.Duration(granularity)}
 	}
+	return Scheduler{time.Now().Add(time.Duration(time.Now().Unix() % int64(granularity))), time.Second * time.Duration(granularity)}
 }
