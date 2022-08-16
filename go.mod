@@ -18,6 +18,7 @@ require (
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.9.0
+	github.com/test-go/testify v1.1.4
 	go.uber.org/fx v1.15.0
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306
 )
@@ -68,7 +69,6 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/mr-tron/base58 v1.2.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/testify v1.8.0
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/dig v1.12.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
