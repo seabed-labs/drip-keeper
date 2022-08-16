@@ -236,7 +236,7 @@ func (w *SolanaClient) GetMaybeUninitializedVaultPeriod(
 	}
 	var instruction solana.Instruction
 	// Use GetAccountInfoWithOpts so we can pass in a commitment level
-	if resp, err := w.client.GetAccountInfoWithOpts(ctx, vaultPeriod, &rpc.GetAccountInfoOpts{
+	if _, err := w.client.GetAccountInfoWithOpts(ctx, vaultPeriod, &rpc.GetAccountInfoOpts{
 		Encoding:   solana.EncodingBase64,
 		Commitment: "confirmed",
 		DataSlice:  nil,
@@ -250,16 +250,11 @@ func (w *SolanaClient) GetMaybeUninitializedVaultPeriod(
 				Errorf("failed to create InitVaultPeriod instruction")
 			return solana.PublicKey{}, nil, err
 		}
-	} else {
-		var vaultPeriodData drip.VaultPeriod
-		if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&vaultPeriodData); err != nil {
-			return solana.PublicKey{}, nil, err
-		}
+	} else if err != nil {
 		log.
-			WithField("vaultPeriodID", vaultPeriodID).
-			WithField("dar", vaultPeriodData.Dar).
-			WithField("twap", vaultPeriodData.Twap).
-			Infof("fetched vault period")
+			WithError(err).
+			Infof("failed to GetMaybeUninitializedVaultPeriod")
+		return solana.PublicKey{}, nil, err
 	}
 	return vaultPeriod, instruction, nil
 }
