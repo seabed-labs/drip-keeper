@@ -30,6 +30,8 @@ type SolanaClient struct {
 	client          *rpc.Client
 }
 
+const ErrNotFound = "not found"
+
 func New(
 	config *configs.Config,
 ) (*SolanaClient, error) {
@@ -205,7 +207,7 @@ func (w *SolanaClient) GetMaybeUninitializedTokenAccount(
 		Encoding:   solana.EncodingBase64,
 		Commitment: "confirmed",
 		DataSlice:  nil,
-	}); err != nil && err.Error() == "not found" {
+	}); err != nil && err.Error() == ErrNotFound {
 		instruction, err = w.CreateTokenAccount(ctx, owner, mint)
 		if err != nil {
 			return solana.PublicKey{}, nil, err
@@ -219,15 +221,15 @@ func (w *SolanaClient) GetMaybeUninitializedVaultPeriod(
 	vault, vaultProtoConfig, tokenAMint, tokenBMint solana.PublicKey,
 	vaultPeriodID int64,
 ) (solana.PublicKey, solana.Instruction, error) {
+	log := logrus.WithField("vault", vault.String())
 	vaultPeriod, _, err := solana.FindProgramAddress([][]byte{
 		[]byte("vault_period"),
 		vault[:],
 		[]byte(strconv.FormatInt(vaultPeriodID, 10)),
 	}, drip.ProgramID)
 	if err != nil {
-		logrus.
+		log.
 			WithError(err).
-			WithField("dcaProgram", drip.ProgramID.String()).
 			WithField("vaultPeriodID", vaultPeriodID).
 			Errorf("failed to get vaultPeriodI PDA")
 		return solana.PublicKey{}, nil, err
@@ -238,13 +240,12 @@ func (w *SolanaClient) GetMaybeUninitializedVaultPeriod(
 		Encoding:   solana.EncodingBase64,
 		Commitment: "confirmed",
 		DataSlice:  nil,
-	}); err != nil {
+	}); err != nil && err.Error() == ErrNotFound {
 		// Failure is likely because the vault period is not initialized
 		instruction, err = w.InitVaultPeriod(ctx, vault.String(), vaultProtoConfig.String(), vaultPeriod.String(), tokenAMint.String(), tokenBMint.String(), vaultPeriodID)
 		if err != nil {
-			logrus.
+			log.
 				WithError(err).
-				WithField("dcaProgram", drip.ProgramID.String()).
 				WithField("vaultPeriodID", vaultPeriodID).
 				Errorf("failed to create InitVaultPeriod instruction")
 			return solana.PublicKey{}, nil, err
@@ -254,7 +255,7 @@ func (w *SolanaClient) GetMaybeUninitializedVaultPeriod(
 		if err := bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&vaultPeriodData); err != nil {
 			return solana.PublicKey{}, nil, err
 		}
-		logrus.
+		log.
 			WithField("vaultPeriodID", vaultPeriodID).
 			WithField("dar", vaultPeriodData.Dar).
 			WithField("twap", vaultPeriodData.Twap).
