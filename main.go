@@ -19,7 +19,18 @@ import (
 
 func main() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
-	fxApp := fx.New(
+	fxApp := fx.New(getDependencies()...)
+	if err := fxApp.Start(context.Background()); err != nil {
+		logrus.WithError(err).Fatalf("failed to start keeper bot")
+	}
+	logrus.Info("starting keeper bot")
+	sig := <-fxApp.Done()
+	logrus.WithFields(logrus.Fields{"signal": sig}).
+		Infof("received exit signal, stoping keeper bot")
+}
+
+func getDependencies() []fx.Option {
+	return []fx.Option{
 		fx.Provide(
 			configs.New,
 			solanaclient.New,
@@ -34,12 +45,5 @@ func main() {
 			heartbeat.NewHeartbeatWorker,
 		),
 		fx.NopLogger,
-	)
-	if err := fxApp.Start(context.Background()); err != nil {
-		logrus.WithError(err).Fatalf("failed to start keeper bot")
 	}
-	logrus.Info("starting keeper bot")
-	sig := <-fxApp.Done()
-	logrus.WithFields(logrus.Fields{"signal": sig}).
-		Infof("received exit signal, stoping keeper bot")
 }
