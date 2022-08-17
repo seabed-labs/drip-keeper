@@ -2,11 +2,12 @@ package heartbeat
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
-	"net/http"
 )
 
 func NewHeartbeatWorker(
@@ -18,11 +19,11 @@ func NewHeartbeatWorker(
 		return nil
 	}
 	log := logrus.WithField("heartbeatURL", config.HeartbeatURL)
-	log.Info("initializing heartbeat worker")
+	log.Debug("initializing heartbeat worker")
 	cronJob := cron.New()
 	cronFunc := func() {
 		log.
-			Info("logging heartbeat")
+			Debug("logging heartbeat")
 		resp, err := http.Get(config.HeartbeatURL)
 		if err != nil {
 			log.WithError(err).Error("failed to ping heartbeat")
