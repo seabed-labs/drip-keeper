@@ -222,7 +222,7 @@ func (dripScheduler *DripSchedulerService) scheduleDrip(config configs.DripConfi
 
 func (dripScheduler *DripSchedulerService) getDripFunc(vault string) func() {
 	return func() {
-		dripScheduler.runWithRetry(vault, 0, 5, 2)
+		dripScheduler.runWithRetry(vault, 0, 2, 2)
 	}
 }
 
