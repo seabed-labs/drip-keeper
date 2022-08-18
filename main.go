@@ -39,8 +39,8 @@ func getDependencies() []fx.Option {
 			keeper.NewKeeperService,
 		),
 		fx.Invoke(
-			// NewDCACron should be invoked first
-			dca.NewDCACron,
+			// NewSchedulerService should be invoked first
+			dca.NewSchedulerService,
 			vaultprovider.NewVaultProvider,
 			heartbeat.NewHeartbeatWorker,
 		),

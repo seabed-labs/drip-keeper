@@ -45,7 +45,7 @@ type DripConfig struct {
 	Config configs.DripConfig
 }
 
-func NewDCACron(
+func NewSchedulerService(
 	lc fx.Lifecycle,
 	config *configs.Config,
 	eventBus EventBus.Bus,
