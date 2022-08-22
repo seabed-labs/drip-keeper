@@ -33,7 +33,7 @@ func (dca *KeeperService) dripOrcaWhirlpool(
 		return nil, err
 	}
 	if err := dca.ensureTickArrays(ctx, dripConfig, vaultData, whirlpoolData); err != nil {
-		logrus.WithError(err).Warn("failed to ensure tick arrays, trying anyways...")
+		return []solana.Instruction{}, err
 	}
 	quoteEstimate, err := solanaclient.GetOrcaWhirlpoolQuoteEstimate(
 		whirlpoolData.WhirlpoolsConfig.String(),
