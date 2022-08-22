@@ -87,8 +87,6 @@ func (w *SolanaClient) DripSPLTokenSwap(
 	txBuilder.SetLastVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriodI.String()))
 	txBuilder.SetCurrentVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriodJ.String()))
 	txBuilder.SetSwapTokenMintAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapTokenMint))
-	txBuilder.SetTokenAMintAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.TokenAMint))
-	txBuilder.SetTokenBMintAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.TokenBMint))
 	txBuilder.SetVaultTokenAAccountAccount(solana.MustPublicKeyFromBase58(config.VaultTokenAAccount))
 	txBuilder.SetVaultTokenBAccountAccount(solana.MustPublicKeyFromBase58(config.VaultTokenBAccount))
 	txBuilder.SetSwapTokenAAccountAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapTokenAAccount))
