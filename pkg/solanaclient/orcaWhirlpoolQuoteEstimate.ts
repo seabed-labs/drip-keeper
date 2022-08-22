@@ -35,7 +35,7 @@ async function getQuote() {
     const fetcher = new AccountFetcher(provider.connection);
     // @ts-ignore - orca uses an older anchor version, so the provider is incompatible
     const ctx = WhirlpoolContext.withProvider(provider, ORCA_WHIRLPOOL_PROGRAM_ID);
-    const whirlpoolClient = buildWhirlpoolClient(ctx);
+    const whirlpoolClient = buildWhirlpoolClient(ctx, fetcher);
     // console.log(config, tokenAMint, tokenBMint, )
     const whirlpoolPda = PDAUtil.getWhirlpool(
         ORCA_WHIRLPOOL_PROGRAM_ID,
