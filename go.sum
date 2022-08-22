@@ -91,6 +91,8 @@ github.com/dcaf-labs/solana-go-clients v0.0.0-20220813034420-90a476347746 h1:eKU
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220813034420-90a476347746/go.mod h1:t4x3fOFS/BidtNeFKM+zxzH18k5cTGOgwNPbqGlaIqs=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220822224702-b657f391cd76 h1:yGhydbmKxUf6s1+qaFIt5xMmbEWCt5pOndcTSB1kEJE=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220822224702-b657f391cd76/go.mod h1:t4x3fOFS/BidtNeFKM+zxzH18k5cTGOgwNPbqGlaIqs=
+github.com/dcaf-labs/solana-go-clients v0.0.0-20220822231656-b584aaa1044e h1:GrrfdKXxTAoYfZIFgQ6lZHy+6o+F9YqblIBZQHOdDNY=
+github.com/dcaf-labs/solana-go-clients v0.0.0-20220822231656-b584aaa1044e/go.mod h1:t4x3fOFS/BidtNeFKM+zxzH18k5cTGOgwNPbqGlaIqs=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
 github.com/disgoorg/disgo v0.13.5 h1:nJpPnQHFhlPSs2J6lNWZzQV1oyP5f3QDLagG5I0I7U8=
