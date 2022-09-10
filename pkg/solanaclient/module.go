@@ -35,7 +35,7 @@ const ErrNotFound = "not found"
 func New(
 	config *configs.Config,
 ) (*SolanaClient, error) {
-	url := getURL(config.Environment)
+	url := getURL(config.Network)
 	// Maximum number of requests per 10 seconds per IP for a single RPC: 40
 	rateLimiter := rate.NewLimiter(rate.Every(time.Second*10/40), 1)
 	httpClient := retryablehttp.NewClient()
@@ -312,15 +312,15 @@ func checkTxHash(
 	}
 }
 
-func getURL(env configs.Environment) string {
+func getURL(env configs.Network) string {
 	switch env {
-	case configs.DevnetEnv:
+	case configs.DevnetNetwork:
 		return "https://devnet.genesysgo.net"
-	case configs.MainnetEnv:
+	case configs.MainnetNetwork:
 		return "https://ssc-dao.genesysgo.net"
-	case configs.NilEnv:
+	case configs.NilNetwork:
 		fallthrough
-	case configs.LocalnetEnv:
+	case configs.LocalNetwork:
 		fallthrough
 	default:
 		return rpc.LocalNet_RPC
