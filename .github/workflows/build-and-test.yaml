@@ -89,7 +89,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    needs: [build_cli_deps, build_bot]
+    needs: [build_bot]
 
     steps:
       - name: Checkout code
