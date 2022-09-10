@@ -66,6 +66,7 @@ const (
 
 const KEEPER_BOT_WALLET = "KEEPER_BOT_WALLET"
 const ENV = "ENV"
+const NETWORK = "NETWORK"
 const PROJECT_ROOT_OVERRIDE = "PROJECT_ROOT_OVERRIDE"
 
 func New() (*Config, error) {
