@@ -12,58 +12,58 @@ env:
   GOPRIVATE: github.com/dcaf-labs/solana-go-clients,github.com/dcaf-labs/drip-client/drip-go
 
 jobs:
-  build_cli_deps:
-    name: Build CLI Dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cache cli deps
-        id: cache-cli-deps
-        uses: actions/cache@v2
-        with:
-          key: $${{ env.CLI_CACHE_KEY }}
-          path: |
-            ~/.local/share/solana
-            ~/.cargo
-            ~/.rustup
-            ~/.cargo/bin/anchor
-
-      - name: Install os deps
-        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
-        run: sudo apt-get update && sudo apt-get install -y pkg-config build-essential libudev-dev
-
-      - name: Install Rust Toolchain
-        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-
-      - name: Install Solana Tools
-        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
-        run: sh -c "$(curl -sSfL https://release.solana.com/v1.10.5/install)"
-
-      - run: echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Install Anchor CLI
-        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
-        run: cargo install --git https://github.com/project-serum/anchor --tag v0.22.0 anchor-cli --locked
-
-      - name: Cache Solana Programs
-        id: cache-solana-programs
-        uses: actions/cache@v2
-        with:
-          key: $${{ env.SOLANA_PROGRAMS }}
-          path: |
-            solana-programs
-            solana-programs/target
-
-      - name: Checkout Solana Programs
-        if: steps.cache-solana-programs.outputs.cache-hit != 'true'
-        run: |
-          rm -rf solana-programs
-          git clone https://${{ env.GITHUB_TOKEN }}@github.com/Dcaf-Protocol/solana-programs.git 
-          cd solana-programs
-          git checkout ${{ env.SOLANA_PROGRAMS }}
-          anchor build
+#  build_cli_deps:
+#    name: Build CLI Dependencies
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Cache cli deps
+#        id: cache-cli-deps
+#        uses: actions/cache@v2
+#        with:
+#          key: $${{ env.CLI_CACHE_KEY }}
+#          path: |
+#            ~/.local/share/solana
+#            ~/.cargo
+#            ~/.rustup
+#            ~/.cargo/bin/anchor
+#
+#      - name: Install os deps
+#        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
+#        run: sudo apt-get update && sudo apt-get install -y pkg-config build-essential libudev-dev
+#
+#      - name: Install Rust Toolchain
+#        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
+#        uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: stable
+#
+#      - name: Install Solana Tools
+#        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
+#        run: sh -c "$(curl -sSfL https://release.solana.com/v1.10.5/install)"
+#
+#      - run: echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$PATH" >> $GITHUB_ENV
+#
+#      - name: Install Anchor CLI
+#        if: steps.cache-cli-deps.outputs.cache-hit != 'true'
+#        run: cargo install --git https://github.com/project-serum/anchor --tag v0.22.0 anchor-cli --locked
+#
+#      - name: Cache Solana Programs
+#        id: cache-solana-programs
+#        uses: actions/cache@v2
+#        with:
+#          key: $${{ env.SOLANA_PROGRAMS }}
+#          path: |
+#            solana-programs
+#            solana-programs/target
+#
+#      - name: Checkout Solana Programs
+#        if: steps.cache-solana-programs.outputs.cache-hit != 'true'
+#        run: |
+#          rm -rf solana-programs
+#          git clone https://${{ env.GITHUB_TOKEN }}@github.com/Dcaf-Protocol/solana-programs.git
+#          cd solana-programs
+#          git checkout ${{ env.SOLANA_PROGRAMS }}
+#          anchor build
 
   build_bot:
     name: Build Keeper Bot
@@ -95,30 +95,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Cache CLI Deps
-        id: cache-cli-deps
-        uses: actions/cache@v2
-        with:
-          key: $${{ env.CLI_CACHE_KEY }}
-          path: |
-            ~/.local/share/solana
-            ~/.cargo
-            ~/.rustup
-            ~/.cargo/bin/anchor
+#      - name: Cache CLI Deps
+#        id: cache-cli-deps
+#        uses: actions/cache@v2
+#        with:
+#          key: $${{ env.CLI_CACHE_KEY }}
+#          path: |
+#            ~/.local/share/solana
+#            ~/.cargo
+#            ~/.rustup
+#            ~/.cargo/bin/anchor
+#
+#      - name: Add solana to path
+#        run: echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Add solana to path
-        run: echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Run solana-test-validator
-        run: solana-test-validator > /dev/null 2>&1 &
-
-      - name: Cache solana programs
-        uses: actions/cache@v2
-        with:
-          key: $${{ env.SOLANA_PROGRAMS }}
-          path: |
-            solana-programs
-            solana-programs/target
+#      - name: Run solana-test-validator
+#        run: solana-test-validator > /dev/null 2>&1 &
+#
+#      - name: Cache solana programs
+#        uses: actions/cache@v2
+#        with:
+#          key: $${{ env.SOLANA_PROGRAMS }}
+#          path: |
+#            solana-programs
+#            solana-programs/target
 
       - name: Install Go
         uses: actions/setup-go@v2
@@ -130,14 +130,14 @@ jobs:
         with:
           cc_test_reporter_id: ${{ secrets.CC_TEST_REPORTER_ID }}
 
-      - name: Deploy Programs
-        run: |
-          go run scripts/check_local_validator.go
-          cd solana-programs
-          solana config set -u localhost 
-          echo -e ${{ secrets.KEEPER_BOT_WALLET }} >> ./id.json
-          solana airdrop 10 ./id.json
-          anchor deploy --provider.wallet ./id.json
+#      - name: Deploy Programs
+#        run: |
+#          go run scripts/check_local_validator.go
+#          cd solana-programs
+#          solana config set -u localhost
+#          echo -e ${{ secrets.KEEPER_BOT_WALLET }} >> ./id.json
+#          solana airdrop 10 ./id.json
+#          anchor deploy --provider.wallet ./id.json
 
       - name: Cache go packages
         uses: actions/cache@v2
