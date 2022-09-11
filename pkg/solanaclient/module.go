@@ -315,9 +315,9 @@ func checkTxHash(
 func getURL(env configs.Network) string {
 	switch env {
 	case configs.DevnetNetwork:
-		return "https://devnet.genesysgo.net"
+		return rpc.DevNet_RPC
 	case configs.MainnetNetwork:
-		return "https://ssc-dao.genesysgo.net"
+		return rpc.MainNetBeta_RPC
 	case configs.NilNetwork:
 		fallthrough
 	case configs.LocalNetwork:
