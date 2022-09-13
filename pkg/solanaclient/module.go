@@ -230,6 +230,7 @@ func (w *SolanaClient) GetMaybeUninitializedVaultPeriod(
 	if err != nil {
 		log.
 			WithError(err).
+			WithField("programId", drip.ProgramID.String()).
 			WithField("vaultPeriodID", vaultPeriodID).
 			Errorf("failed to get vaultPeriodI PDA")
 		return solana.PublicKey{}, nil, err
