@@ -8,7 +8,8 @@ import (
 )
 
 type Config struct {
-	Environment              Environment  `yaml:"environment" env:"ENV" env-default:"DEVNET"`
+	Environment              Environment  `yaml:"environment" env:"ENV" env-default:"STAGING"`
+	Network                  Network      `yaml:"network" env:"NETWORK" env-default:"DEVNET"`
 	DripProgramID            string       `yaml:"dripProgramID" env:"DRIP_PROGRAM_ID"  env-default:"dripTrkvSyQKvkyWg7oi4jmeEGMA5scSYowHArJ9Vwk"`
 	Wallet                   string       `yaml:"solanaclient"      env:"KEEPER_BOT_WALLET"`
 	FeeWallet                string       `yaml:"feeWallet"      env:"KEEPER_BOT_FEE_WALLET" env-default:"H7pb5fjhDygia45TeyhyE1JDmQXSuC5FrdXeSjA9kQ9T"`
@@ -47,18 +48,25 @@ type DripConfig struct {
 	SPLTokenSwapConfig  SPLTokenSwapConfig  `yaml:"SPLTokenSwapConfig"`
 	OrcaWhirlpoolConfig OrcaWhirlpoolConfig `yaml:"orcaWhirlpoolConfig"`
 }
+type Network string
+
+const (
+	NilNetwork     = Network("")
+	LocalNetwork   = Network("LOCALNET")
+	DevnetNetwork  = Network("DEVNET")
+	MainnetNetwork = Network("MAINNET")
+)
 
 type Environment string
 
 const (
-	NilEnv      = Environment("")
-	LocalnetEnv = Environment("LOCALNET")
-	DevnetEnv   = Environment("DEVNET")
-	MainnetEnv  = Environment("MAINNET")
+	Staging = Environment("STAGING")
+	Prod    = Environment("PROD")
 )
 
 const KEEPER_BOT_WALLET = "KEEPER_BOT_WALLET"
 const ENV = "ENV"
+const NETWORK = "NETWORK"
 const PROJECT_ROOT_OVERRIDE = "PROJECT_ROOT_OVERRIDE"
 
 func New() (*Config, error) {
@@ -81,14 +89,14 @@ func New() (*Config, error) {
 	return &config, nil
 }
 
-func IsLocal(env Environment) bool {
-	return env == LocalnetEnv || env == NilEnv
+func IsLocal(network Network) bool {
+	return network == LocalNetwork || network == NilNetwork
 }
 
-func IsDev(env Environment) bool {
-	return env == DevnetEnv
+func IsDev(network Network) bool {
+	return network == DevnetNetwork
 }
 
-func IsProd(env Environment) bool {
-	return env == MainnetEnv
+func IsProd(network Network) bool {
+	return network == MainnetNetwork
 }

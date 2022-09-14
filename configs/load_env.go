@@ -25,7 +25,10 @@ func GetProjectRoot() string {
 }
 
 func LoadEnv() {
-	logrus.WithField("env", Environment(os.Getenv(ENV))).Infof("loading env")
+	logrus.
+		WithField("environment", Environment(os.Getenv(ENV))).
+		WithField("network", Network(os.Getenv(NETWORK))).
+		Infof("loading env")
 	re := regexp.MustCompile(`^(.*` + PROJECT_DIR + `)`)
 	cwd, _ := os.Getwd()
 	rootPath := re.Find([]byte(cwd))

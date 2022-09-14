@@ -28,30 +28,28 @@ func (w *SolanaClient) DripOrcaWhirlpool(
 	ctx context.Context,
 	params DripOrcaWhirlpoolParams,
 ) (solana.Instruction, error) {
+	commonBuilder := drip.NewDripOrcaWhirlpoolCommonAccountsBuilder()
+	commonBuilder.SetDripTriggerSourceAccount(w.wallet.PublicKey())
+	commonBuilder.SetVaultAccount(params.Vault)
+	commonBuilder.SetVaultProtoConfigAccount(params.VaultData.ProtoConfig)
+	commonBuilder.SetLastVaultPeriodAccount(params.VaultPeriodI)
+	commonBuilder.SetCurrentVaultPeriodAccount(params.VaultPeriodJ)
+	commonBuilder.SetVaultTokenAAccountAccount(params.VaultData.TokenAAccount)
+	commonBuilder.SetVaultTokenBAccountAccount(params.VaultData.TokenBAccount)
+	commonBuilder.SetSwapTokenAAccountAccount(params.WhirlpoolData.TokenVaultA)
+	commonBuilder.SetSwapTokenBAccountAccount(params.WhirlpoolData.TokenVaultB)
+	commonBuilder.SetDripFeeTokenAAccountAccount(params.BotTokenAFeeAccount)
+	commonBuilder.SetTokenProgramAccount(solana.TokenProgramID)
+
 	txBuilder := drip.NewDripOrcaWhirlpoolInstructionBuilder()
-	txBuilder.SetDripTriggerSourceAccount(w.wallet.PublicKey())
-
-	txBuilder.SetVaultAccount(params.Vault)
-	txBuilder.SetVaultProtoConfigAccount(params.VaultData.ProtoConfig)
-	txBuilder.SetVaultTokenAAccountAccount(params.VaultData.TokenAAccount)
-	txBuilder.SetVaultTokenBAccountAccount(params.VaultData.TokenBAccount)
-	txBuilder.SetDripFeeTokenAAccountAccount(params.BotTokenAFeeAccount)
-	txBuilder.SetLastVaultPeriodAccount(params.VaultPeriodI)
-	txBuilder.SetCurrentVaultPeriodAccount(params.VaultPeriodJ)
-
+	txBuilder.SetCommonAccountsFromBuilder(commonBuilder)
 	txBuilder.SetWhirlpoolAccount(params.Whirlpool)
-	txBuilder.SetSwapTokenAAccountAccount(params.WhirlpoolData.TokenVaultA)
-	txBuilder.SetSwapTokenBAccountAccount(params.WhirlpoolData.TokenVaultB)
 	txBuilder.SetTickArray0Account(params.TickArray0)
 	txBuilder.SetTickArray1Account(params.TickArray1)
 	txBuilder.SetTickArray2Account(params.TickArray2)
 	txBuilder.SetOracleAccount(params.Oracle)
 
-	txBuilder.SetTokenProgramAccount(solana.TokenProgramID)
-	txBuilder.SetAssociatedTokenProgramAccount(solana.SPLAssociatedTokenAccountProgramID)
 	txBuilder.SetWhirlpoolProgramAccount(whirlpool.ProgramID)
-	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
-	txBuilder.SetRentAccount(solana.SysVarRentPubkey)
 
 	return txBuilder.ValidateAndBuild()
 }
@@ -78,27 +76,26 @@ func (w *SolanaClient) InitializeTickArray(
 func (w *SolanaClient) DripSPLTokenSwap(
 	ctx context.Context, config configs.DripConfig, vaultPeriodI, vaultPeriodJ, botTokenAAccount solana.PublicKey,
 ) (solana.Instruction, error) {
-	txBuilder := drip.NewDripSplTokenSwapInstructionBuilder()
-	txBuilder.SetDripTriggerSourceAccount(w.wallet.PublicKey())
+	commonBuilder := drip.NewDripSplTokenSwapCommonAccountsBuilder()
+	commonBuilder.SetDripFeeTokenAAccountAccount(botTokenAAccount)
+	commonBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58(config.Vault))
+	commonBuilder.SetVaultProtoConfigAccount(solana.MustPublicKeyFromBase58(config.VaultProtoConfig))
+	commonBuilder.SetLastVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriodI.String()))
+	commonBuilder.SetCurrentVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriodJ.String()))
+	commonBuilder.SetVaultTokenAAccountAccount(solana.MustPublicKeyFromBase58(config.VaultTokenAAccount))
+	commonBuilder.SetVaultTokenBAccountAccount(solana.MustPublicKeyFromBase58(config.VaultTokenBAccount))
+	commonBuilder.SetSwapTokenAAccountAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapTokenAAccount))
+	commonBuilder.SetSwapTokenBAccountAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapTokenBAccount))
+	commonBuilder.SetDripTriggerSourceAccount(w.wallet.PublicKey())
 
-	txBuilder.SetDripFeeTokenAAccountAccount(botTokenAAccount)
-	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58(config.Vault))
-	txBuilder.SetVaultProtoConfigAccount(solana.MustPublicKeyFromBase58(config.VaultProtoConfig))
-	txBuilder.SetLastVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriodI.String()))
-	txBuilder.SetCurrentVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriodJ.String()))
+	txBuilder := drip.NewDripSplTokenSwapInstructionBuilder()
+	txBuilder.SetCommonAccountsFromBuilder(commonBuilder)
 	txBuilder.SetSwapTokenMintAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapTokenMint))
-	txBuilder.SetVaultTokenAAccountAccount(solana.MustPublicKeyFromBase58(config.VaultTokenAAccount))
-	txBuilder.SetVaultTokenBAccountAccount(solana.MustPublicKeyFromBase58(config.VaultTokenBAccount))
-	txBuilder.SetSwapTokenAAccountAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapTokenAAccount))
-	txBuilder.SetSwapTokenBAccountAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapTokenBAccount))
 	txBuilder.SetSwapFeeAccountAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapFeeAccount))
 	txBuilder.SetSwapAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.Swap))
 	txBuilder.SetSwapAuthorityAccount(solana.MustPublicKeyFromBase58(config.SPLTokenSwapConfig.SwapAuthority))
 	txBuilder.SetTokenSwapProgramAccount(solana.TokenSwapProgramID)
-	txBuilder.SetTokenProgramAccount(solana.TokenProgramID)
-	txBuilder.SetAssociatedTokenProgramAccount(solana.SPLAssociatedTokenAccountProgramID)
-	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
-	txBuilder.SetRentAccount(solana.SysVarRentPubkey)
+	commonBuilder.SetTokenProgramAccount(solana.TokenProgramID)
 	return txBuilder.ValidateAndBuild()
 }
 
@@ -106,13 +103,11 @@ func (w *SolanaClient) InitVaultPeriod(
 	ctx context.Context, vault, vaultProtoConfig, vaultPeriod, tokenAMint, tokenBMint string, vaultPeriodID int64,
 ) (solana.Instruction, error) {
 	txBuilder := drip.NewInitVaultPeriodInstructionBuilder()
+	txBuilder.SetVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriod))
 	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58(vault))
-	txBuilder.SetTokenAMintAccount(solana.MustPublicKeyFromBase58(tokenAMint))
-	txBuilder.SetTokenBMintAccount(solana.MustPublicKeyFromBase58(tokenBMint))
 	txBuilder.SetVaultProtoConfigAccount(solana.MustPublicKeyFromBase58(vaultProtoConfig))
 	txBuilder.SetCreatorAccount(w.wallet.PublicKey())
 	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
-	txBuilder.SetVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriod))
 	txBuilder.SetParams(drip.InitializeVaultPeriodParams{
 		PeriodId: uint64(vaultPeriodID),
 	})

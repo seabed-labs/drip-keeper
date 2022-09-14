@@ -166,7 +166,7 @@ func (dripScheduler *DripSchedulerService) runWithRetry(vault string, try, maxTr
 		if try >= maxTry {
 			if err.Error() != keeper.ErrDripAmount0 && err.Error() != keeper.ErrDripAlreadyTriggered {
 				log.Error("failed to drip")
-				if alertErr := dripScheduler.alertService.SendError(context.Background(), fmt.Errorf("err in runWithRetry, try %d, maxTry %d, err %w", try, maxTry, err)); alertErr != nil {
+				if alertErr := dripScheduler.alertService.SendError(context.Background(), fmt.Errorf("err in runWithRetry, try %d, maxTry %d, vault %s, err %w", try, maxTry, config.Vault, err)); alertErr != nil {
 					log.WithField("alertErr", alertErr.Error()).Errorf("failed to send error alert")
 				}
 			}
