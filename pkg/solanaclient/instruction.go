@@ -105,7 +105,6 @@ func (w *SolanaClient) InitVaultPeriod(
 	txBuilder := drip.NewInitVaultPeriodInstructionBuilder()
 	txBuilder.SetVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriod))
 	txBuilder.SetVaultAccount(solana.MustPublicKeyFromBase58(vault))
-	txBuilder.SetVaultProtoConfigAccount(solana.MustPublicKeyFromBase58(vaultProtoConfig))
 	txBuilder.SetCreatorAccount(w.wallet.PublicKey())
 	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
 	txBuilder.SetParams(drip.InitializeVaultPeriodParams{
