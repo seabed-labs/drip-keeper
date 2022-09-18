@@ -91,6 +91,8 @@ github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220913232851-d518c4ba9208 h1:W
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220913232851-d518c4ba9208/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220915235956-97b71c7325c7 h1:8DeLG4bJPO9GYU7KUknpYTQvLqDZc7qyMn63Vx/iASk=
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220915235956-97b71c7325c7/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
+github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220918232623-d63a0b67c943 h1:rnF9NK7O/yRPTw+7vYJIh/gp+fHNHy0P/or3eMOIUPs=
+github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220918232623-d63a0b67c943/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220813034420-90a476347746 h1:eKU/trAhFQa4stQNlVoIoJ+y9PiJSdze2NTXA4tGxk0=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220813034420-90a476347746/go.mod h1:t4x3fOFS/BidtNeFKM+zxzH18k5cTGOgwNPbqGlaIqs=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220822224702-b657f391cd76 h1:yGhydbmKxUf6s1+qaFIt5xMmbEWCt5pOndcTSB1kEJE=
