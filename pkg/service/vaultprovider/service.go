@@ -73,7 +73,7 @@ func NewVaultProvider(
 
 func (vaultProviderImpl vaultProviderImpl) discoverConfigs() {
 	logrus.Debug("searching for new configs")
-	dripSPLTokenSwapConfigs, _, err := vaultProviderImpl.dripClient.DefaultApi.SpltokenswapconfigsGet(context.Background()).Execute()
+	dripSPLTokenSwapConfigs, _, err := vaultProviderImpl.dripClient.DefaultApi.V1DripSpltokenswapconfigsGet(context.Background()).Execute()
 	if err != nil {
 		logrus.
 			WithError(err).
@@ -81,7 +81,7 @@ func (vaultProviderImpl vaultProviderImpl) discoverConfigs() {
 			Error("failed to get spl token swaps configs from backend")
 		return
 	}
-	dripOrcaWhirlpoolConfigs, _, err := vaultProviderImpl.dripClient.DefaultApi.OrcawhirlpoolconfigsGet(context.Background()).Execute()
+	dripOrcaWhirlpoolConfigs, _, err := vaultProviderImpl.dripClient.DefaultApi.V1DripOrcawhirlpoolconfigsGet(context.Background()).Execute()
 	if err != nil {
 		logrus.
 			WithError(err).

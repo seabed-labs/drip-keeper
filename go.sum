@@ -89,6 +89,10 @@ github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220725212510-669a4d25a454 h1:Q
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220725212510-669a4d25a454/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220913232851-d518c4ba9208 h1:WOUYEIJQXVF9kJlhkNjhA8u5CJEP0H5keWIY6QL9E8w=
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220913232851-d518c4ba9208/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
+github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220915235956-97b71c7325c7 h1:8DeLG4bJPO9GYU7KUknpYTQvLqDZc7qyMn63Vx/iASk=
+github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220915235956-97b71c7325c7/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
+github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220918232623-d63a0b67c943 h1:rnF9NK7O/yRPTw+7vYJIh/gp+fHNHy0P/or3eMOIUPs=
+github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220918232623-d63a0b67c943/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220813034420-90a476347746 h1:eKU/trAhFQa4stQNlVoIoJ+y9PiJSdze2NTXA4tGxk0=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220813034420-90a476347746/go.mod h1:t4x3fOFS/BidtNeFKM+zxzH18k5cTGOgwNPbqGlaIqs=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220822224702-b657f391cd76 h1:yGhydbmKxUf6s1+qaFIt5xMmbEWCt5pOndcTSB1kEJE=
@@ -101,6 +105,8 @@ github.com/dcaf-labs/solana-go-clients v0.0.0-20220911015427-d2762cb3f3dd h1:yla
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220911015427-d2762cb3f3dd/go.mod h1:t4x3fOFS/BidtNeFKM+zxzH18k5cTGOgwNPbqGlaIqs=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220913232444-7b6f34376bb9 h1:JxSlFb+A54Ma3mEXSPXdUDTwF6gEU7cTW8m2velu3jE=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220913232444-7b6f34376bb9/go.mod h1:t4x3fOFS/BidtNeFKM+zxzH18k5cTGOgwNPbqGlaIqs=
+github.com/dcaf-labs/solana-go-clients v0.0.0-20220916003147-7942e13b2f72 h1:jApyMzKU4tg/RE5S6l/FJ3PaGj3/s9b+L3R41H0bx64=
+github.com/dcaf-labs/solana-go-clients v0.0.0-20220916003147-7942e13b2f72/go.mod h1:t4x3fOFS/BidtNeFKM+zxzH18k5cTGOgwNPbqGlaIqs=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
 github.com/disgoorg/disgo v0.13.5 h1:nJpPnQHFhlPSs2J6lNWZzQV1oyP5f3QDLagG5I0I7U8=
