@@ -8,7 +8,7 @@ replace github.com/dfuse-io/logging => github.com/streamingfast/logging v0.0.0-2
 require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220918232623-d63a0b67c943
-	github.com/dcaf-labs/solana-go-clients v0.0.0-20220916003147-7942e13b2f72
+	github.com/dcaf-labs/solana-go-clients v0.0.0-20220921001636-da320fd976a4
 	github.com/disgoorg/disgo v0.13.5
 	github.com/disgoorg/snowflake/v2 v2.0.0
 	github.com/gagliardetto/binary v0.6.1
