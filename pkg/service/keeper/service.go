@@ -32,7 +32,7 @@ func NewKeeperService(
 }
 
 func (dca *KeeperService) Run(dripConfig configs.DripConfig) error {
-	logrus.WithField("vault", dripConfig.Vault).Info("preparing trigger dca")
+	log := logrus.WithField("vault", dripConfig.Vault)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 	defer cancel()
 
@@ -46,10 +46,10 @@ func (dca *KeeperService) Run(dripConfig configs.DripConfig) error {
 	vaultPeriodI, instruction, err := dca.solanaClient.GetMaybeUninitializedVaultPeriod(
 		ctx, vaultAddress, vaultData.ProtoConfig, vaultData.TokenAMint, vaultData.TokenBMint, lastVaultPeriod)
 	if err != nil {
-		logrus.WithError(err).Errorf("failed to get vaultPeriodI %d PDA", lastVaultPeriod)
+		log.WithError(err).Errorf("failed to get vaultPeriodI %d PDA", lastVaultPeriod)
 		return err
 	}
-	logrus.WithField("publicKey", vaultPeriodI.String()).Infof("fetched vaultPeriod %d PDA", lastVaultPeriod)
+	//log.WithField("publicKey", vaultPeriodI.String()).Infof("fetched vaultPeriod %d PDA", lastVaultPeriod)
 	if instruction != nil {
 		instructions = append(instructions, instruction)
 	}
@@ -58,20 +58,20 @@ func (dca *KeeperService) Run(dripConfig configs.DripConfig) error {
 	vaultPeriodJ, instruction, err := dca.solanaClient.GetMaybeUninitializedVaultPeriod(
 		ctx, vaultAddress, vaultData.ProtoConfig, vaultData.TokenAMint, vaultData.TokenBMint, currentVaultPeriod)
 	if err != nil {
-		logrus.WithError(err).Errorf("failed to get vaultPeriodJ %d PDA", currentVaultPeriod)
+		log.WithError(err).Errorf("failed to get vaultPeriodJ %d PDA", currentVaultPeriod)
 		return err
 	}
-	logrus.WithField("publicKey", vaultPeriodJ.String()).Infof("fetched vaultPeriod %d PDA", currentVaultPeriod)
+	//log.WithField("publicKey", vaultPeriodJ.String()).Infof("fetched vaultPeriod %d PDA", currentVaultPeriod)
 	if instruction != nil {
 		instructions = append(instructions, instruction)
 	}
 
 	botTokenAFeeAccount, instruction, err := dca.solanaClient.GetMaybeUninitializedTokenAccount(ctx, dca.solanaClient.GetFeeWallet(), vaultData.TokenAMint)
 	if err != nil {
-		logrus.WithError(err).Errorf("failed to get botTokenAFeeAccount")
+		log.WithError(err).Errorf("failed to get botTokenAFeeAccount")
 		return err
 	}
-	logrus.WithField("publicKey", botTokenAFeeAccount.String()).Infof("fetched botTokenAFeeAccount")
+	//log.WithField("publicKey", botTokenAFeeAccount.String()).Infof("fetched botTokenAFeeAccount")
 	if instruction != nil {
 		instructions = append(instructions, instruction)
 	}
@@ -90,19 +90,17 @@ func (dca *KeeperService) Run(dripConfig configs.DripConfig) error {
 		}
 		instructions = append(instructions, newInstructions...)
 	default:
-		logrus.WithField("vault", dripConfig.Vault).Infof("missing drip config")
+		log.WithField("vault", dripConfig.Vault).Infof("missing drip config")
 	}
 	if err := dca.solanaClient.Send(ctx, instructions...); err != nil {
-		logrus.
+		log.
 			WithField("vault", dripConfig.Vault).
 			WithField("numInstructions", len(instructions)).
 			WithError(err).
 			Errorf("failed to trigger dca")
 		return err
 	}
-	logrus.
-		WithFields(logrus.Fields{"vault": dripConfig.Vault}).
-		Info("processed drip")
+	log.Info("processed drip")
 	return nil
 }
 
