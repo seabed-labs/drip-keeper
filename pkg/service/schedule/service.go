@@ -187,7 +187,7 @@ func (dripScheduler *DripSchedulerService) runWithRetry(vault string, try, maxTr
 			}
 			return
 		}
-		log.Warn("waiting before retrying drip")
+		//log.Warn("waiting before retrying drip")
 		time.Sleep(time.Duration(timeout) * time.Second)
 		dripScheduler.runWithRetry(config.Vault, try+1, maxTry, timeout*2)
 	}
