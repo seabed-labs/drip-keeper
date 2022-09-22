@@ -120,10 +120,10 @@ func (dca *KeeperService) validateVault(ctx context.Context, dripConfig configs.
 	}
 	// Check if Vault can Drip
 	if vaultData.DripAmount == 0 {
-		logrus.
-			WithField("dripAmount", vaultData.DripAmount).
-			WithField("vault", dripConfig.Vault).
-			Info("drip amount is 0")
+		//logrus.
+		//	WithField("dripAmount", vaultData.DripAmount).
+		//	WithField("vault", dripConfig.Vault).
+		//	Info("drip amount is 0")
 		return drip.Vault{}, errors.New(ErrDripAmount0)
 	}
 	vaultTokenAAccountAddress, err := solana.PublicKeyFromBase58(dripConfig.VaultTokenAAccount)
