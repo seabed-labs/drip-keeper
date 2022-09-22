@@ -32,7 +32,7 @@ func GetOrcaWhirlpoolQuoteEstimate(
 	tokenBMint string,
 	inputToken string,
 	tickSpacing uint16,
-	env configs.Environment,
+	network configs.Network,
 ) (QuoteEstimate, error) {
 	root := configs.GetProjectRoot()
 	scriptPath := fmt.Sprintf("%s/pkg/solanaclient/orcaWhirlpoolQuoteEstimate.ts", root)
@@ -42,7 +42,7 @@ func GetOrcaWhirlpoolQuoteEstimate(
 		fmt.Sprintf(" %s", tokenBMint) +
 		fmt.Sprintf(" %s", inputToken) +
 		fmt.Sprintf(" %d", tickSpacing) +
-		fmt.Sprintf(" %s", env)
+		fmt.Sprintf(" %s", getURL(network))
 	parts := strings.Fields(command)
 	data, err := exec.Command(parts[0], parts[1:]...).Output()
 	if err != nil {

@@ -23,12 +23,12 @@ async function getQuote() {
     const tokenBMint = new PublicKey(args[2]);
     const inputToken = new PublicKey(args[3]);
     const tickSpacing = Number(args[4]);
-    const connection = args[5] === "MAINNET"? "https://api.mainnet-beta.solana.com" : "https://api.devnet.solana.com";
+    const connectionUrl = args[5];
 
     // Don't need to sign anything, so a random keypair is fine
     const wallet = new NodeWallet(Keypair.generate());
     const provider = new AnchorProvider(
-        new Connection(connection, "confirmed"),
+        new Connection(connectionUrl, "confirmed"),
         wallet,
         AnchorProvider.defaultOptions()
     );

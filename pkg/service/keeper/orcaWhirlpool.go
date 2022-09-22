@@ -41,7 +41,7 @@ func (dca *KeeperService) dripOrcaWhirlpool(
 		whirlpoolData.TokenMintB.String(),
 		vaultData.TokenAMint.String(),
 		whirlpoolData.TickSpacing,
-		dca.env,
+		dca.network,
 	)
 	if err != nil {
 		return []solana.Instruction{}, err

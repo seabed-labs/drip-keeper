@@ -18,7 +18,7 @@ const ErrDripAlreadyTriggered = "drip already triggered"
 
 type KeeperService struct {
 	solanaClient *solanaclient.SolanaClient
-	env          configs.Environment
+	network      configs.Network
 }
 
 func NewKeeperService(
@@ -27,7 +27,7 @@ func NewKeeperService(
 ) *KeeperService {
 	return &KeeperService{
 		solanaClient: solanaClient,
-		env:          config.Environment,
+		network:      config.Network,
 	}
 }
 
