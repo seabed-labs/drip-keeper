@@ -40,7 +40,6 @@ func New(
 	rateLimiter := rate.NewLimiter(rate.Every(time.Second*10/40), 1)
 	httpClient := retryablehttp.NewClient()
 	httpClient.Logger = nil
-	httpClient.Logger = nil
 	httpClient.RetryWaitMin = time.Second * 5
 	httpClient.RetryMax = 3
 	httpClient.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, retry int) {
