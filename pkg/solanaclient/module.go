@@ -35,7 +35,7 @@ const ErrNotFound = "not found"
 func New(
 	config *configs.Config,
 ) (*SolanaClient, error) {
-	url := getURL(config.Network)
+	url := GetURL(config.Network)
 	// Maximum number of requests per 10 seconds per IP for a single RPC: 40
 	rateLimiter := rate.NewLimiter(rate.Every(time.Second*10/40), 1)
 	httpClient := retryablehttp.NewClient()
@@ -312,7 +312,7 @@ func checkTxHash(
 	}
 }
 
-func getURL(env configs.Network) string {
+func GetURL(env configs.Network) string {
 	switch env {
 	case configs.DevnetNetwork:
 		return rpc.DevNet_RPC

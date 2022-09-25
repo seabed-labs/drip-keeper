@@ -26,23 +26,21 @@ type QuoteEstimate struct {
 	Error                  string `json:"error"`
 }
 
+const scriptPath = "./pkg/solanaclient/orcaWhirlpoolQuoteEstimate.ts"
+
 func GetOrcaWhirlpoolQuoteEstimate(
-	config string,
-	tokenAMint string,
-	tokenBMint string,
-	inputToken string,
-	tickSpacing uint16,
-	network configs.Network,
+	whirlpool string,
+	inputTokenMint string,
+	inputTokenAmount uint64,
+	connectionUrl string,
 ) (QuoteEstimate, error) {
 	root := configs.GetProjectRoot()
-	scriptPath := fmt.Sprintf("%s/pkg/solanaclient/orcaWhirlpoolQuoteEstimate.ts", root)
-	command := fmt.Sprintf("npx ts-node %s", scriptPath) +
-		fmt.Sprintf(" %s", config) +
-		fmt.Sprintf(" %s", tokenAMint) +
-		fmt.Sprintf(" %s", tokenBMint) +
-		fmt.Sprintf(" %s", inputToken) +
-		fmt.Sprintf(" %d", tickSpacing) +
-		fmt.Sprintf(" %s", getURL(network))
+	script := fmt.Sprintf("%s/%s", root, scriptPath)
+	command := fmt.Sprintf("npx ts-node %s", script) +
+		fmt.Sprintf(" %s", whirlpool) +
+		fmt.Sprintf(" %s", inputTokenMint) +
+		fmt.Sprintf(" %d", inputTokenAmount) +
+		fmt.Sprintf(" %s", connectionUrl)
 	parts := strings.Fields(command)
 	data, err := exec.Command(parts[0], parts[1:]...).Output()
 	if err != nil {

@@ -36,12 +36,10 @@ func (dca *KeeperService) dripOrcaWhirlpool(
 		return []solana.Instruction{}, err
 	}
 	quoteEstimate, err := solanaclient.GetOrcaWhirlpoolQuoteEstimate(
-		whirlpoolData.WhirlpoolsConfig.String(),
-		whirlpoolData.TokenMintA.String(),
-		whirlpoolData.TokenMintB.String(),
+		dripConfig.OrcaWhirlpoolConfig.Whirlpool,
 		vaultData.TokenAMint.String(),
-		whirlpoolData.TickSpacing,
-		dca.network,
+		vaultData.DripAmount,
+		solanaclient.GetURL(dca.network),
 	)
 	if err != nil {
 		return []solana.Instruction{}, err
