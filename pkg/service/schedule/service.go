@@ -6,12 +6,11 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/solanaclient"
-
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/alert"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/eventbus"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/keeper"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/solanaclient"
 	"github.com/asaskevich/EventBus"
 	"github.com/gagliardetto/solana-go"
 	cmap "github.com/orcaman/concurrent-map"
@@ -195,9 +194,9 @@ func (dripScheduler *DripSchedulerService) runWithRetry(vault string, try, maxTr
 
 func (dripScheduler *DripSchedulerService) scheduleDrip(config configs.DripConfig, snapToBeginning bool, reason string) (*DripConfig, error) {
 	log := logrus.WithField("vault", config.Vault).WithField("reason", reason).WithField("snapToBeginning", snapToBeginning)
-	schedule, granularity, err := dripScheduler.getSchedulerFromProtoConfig(config.VaultProtoConfig, snapToBeginning)
+	schedule, granularity, err := dripScheduler.getScheduler(config.VaultProtoConfig, config.Vault, snapToBeginning)
 	if err != nil {
-		log.WithError(err).Error("failed to getSchedulerFromProtoConfig")
+		log.WithError(err).Error("failed to getScheduler")
 		return nil, err
 	}
 	log.WithField("nextSchedule", schedule.At.String())
@@ -226,7 +225,7 @@ func (dripScheduler *DripSchedulerService) getDripFunc(vault string) func() {
 	}
 }
 
-func (dripScheduler *DripSchedulerService) getSchedulerFromProtoConfig(address string, snapToBeginning bool) (Scheduler, uint64, error) {
+func (dripScheduler *DripSchedulerService) getScheduler(address string, vault string, snapToBeginning bool) (Scheduler, uint64, error) {
 	protoConfigPubkey, err := solana.PublicKeyFromBase58(address)
 	if err != nil {
 		return Scheduler{}, 0, err
@@ -235,12 +234,26 @@ func (dripScheduler *DripSchedulerService) getSchedulerFromProtoConfig(address s
 	if err != nil {
 		return Scheduler{}, 0, err
 	}
-	return newScheduler(vaultProtoConfigData.Granularity, snapToBeginning), vaultProtoConfigData.Granularity, nil
-}
-
-func newScheduler(granularity uint64, snapToBeginning bool) Scheduler {
-	if snapToBeginning {
-		return Scheduler{time.Now().Add(-1 * time.Duration(time.Now().Unix()%int64(granularity))), time.Second * time.Duration(granularity)}
+	vaultPubkey, err := solana.PublicKeyFromBase58(vault)
+	if err != nil {
+		return Scheduler{}, 0, err
 	}
-	return Scheduler{time.Now().Add(time.Duration(time.Now().Unix() % int64(granularity))), time.Second * time.Duration(granularity)}
+	vaultData, err := dripScheduler.solanaClient.GetVault(context.Background(), vaultPubkey)
+	if err != nil {
+		return Scheduler{}, 0, err
+	}
+	schedule := Scheduler{
+		At:    time.Unix(vaultData.DripActivationTimestamp, 0),
+		Every: time.Second * time.Duration(vaultProtoConfigData.Granularity),
+	}
+	if snapToBeginning {
+		schedule = Scheduler{
+			At: time.
+				Now().
+				Add(-1 * time.Duration(time.Now().Unix()%int64(vaultProtoConfigData.Granularity))),
+			Every: time.Second * time.Duration(vaultProtoConfigData.Granularity),
+		}
+	}
+
+	return schedule, vaultProtoConfigData.Granularity, nil
 }
