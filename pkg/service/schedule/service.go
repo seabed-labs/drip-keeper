@@ -116,7 +116,7 @@ func (dripScheduler *DripSchedulerService) registerDripConfig(newConfig configs.
 		return nil, nil
 	}
 	log.Debug("creating cron")
-	return dripScheduler.scheduleDrip(newConfig, true)
+	return dripScheduler.scheduleDrip(newConfig, true, "registerDripConfig")
 }
 
 func (dripScheduler *DripSchedulerService) stopCron(
