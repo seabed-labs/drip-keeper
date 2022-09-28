@@ -177,11 +177,11 @@ func (dripScheduler *DripSchedulerService) runWithRetry(vault string, try, maxTr
 
 			// create new drip handler
 			if err.Error() == keeper.ErrDripAlreadyTriggered || err.Error() == keeper.ErrDripAmount0 {
-				if _, scheduleErr := dripScheduler.scheduleDrip(config, false); scheduleErr != nil {
+				if _, scheduleErr := dripScheduler.scheduleDrip(config, false, err.Error()); scheduleErr != nil {
 					log.WithField("scheduleErr", scheduleErr.Error()).WithField("snapToBeginning", false).Errorf("failed to reschedule drip")
 				}
 			} else {
-				if _, scheduleErr := dripScheduler.scheduleDrip(config, true); scheduleErr != nil {
+				if _, scheduleErr := dripScheduler.scheduleDrip(config, true, err.Error()); scheduleErr != nil {
 					log.WithField("scheduleErr", scheduleErr.Error()).WithField("snapToBeginning", true).Errorf("failed to reschedule drip")
 				}
 			}
@@ -193,8 +193,8 @@ func (dripScheduler *DripSchedulerService) runWithRetry(vault string, try, maxTr
 	}
 }
 
-func (dripScheduler *DripSchedulerService) scheduleDrip(config configs.DripConfig, snapToBeginning bool) (*DripConfig, error) {
-	log := logrus.WithField("vault", config.Vault).WithField("snapToBeginning", snapToBeginning)
+func (dripScheduler *DripSchedulerService) scheduleDrip(config configs.DripConfig, snapToBeginning bool, reason string) (*DripConfig, error) {
+	log := logrus.WithField("vault", config.Vault).WithField("reason", reason).WithField("snapToBeginning", snapToBeginning)
 	schedule, granularity, err := dripScheduler.getSchedulerFromProtoConfig(config.VaultProtoConfig, snapToBeginning)
 	if err != nil {
 		log.WithError(err).Error("failed to getSchedulerFromProtoConfig")

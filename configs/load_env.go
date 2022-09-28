@@ -15,7 +15,6 @@ const PROJECT_DIR = "drip-keeper"
 func GetProjectRoot() string {
 	rootOverride := os.Getenv(string(PROJECT_ROOT_OVERRIDE))
 	if rootOverride != "" {
-		//logrus.WithField("override", rootOverride).Infof("override project root")
 		return rootOverride
 	}
 	re := regexp.MustCompile(`^(.*` + PROJECT_DIR + `)`)
