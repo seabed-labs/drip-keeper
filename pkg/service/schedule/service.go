@@ -213,7 +213,7 @@ func (dripScheduler *DripSchedulerService) runWithRetry(vault string, try, maxTr
 		}
 		//log.Warn("waiting before retrying drip")
 		time.Sleep(time.Duration(timeout) * time.Second)
-		dripScheduler.runWithRetry(config.Vault, try+1, maxTry, timeout*2)
+		dripScheduler.runWithRetry(config.Vault, try+1, maxTry, timeout)
 	}
 }
 
@@ -246,7 +246,7 @@ func (dripScheduler *DripSchedulerService) scheduleDrip(config configs.DripConfi
 
 func (dripScheduler *DripSchedulerService) getDripFunc(vault string) func() {
 	return func() {
-		dripScheduler.runWithRetry(vault, 0, 3, 2)
+		dripScheduler.runWithRetry(vault, 0, 3, 30)
 	}
 }
 
