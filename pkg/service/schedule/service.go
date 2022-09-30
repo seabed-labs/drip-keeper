@@ -63,8 +63,16 @@ func NewSchedulerService(
 	if err := eventBus.Subscribe(string(eventbus.VaultConfigTopic), dcaCronService.registerDripConfig); err != nil {
 		return nil, err
 	}
+	scheduleStatusCron := cron.New()
+	if _, err := scheduleStatusCron.AddFunc("@every 1m", dcaCronService.scheduleStatus); err != nil {
+		return nil, err
+	}
+	scheduleStatusCron.Start()
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
+			if err := dcaCronService.stopCron(ctx, scheduleStatusCron); err != nil {
+				logrus.WithError(err).Error("failed to stop scheduleStatus cron")
+			}
 			for !dcaCronService.dripConfigs.IsEmpty() {
 				if config.ShouldDiscoverNewConfigs {
 					// Don't return err if this fails
@@ -88,6 +96,23 @@ func NewSchedulerService(
 		},
 	})
 	return nil, nil
+}
+func (dripScheduler *DripSchedulerService) scheduleStatus() {
+	logrus.Info("checking schedule status")
+	dripScheduler.dripConfigs.IterCb(func(key string, v interface{}) {
+		dripConfig := v.(*DripConfig)
+		if dripConfig == nil {
+			return
+		}
+		for _, entry := range dripConfig.Cron.Entries() {
+			logrus.
+				WithField("nextTryUnix", entry.Next.Unix()).
+				WithField("nextTry", entry.Next).
+				WithField("vault", dripConfig.Config.Vault).
+				Infof("next scheduled drip attempt")
+		}
+
+	})
 }
 
 func (dripScheduler *DripSchedulerService) registerDripConfig(newConfig configs.DripConfig) (*DripConfig, error) {
