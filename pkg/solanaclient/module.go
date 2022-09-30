@@ -4,15 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/dcaf-labs/solana-go-clients/pkg/whirlpool"
 	"github.com/gagliardetto/solana-go/programs/token"
-	"github.com/gagliardetto/solana-go/rpc/jsonrpc"
-	"github.com/hashicorp/go-retryablehttp"
-	"golang.org/x/time/rate"
 
 	bin "github.com/gagliardetto/binary"
 
@@ -35,23 +31,8 @@ const ErrNotFound = "not found"
 func New(
 	config *configs.Config,
 ) (*SolanaClient, error) {
-	url := GetURL(config.Network)
-	// Maximum number of requests per 10 seconds per IP for a single RPC: 40
-	rateLimiter := rate.NewLimiter(rate.Every(time.Second*10/40), 1)
-	httpClient := retryablehttp.NewClient()
-	httpClient.Logger = nil
-	httpClient.RetryWaitMin = time.Second * 5
-	httpClient.RetryMax = 3
-	httpClient.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, retry int) {
-		if err := rateLimiter.Wait(context.Background()); err != nil {
-			logrus.WithField("err", err.Error()).Warnf("waiting for rate limit")
-			return
-		}
-	}
-	rpcClient := rpc.NewWithCustomRPCClient(jsonrpc.NewClientWithOpts(url, &jsonrpc.RPCClientOpts{
-		HTTPClient:    httpClient.StandardClient(),
-		CustomHeaders: nil,
-	}))
+	url, callsPerSecond := GetURLWithRateLimit(config.Network)
+	rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithRateLimit(url, callsPerSecond))
 	resp, err := rpcClient.GetVersion(context.Background())
 	if err != nil {
 		logrus.WithError(err).Fatalf("failed to get client version info")
@@ -312,17 +293,17 @@ func checkTxHash(
 	}
 }
 
-func GetURL(env configs.Network) string {
-	switch env {
-	case configs.DevnetNetwork:
-		return rpc.DevNet_RPC
+func GetURLWithRateLimit(network configs.Network) (string, int) {
+	switch network {
 	case configs.MainnetNetwork:
-		return rpc.MainNetBeta_RPC
+		return "https://dimensional-young-cloud.solana-mainnet.discover.quiknode.pro/a5a0fb3cfa38ab740ed634239fd502a99dbf028d", 10
+	case configs.DevnetNetwork:
+		return rpc.DevNet_RPC, 2
 	case configs.NilNetwork:
 		fallthrough
 	case configs.LocalNetwork:
 		fallthrough
 	default:
-		return rpc.LocalNet_RPC
+		return rpc.LocalNet_RPC, 2
 	}
 }
