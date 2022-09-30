@@ -24,11 +24,8 @@ func NewHeartbeatWorker(
 	cronFunc := func() {
 		log.
 			Debug("logging heartbeat")
-		resp, err := http.Get(config.HeartbeatURL)
-		if err != nil {
+		if _, err := http.Get(config.HeartbeatURL); err != nil {
 			log.WithError(err).Error("failed to ping heartbeat")
-		} else {
-			log.WithField("status", resp.Status).Info("pinged heartbeat")
 		}
 	}
 	if _, err := cronJob.AddFunc("@every 1m", cronFunc); err != nil {

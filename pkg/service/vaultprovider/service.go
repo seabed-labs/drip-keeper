@@ -102,6 +102,7 @@ func (vaultProviderImpl vaultProviderImpl) discoverConfigs() {
 		orcaWhirlpoolConfigsByVault[orcaWhirlpoolConfig.Vault] = orcaWhirlpoolConfig
 		vaultSet[orcaWhirlpoolConfig.Vault] = true
 	}
+	logrus.WithField("len(vaultSet)", len(vaultSet)).Info("fetched vault configs")
 	for vault := range vaultSet {
 		dripSPLTokenSwapConfig, validTokenSwapConfig := splTokenSwapConfigsByVault[vault]
 		dripOrcaWhirlpoolConfig, validOrcaWhirlpoolConfig := orcaWhirlpoolConfigsByVault[vault]
