@@ -108,9 +108,7 @@ func (w *SolanaClient) Send(
 	}
 	logrus.WithFields(logFields).Info("signed transaction")
 
-	txHash, err := w.client.SendTransactionWithOpts(
-		ctx, tx, false, rpc.CommitmentConfirmed,
-	)
+	txHash, err := w.client.SendTransaction(ctx, tx)
 	if err != nil {
 		return fmt.Errorf("failed to send transaction, err %s", err)
 	}
