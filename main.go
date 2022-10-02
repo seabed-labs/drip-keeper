@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/orcawhirlpool"
+
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/solana"
+
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/keeper"
 
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/alert"
@@ -12,7 +16,6 @@ import (
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/vaultprovider"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/solanaclient"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
@@ -33,7 +36,8 @@ func getDependencies() []fx.Option {
 	return []fx.Option{
 		fx.Provide(
 			configs.New,
-			solanaclient.New,
+			solana.New,
+			orcawhirlpool.NewOrcaWhirlpoolClient,
 			eventbus.NewEventBus,
 			alert.NewService,
 			keeper.NewKeeperService,

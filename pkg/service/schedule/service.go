@@ -8,9 +8,9 @@ import (
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/alert"
+	solclient "github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/solana"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/eventbus"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/keeper"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/solanaclient"
 	"github.com/asaskevich/EventBus"
 	"github.com/gagliardetto/solana-go"
 	cmap "github.com/orcaman/concurrent-map"
@@ -34,7 +34,7 @@ func (s *Scheduler) Next(t time.Time) time.Time {
 type DripSchedulerService struct {
 	alertService alert.Service
 	keeper       *keeper.KeeperService
-	solanaClient *solanaclient.SolanaClient
+	solanaClient *solclient.SolanaClient
 
 	dripConfigs cmap.ConcurrentMap
 }
@@ -50,7 +50,7 @@ func NewSchedulerService(
 	eventBus EventBus.Bus,
 	alertService alert.Service,
 	keeper *keeper.KeeperService,
-	solanaClient *solanaclient.SolanaClient,
+	solanaClient *solclient.SolanaClient,
 ) (*DripSchedulerService, error) {
 	logrus.Info("initializing dca cron service")
 	dcaCronService := DripSchedulerService{

@@ -7,12 +7,14 @@ replace github.com/dfuse-io/logging => github.com/streamingfast/logging v0.0.0-2
 
 require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220924190436-fb231d2fd2f9
+	github.com/dcaf-labs/drip-client/drip-extension-go v0.0.0-20221001224830-925650c045bb
+	github.com/dcaf-labs/drip-client/drip-go v0.0.0-20221001224830-925650c045bb
 	github.com/dcaf-labs/solana-go-clients v0.0.0-20220921001636-da320fd976a4
 	github.com/disgoorg/disgo v0.13.5
 	github.com/disgoorg/snowflake/v2 v2.0.0
 	github.com/gagliardetto/binary v0.6.1
 	github.com/gagliardetto/solana-go v1.4.0
+	github.com/golang/mock v1.4.4
 	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/ilyakaznacheev/cleanenv v1.2.6
 	github.com/orcaman/concurrent-map v1.0.0

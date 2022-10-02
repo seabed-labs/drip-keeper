@@ -85,6 +85,8 @@ github.com/daaku/go.zipexe v1.0.0/go.mod h1:z8IiR6TsVLEYKwXAoE/I+8ys/sDkgTzSL0CL
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/dcaf-labs/drip-client/drip-extension-go v0.0.0-20221001224830-925650c045bb h1:XqvFSVYFJ3Vsu7JXDT52I2kiEt5ps8QwOrREXw5mOMg=
+github.com/dcaf-labs/drip-client/drip-extension-go v0.0.0-20221001224830-925650c045bb/go.mod h1:XYeweCr0ZLg/Gsw9q7lAFrvDlA++mXnKFp3lks/e5Fg=
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220725212510-669a4d25a454 h1:Q5f1rgwg0JJCPsACMQ9x22o2hfXX8ciiUgDtelRuUzI=
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220725212510-669a4d25a454/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220913232851-d518c4ba9208 h1:WOUYEIJQXVF9kJlhkNjhA8u5CJEP0H5keWIY6QL9E8w=
@@ -95,6 +97,8 @@ github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220918232623-d63a0b67c943 h1:r
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220918232623-d63a0b67c943/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220924190436-fb231d2fd2f9 h1:mo02wO2YQFJjsR7kP3RN0n+D1KHPjJ6JmpK9j/ZfrTI=
 github.com/dcaf-labs/drip-client/drip-go v0.0.0-20220924190436-fb231d2fd2f9/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
+github.com/dcaf-labs/drip-client/drip-go v0.0.0-20221001224830-925650c045bb h1:Z89cVErWhOQwj/Es/yLcraiRpJDKeP07I5BCGlJCo6U=
+github.com/dcaf-labs/drip-client/drip-go v0.0.0-20221001224830-925650c045bb/go.mod h1:BsJnQ6h7Lyffilwjkhcw2fICNoAwMNHf/SL5L3UJFrk=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220813034420-90a476347746 h1:eKU/trAhFQa4stQNlVoIoJ+y9PiJSdze2NTXA4tGxk0=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220813034420-90a476347746/go.mod h1:t4x3fOFS/BidtNeFKM+zxzH18k5cTGOgwNPbqGlaIqs=
 github.com/dcaf-labs/solana-go-clients v0.0.0-20220822224702-b657f391cd76 h1:yGhydbmKxUf6s1+qaFIt5xMmbEWCt5pOndcTSB1kEJE=
@@ -157,6 +161,7 @@ github.com/golang/mock v1.3.1/go.mod h1:sBzyDLLjw3U8JLTeZvSv8jJB+tU5PVekmnlKIyFU
 github.com/golang/mock v1.4.0/go.mod h1:UOMv5ysSaYNkG+OFQykRIcU/QvvxJf3p21QfJ2Bt3cw=
 github.com/golang/mock v1.4.1/go.mod h1:UOMv5ysSaYNkG+OFQykRIcU/QvvxJf3p21QfJ2Bt3cw=
 github.com/golang/mock v1.4.3/go.mod h1:UOMv5ysSaYNkG+OFQykRIcU/QvvxJf3p21QfJ2Bt3cw=
+github.com/golang/mock v1.4.4 h1:l75CXGRSwbaYNpl/Z2X1XIIAMSCquvXgpVZDhwEIJsc=
 github.com/golang/mock v1.4.4/go.mod h1:l3mdAwkq5BuhzHwde/uurv3sEJeZMXNpwsxVWU71h+4=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/golang/protobuf v1.3.1/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=

@@ -1,4 +1,4 @@
-package solanaclient
+package solana
 
 import (
 	"context"
