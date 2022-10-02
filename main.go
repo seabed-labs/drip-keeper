@@ -3,19 +3,15 @@ package main
 import (
 	"context"
 
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/orcawhirlpool"
-
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/solana"
-
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/keeper"
-
+	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/alert"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/orcawhirlpool"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/solana"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/eventbus"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/heartbeat"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/keeper"
 	dca "github.com/Dcaf-Protocol/drip-keeper/pkg/service/schedule"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/vaultprovider"
-
-	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
