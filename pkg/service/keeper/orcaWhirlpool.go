@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/solanaclient"
+	solclient "github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/solana"
 	"github.com/dcaf-labs/solana-go-clients/pkg/drip"
 	"github.com/dcaf-labs/solana-go-clients/pkg/whirlpool"
 	"github.com/gagliardetto/solana-go"
@@ -35,12 +35,11 @@ func (dca *KeeperService) dripOrcaWhirlpool(
 	if err := dca.ensureTickArrays(ctx, dripConfig, vaultData, whirlpoolData); err != nil {
 		return []solana.Instruction{}, err
 	}
-	rpcUrl, _ := solanaclient.GetURLWithRateLimit(dca.network)
-	quoteEstimate, err := solanaclient.GetOrcaWhirlpoolQuoteEstimate(
+	quoteEstimate, err := dca.orcaWhirlpoolClient.GetOrcaWhirlpoolQuoteEstimate(
+		ctx,
 		dripConfig.OrcaWhirlpoolConfig.Whirlpool,
 		vaultData.TokenAMint.String(),
-		vaultData.DripAmount,
-		rpcUrl,
+		strconv.FormatUint(vaultData.DripAmount, 10),
 	)
 	if err != nil {
 		return []solana.Instruction{}, err
@@ -59,7 +58,7 @@ func (dca *KeeperService) dripOrcaWhirlpool(
 	}).Info("running drip")
 
 	instruction, err := dca.solanaClient.DripOrcaWhirlpool(ctx,
-		solanaclient.DripOrcaWhirlpoolParams{
+		solclient.DripOrcaWhirlpoolParams{
 			VaultData:           vaultData,
 			Vault:               solana.MustPublicKeyFromBase58(dripConfig.Vault),
 			VaultPeriodI:        vaultPeriodI,
@@ -120,7 +119,7 @@ func (dca *KeeperService) ensureTickArrays(
 		// Use GetAccountInfoWithOpts so we can pass in a commitment level
 		if _, err := dca.solanaClient.GetOrcaWhirlpoolTickArray(ctx, tickArrayPubkey); err != nil && err == rpc.ErrNotFound {
 			initTickArrayInstruction, err := dca.solanaClient.InitializeTickArray(ctx,
-				solanaclient.InitializeTickArrayParams{
+				solclient.InitializeTickArrayParams{
 					Whirlpool:  whirlpoolPubkey,
 					StartIndex: tickArrayIndex,
 					TickArray:  tickArrayPubkey,

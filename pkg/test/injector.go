@@ -3,8 +3,9 @@ package test
 import (
 	"context"
 
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/solana"
+
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/solanaclient"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
@@ -16,7 +17,7 @@ func InjectDependencies(
 	opts := []fx.Option{
 		fx.Provide(
 			configs.New,
-			solanaclient.New,
+			solana.New,
 		),
 		fx.Invoke(
 			testCase,

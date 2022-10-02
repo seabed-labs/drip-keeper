@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/solanaclient"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/orcawhirlpool"
+	solclient "github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/solana"
 	"github.com/dcaf-labs/solana-go-clients/pkg/drip"
 	"github.com/gagliardetto/solana-go"
 	"github.com/sirupsen/logrus"
@@ -17,17 +18,20 @@ const ErrDripAmount0 = "drip amount is 0"
 const ErrDripAlreadyTriggered = "drip already triggered"
 
 type KeeperService struct {
-	solanaClient *solanaclient.SolanaClient
-	network      configs.Network
+	solanaClient        *solclient.SolanaClient
+	orcaWhirlpoolClient orcawhirlpool.OrcaWhirlpoolClient
+	network             configs.Network
 }
 
 func NewKeeperService(
 	config *configs.Config,
-	solanaClient *solanaclient.SolanaClient,
+	solanaClient *solclient.SolanaClient,
+	orcaWhirlpoolClient orcawhirlpool.OrcaWhirlpoolClient,
 ) *KeeperService {
 	return &KeeperService{
-		solanaClient: solanaClient,
-		network:      config.Network,
+		solanaClient:        solanaClient,
+		orcaWhirlpoolClient: orcaWhirlpoolClient,
+		network:             config.Network,
 	}
 }
 

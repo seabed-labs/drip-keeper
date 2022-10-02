@@ -11,7 +11,7 @@ type Config struct {
 	Environment              Environment  `yaml:"environment" env:"ENV" env-default:"STAGING"`
 	Network                  Network      `yaml:"network" env:"NETWORK" env-default:"DEVNET"`
 	DripProgramID            string       `yaml:"dripProgramID" env:"DRIP_PROGRAM_ID"  env-default:"dripTrkvSyQKvkyWg7oi4jmeEGMA5scSYowHArJ9Vwk"`
-	Wallet                   string       `yaml:"solanaclient"      env:"KEEPER_BOT_WALLET"`
+	Wallet                   string       `yaml:"keeperBotWallet"      env:"KEEPER_BOT_WALLET"`
 	FeeWallet                string       `yaml:"feeWallet"      env:"KEEPER_BOT_FEE_WALLET" env-default:"H7pb5fjhDygia45TeyhyE1JDmQXSuC5FrdXeSjA9kQ9T"`
 	ShouldDiscoverNewConfigs bool         `yaml:"shouldDiscoverNewConfigs"      env-default:"true"`
 	TriggerDCAConfigs        []DripConfig `yaml:"triggerDCA"`
