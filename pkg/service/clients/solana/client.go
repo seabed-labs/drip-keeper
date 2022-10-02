@@ -296,7 +296,7 @@ func checkTxHash(
 func GetURLWithRateLimit(network configs.Network) (string, int) {
 	switch network {
 	case configs.MainnetNetwork:
-		return "https://dimensional-young-cloud.solana-mainnet.discover.quiknode.pro/a5a0fb3cfa38ab740ed634239fd502a99dbf028d", 10
+		return "https://dimensional-young-cloud.solana-mainnet.quiknode.pro/a5a0fb3cfa38ab740ed634239fd502a99dbf028d", 10
 	case configs.DevnetNetwork:
 		return "https://fabled-bitter-tent.solana-devnet.quiknode.pro/ea2807069cec3658c0e16618bea5a5c9b85e0dd7", 10
 	case configs.NilNetwork:
