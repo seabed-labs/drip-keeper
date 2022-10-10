@@ -31,12 +31,17 @@ func NewVaultProvider(
 	lc fx.Lifecycle,
 	eventBus EventBus.Bus,
 	config *configs.Config,
-	dripBackendClient *drip.APIClient,
 ) (*VaultProvider, error) {
+	cfg := drip.NewConfiguration()
+	cfg.Host = config.DiscoveryURL
+	cfg.UserAgent = "drip-keeper"
+	// Debug is super noisy
+	// cfg.Debug = config.Environment != configs.MainnetEnv
+	cfg.Scheme = "https"
 	vaultProviderImpl := vaultProviderImpl{
 		cron:       cron.New(),
 		eventBus:   eventBus,
-		dripClient: dripBackendClient,
+		dripClient: drip.NewAPIClient(cfg),
 	}
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {

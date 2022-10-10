@@ -7,10 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gagliardetto/solana-go/rpc/jsonrpc"
-
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients"
-
 	"github.com/dcaf-labs/solana-go-clients/pkg/whirlpool"
 	"github.com/gagliardetto/solana-go/programs/token"
 
@@ -36,11 +32,7 @@ func New(
 	config *configs.Config,
 ) (*SolanaClient, error) {
 	url, callsPerSecond := GetURLWithRateLimit(config.Network)
-	httpClient := clients.GetRateLimitedHTTPClient(callsPerSecond)
-	opts := &jsonrpc.RPCClientOpts{
-		HTTPClient: httpClient,
-	}
-	rpcClient := rpc.NewWithCustomRPCClient(jsonrpc.NewClientWithOpts(url, opts))
+	rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithRateLimit(url, callsPerSecond))
 	resp, err := rpcClient.GetVersion(context.Background())
 	if err != nil {
 		logrus.WithError(err).Fatalf("failed to get client version info")
@@ -117,10 +109,7 @@ func (w *SolanaClient) Send(
 	logrus.WithFields(logFields).Info("signed transaction")
 
 	txHash, err := w.client.SendTransactionWithOpts(
-		ctx, tx, rpc.TransactionOpts{
-			SkipPreflight:       false,
-			PreflightCommitment: rpc.CommitmentConfirmed,
-		},
+		ctx, tx, false, rpc.CommitmentConfirmed,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to send transaction, err %s", err)
