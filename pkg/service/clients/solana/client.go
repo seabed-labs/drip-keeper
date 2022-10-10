@@ -269,8 +269,7 @@ func (w *SolanaClient) getAccount(ctx context.Context, address solana.PublicKey,
 func checkTxHash(
 	client *rpc.Client, txHash solana.Signature, done chan error,
 ) {
-	// Should take max 13s
-	timeout := time.Second * 15
+	timeout := time.Second * 60
 	ticker := time.NewTicker(timeout)
 	for {
 		select {
