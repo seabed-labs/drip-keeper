@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/dripclient"
+
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/alert"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/orcawhirlpool"
@@ -34,6 +36,7 @@ func getDependencies() []fx.Option {
 			configs.New,
 			solana.New,
 			orcawhirlpool.NewOrcaWhirlpoolClient,
+			dripclient.NewDripBackendClient,
 			eventbus.NewEventBus,
 			alert.NewService,
 			keeper.NewKeeperService,
