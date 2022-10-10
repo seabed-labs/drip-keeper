@@ -13,7 +13,7 @@ require (
 	github.com/disgoorg/disgo v0.13.5
 	github.com/disgoorg/snowflake/v2 v2.0.0
 	github.com/gagliardetto/binary v0.6.1
-	github.com/gagliardetto/solana-go v1.4.0
+	github.com/gagliardetto/solana-go v1.6.0
 	github.com/golang/mock v1.4.4
 	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/ilyakaznacheev/cleanenv v1.2.6

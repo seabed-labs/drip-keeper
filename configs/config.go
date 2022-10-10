@@ -60,8 +60,10 @@ const (
 type Environment string
 
 const (
-	Staging = Environment("STAGING")
-	Prod    = Environment("PROD")
+	NilEnv     = Environment("")
+	LocalEnv   = Environment("LocalEnv")
+	StagingEnv = Environment("STAGING")
+	ProdEnv    = Environment("PROD")
 )
 
 const KEEPER_BOT_WALLET = "KEEPER_BOT_WALLET"
@@ -89,14 +91,24 @@ func New() (*Config, error) {
 	return &config, nil
 }
 
-func IsLocal(network Network) bool {
+func IsLocalnet(network Network) bool {
 	return network == LocalNetwork || network == NilNetwork
 }
 
-func IsDev(network Network) bool {
+func IsDevnet(network Network) bool {
 	return network == DevnetNetwork
 }
 
-func IsProd(network Network) bool {
+func IsMainnet(network Network) bool {
 	return network == MainnetNetwork
+}
+
+func IsStagingEnv(env Environment) bool {
+	return env == StagingEnv
+}
+func IsProductionEnv(env Environment) bool {
+	return env == ProdEnv
+}
+func IsLocalEnv(env Environment) bool {
+	return env == NilEnv || env == LocalEnv
 }
