@@ -4,15 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
+
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/solana"
 	dripextension "github.com/dcaf-labs/drip-client/drip-extension-go"
-	"github.com/hashicorp/go-retryablehttp"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/time/rate"
 )
 
 type OrcaWhirlpoolClient interface {
@@ -32,24 +29,12 @@ type client struct {
 
 func newClient(network configs.Network) *client {
 	connectionURL, callsPerSecond := solana.GetURLWithRateLimit(network)
-	rateLimiter := rate.NewLimiter(rate.Every(time.Second/time.Duration(callsPerSecond)), 1)
-	httpClient := retryablehttp.NewClient()
-	httpClient.Logger = nil
-	httpClient.CheckRetry = clients.DefaultCheckRetry
-	httpClient.RetryWaitMin = clients.DefaultRetryMin
-	httpClient.RetryMax = clients.MaxRetries
-
-	httpClient.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, retry int) {
-		if err := rateLimiter.Wait(context.Background()); err != nil {
-			log.WithError(err).Errorf("waiting for rate limit")
-			return
-		}
-	}
+	httpClient := clients.GetRateLimitedHTTPClient(callsPerSecond)
 
 	config := dripextension.NewConfiguration()
 	config.HTTPClient = httpClient.StandardClient()
 	config.Host = host
-	config.UserAgent = "drip-backend"
+	config.UserAgent = "drip-keeper"
 	config.Scheme = "https"
 	return &client{
 		APIClient:     dripextension.NewAPIClient(config),
