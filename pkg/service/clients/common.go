@@ -39,7 +39,7 @@ type RetryableHTTPClient struct {
 	*retryablehttp.Client
 }
 
-func (r RetryableHTTPClient) Do(request *http.Request) (*http.Response, error) {
+func (r *RetryableHTTPClient) Do(request *http.Request) (*http.Response, error) {
 	retryableRequest, err := retryablehttp.FromRequest(request)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (r RetryableHTTPClient) Do(request *http.Request) (*http.Response, error) {
 	return r.Client.Do(retryableRequest)
 }
 
-func (r RetryableHTTPClient) CloseIdleConnections() {
+func (r *RetryableHTTPClient) CloseIdleConnections() {
 	r.HTTPClient.CloseIdleConnections()
 }
 
