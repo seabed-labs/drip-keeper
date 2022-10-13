@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/eventbus"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/keeper"
 	"github.com/asaskevich/EventBus"
 	"github.com/dcaf-labs/drip-client/drip-go"
 	"github.com/robfig/cron/v3"
@@ -17,6 +17,7 @@ type vaultProviderImpl struct {
 	cron       *cron.Cron
 	eventBus   EventBus.Bus
 	dripClient *drip.APIClient
+	keeper     *keeper.KeeperService
 }
 
 type VaultProvider interface {
@@ -24,7 +25,7 @@ type VaultProvider interface {
 }
 
 const (
-	discoveryPeriod = 60
+	discoveryPeriod = 300
 )
 
 func NewVaultProvider(
@@ -32,33 +33,26 @@ func NewVaultProvider(
 	eventBus EventBus.Bus,
 	config *configs.Config,
 	dripBackendClient *drip.APIClient,
+	keeper *keeper.KeeperService,
 ) (*VaultProvider, error) {
 	vaultProviderImpl := vaultProviderImpl{
 		cron:       cron.New(),
 		eventBus:   eventBus,
 		dripClient: dripBackendClient,
+		keeper:     keeper,
 	}
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			for i := range config.TriggerDCAConfigs {
-				dcaConfig := config.TriggerDCAConfigs[i]
-				logrus.WithField("vault", dcaConfig.Vault).Info("publishing vault config")
-				vaultProviderImpl.eventBus.Publish(string(eventbus.VaultConfigTopic), dcaConfig)
+			if _, err := vaultProviderImpl.cron.AddFunc(fmt.Sprintf("@every %ds", discoveryPeriod), vaultProviderImpl.discoverConfigs); err != nil {
+				return err
 			}
-			if config.ShouldDiscoverNewConfigs {
-				if _, err := vaultProviderImpl.cron.AddFunc(fmt.Sprintf("@every %ds", discoveryPeriod), vaultProviderImpl.discoverConfigs); err != nil {
-					return err
-				}
-				vaultProviderImpl.cron.Start()
-				vaultProviderImpl.discoverConfigs()
-			}
+			vaultProviderImpl.cron.Start()
+			vaultProviderImpl.discoverConfigs()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
 			// TODO(Mocha): wait for context or return err if it takes too long
-			if config.ShouldDiscoverNewConfigs {
-				vaultProviderImpl.cron.Stop()
-			}
+			vaultProviderImpl.cron.Stop()
 			return nil
 		},
 	})
@@ -130,7 +124,10 @@ func (vaultProviderImpl vaultProviderImpl) discoverConfigs() {
 				Whirlpool:         dripOrcaWhirlpoolConfig.Whirlpool,
 			}
 		}
-
-		vaultProviderImpl.eventBus.Publish(string(eventbus.VaultConfigTopic), dripConfig)
+		log := logrus.WithField("vault", dripConfig.Vault)
+		log.Info("starting drip...")
+		if err := vaultProviderImpl.keeper.Run(dripConfig); err != nil && err.Error() != keeper.ErrDripAmount0 && err.Error() != keeper.ErrDripAlreadyTriggered {
+			log.WithError(err).Errorf("failed to drip")
+		}
 	}
 }

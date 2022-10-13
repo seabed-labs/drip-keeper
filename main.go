@@ -12,7 +12,6 @@ import (
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/eventbus"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/heartbeat"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/keeper"
-	dca "github.com/Dcaf-Protocol/drip-keeper/pkg/service/schedule"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/vaultprovider"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
@@ -43,7 +42,7 @@ func getDependencies() []fx.Option {
 		),
 		fx.Invoke(
 			// NewSchedulerService should be invoked first
-			dca.NewSchedulerService,
+			//dca.NewSchedulerService,
 			vaultprovider.NewVaultProvider,
 			heartbeat.NewHeartbeatWorker,
 		),
