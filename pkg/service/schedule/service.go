@@ -200,7 +200,7 @@ func (dripScheduler *DripSchedulerService) runWithRetry(vault string, try, maxTr
 			}
 
 			// create new drip handler
-			if err.Error() == keeper.ErrDripAlreadyTriggered || err.Error() == keeper.ErrDripAmount0 {
+			if err.Error() == keeper.ErrDripAlreadyTriggered {
 				if _, scheduleErr := dripScheduler.scheduleDrip(config, false, err.Error()); scheduleErr != nil {
 					log.WithField("scheduleErr", scheduleErr.Error()).WithField("snapToBeginning", false).Errorf("failed to reschedule drip")
 				}
