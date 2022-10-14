@@ -1,82 +1,93 @@
-package vaultprovider
+package startdrip
 
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/keeper"
-	"github.com/asaskevich/EventBus"
 	"github.com/dcaf-labs/drip-client/drip-go"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
 
-type vaultProviderImpl struct {
-	cron       *cron.Cron
-	eventBus   EventBus.Bus
-	dripClient *drip.APIClient
-	keeper     *keeper.KeeperService
+type VaultProvider interface {
+	getAllDripConfigs() ([]configs.DripConfig, error)
+	dripAllVaults()
 }
 
-type VaultProvider interface {
-	GetVaultChannel()
+type vaultProviderImpl struct {
+	dripClient *drip.APIClient
+	keeper     *keeper.KeeperService
 }
 
 const (
 	discoveryPeriod = 300
 )
 
-func NewVaultProvider(
+func StartDrip(
 	lc fx.Lifecycle,
-	eventBus EventBus.Bus,
-	config *configs.Config,
 	dripBackendClient *drip.APIClient,
 	keeper *keeper.KeeperService,
-) (*VaultProvider, error) {
+) {
 	vaultProviderImpl := vaultProviderImpl{
-		cron:       cron.New(),
-		eventBus:   eventBus,
 		dripClient: dripBackendClient,
 		keeper:     keeper,
 	}
+	dripCron := cron.New()
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			if _, err := vaultProviderImpl.cron.AddFunc(fmt.Sprintf("@every %ds", discoveryPeriod), vaultProviderImpl.discoverConfigs); err != nil {
+			if _, err := dripCron.AddFunc(fmt.Sprintf("@every %ds", discoveryPeriod), vaultProviderImpl.dripAllVaults); err != nil {
 				return err
 			}
-			vaultProviderImpl.cron.Start()
-			vaultProviderImpl.discoverConfigs()
+			dripCron.Start()
+			vaultProviderImpl.dripAllVaults()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
 			// TODO(Mocha): wait for context or return err if it takes too long
-			vaultProviderImpl.cron.Stop()
+			dripCron.Stop()
 			return nil
 		},
 	})
-
-	return nil, nil
+	return
 }
 
-func (vaultProviderImpl vaultProviderImpl) discoverConfigs() {
-	logrus.Debug("searching for new configs")
-	dripSPLTokenSwapConfigs, _, err := vaultProviderImpl.dripClient.DefaultApi.V1DripSpltokenswapconfigsGet(context.Background()).Execute()
+func (impl vaultProviderImpl) dripAllVaults() {
+	log := logrus.WithField("method", "dripAllVaults")
+	log.Info("searching for new configs...")
+	dripConfigs, err := impl.getAllDripConfigs()
 	if err != nil {
-		logrus.
-			WithError(err).
-			WithField("host", vaultProviderImpl.dripClient.GetConfig().Host).
-			Error("failed to get spl token swaps configs from backend")
-		return
+		log.WithError(err).Errorf("failed to get configs")
 	}
-	dripOrcaWhirlpoolConfigs, _, err := vaultProviderImpl.dripClient.DefaultApi.V1DripOrcawhirlpoolconfigsGet(context.Background()).Execute()
+	log.WithField("len(dripConfigs)", len(dripConfigs)).Info("fetched drip configs")
+	for _, dripConfig := range dripConfigs {
+		log = logrus.WithField("vault", dripConfig.Vault)
+		log.Info("starting drip...")
+
+		startTime := time.Now()
+		err := impl.keeper.Run(dripConfig)
+		totalTime := time.Now().Unix() - startTime.Unix()
+		log = log.WithField("totalTimeInSeconds", totalTime)
+
+		if err != nil && err.Error() != keeper.ErrDripAmount0 && err.Error() != keeper.ErrDripAlreadyTriggered {
+			log.WithError(err).Errorf("failed to drip")
+		} else {
+			log.Info("finished drip")
+		}
+	}
+}
+
+func (impl vaultProviderImpl) getAllDripConfigs() ([]configs.DripConfig, error) {
+	dripSPLTokenSwapConfigs, _, err := impl.dripClient.DefaultApi.V1DripSpltokenswapconfigsGet(context.Background()).Execute()
 	if err != nil {
-		logrus.
-			WithError(err).
-			WithField("host", vaultProviderImpl.dripClient.GetConfig().Host).
-			Error("failed to get orca whirlpool configs from backend")
-		return
+		return nil, fmt.Errorf("failed to get spl token swap configs from backend, err: %s", err.Error())
+	}
+	dripOrcaWhirlpoolConfigs, _, err := impl.dripClient.DefaultApi.V1DripOrcawhirlpoolconfigsGet(context.Background()).Execute()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get orca whirlpool configs from backend, err: %s", err.Error())
 	}
 	vaultSet := make(map[string]bool)
 	splTokenSwapConfigsByVault := make(map[string]drip.SplTokenSwapConfig)
@@ -91,7 +102,7 @@ func (vaultProviderImpl vaultProviderImpl) discoverConfigs() {
 		orcaWhirlpoolConfigsByVault[orcaWhirlpoolConfig.Vault] = orcaWhirlpoolConfig
 		vaultSet[orcaWhirlpoolConfig.Vault] = true
 	}
-	logrus.WithField("len(vaultSet)", len(vaultSet)).Info("fetched vault configs")
+	dripConfigs := []configs.DripConfig{}
 	for vault := range vaultSet {
 		dripSPLTokenSwapConfig, validTokenSwapConfig := splTokenSwapConfigsByVault[vault]
 		dripOrcaWhirlpoolConfig, validOrcaWhirlpoolConfig := orcaWhirlpoolConfigsByVault[vault]
@@ -124,10 +135,7 @@ func (vaultProviderImpl vaultProviderImpl) discoverConfigs() {
 				Whirlpool:         dripOrcaWhirlpoolConfig.Whirlpool,
 			}
 		}
-		log := logrus.WithField("vault", dripConfig.Vault)
-		log.Info("starting drip...")
-		if err := vaultProviderImpl.keeper.Run(dripConfig); err != nil && err.Error() != keeper.ErrDripAmount0 && err.Error() != keeper.ErrDripAlreadyTriggered {
-			log.WithError(err).Errorf("failed to drip")
-		}
+		dripConfigs = append(dripConfigs, dripConfig)
 	}
+	return dripConfigs, nil
 }
