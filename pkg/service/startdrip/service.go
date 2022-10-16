@@ -37,8 +37,9 @@ func StartDrip(
 	alertService alert.Service,
 ) {
 	vaultProviderImpl := vaultProviderImpl{
-		dripClient: dripBackendClient,
-		keeper:     keeper,
+		dripClient:   dripBackendClient,
+		keeper:       keeper,
+		alertService: alertService,
 	}
 	dripCron := cron.New()
 	lc.Append(fx.Hook{
