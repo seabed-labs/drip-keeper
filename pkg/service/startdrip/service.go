@@ -79,7 +79,8 @@ func (impl vaultProviderImpl) dripAllVaults() {
 
 		if err != nil && err.Error() != keeper.ErrDripAmount0 && err.Error() != keeper.ErrDripAlreadyTriggered {
 			log.WithError(err).Errorf("failed to drip")
-			if err := impl.alertService.SendError(context.Background(), err); err != nil {
+			msg := fmt.Errorf("vault %s failed to drip with err \"%s\"", dripConfig.Vault, err.Error())
+			if err := impl.alertService.SendError(context.Background(), msg); err != nil {
 				log.WithError(err).Errorf("failed to alert error")
 			}
 		} else if err == nil {
