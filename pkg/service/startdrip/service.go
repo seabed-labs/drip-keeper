@@ -82,7 +82,7 @@ func (impl vaultProviderImpl) dripAllVaults() {
 			if err := impl.alertService.SendError(context.Background(), err); err != nil {
 				log.WithError(err).Errorf("failed to alert error")
 			}
-		} else {
+		} else if err == nil {
 			log.Info("finished drip")
 			msg := fmt.Sprintf("dripped vault %s", dripConfig.Vault)
 			if err := impl.alertService.SendInfo(context.Background(), msg); err != nil {
