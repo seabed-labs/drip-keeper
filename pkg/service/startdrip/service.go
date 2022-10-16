@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/alert"
+
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/keeper"
 	"github.com/dcaf-labs/drip-client/drip-go"
@@ -19,8 +21,9 @@ type VaultProvider interface {
 }
 
 type vaultProviderImpl struct {
-	dripClient *drip.APIClient
-	keeper     *keeper.KeeperService
+	dripClient   *drip.APIClient
+	keeper       *keeper.KeeperService
+	alertService alert.Service
 }
 
 const (
@@ -31,6 +34,7 @@ func StartDrip(
 	lc fx.Lifecycle,
 	dripBackendClient *drip.APIClient,
 	keeper *keeper.KeeperService,
+	alertService alert.Service,
 ) {
 	vaultProviderImpl := vaultProviderImpl{
 		dripClient: dripBackendClient,
@@ -74,8 +78,15 @@ func (impl vaultProviderImpl) dripAllVaults() {
 
 		if err != nil && err.Error() != keeper.ErrDripAmount0 && err.Error() != keeper.ErrDripAlreadyTriggered {
 			log.WithError(err).Errorf("failed to drip")
+			if err := impl.alertService.SendError(context.Background(), err); err != nil {
+				log.WithError(err).Errorf("failed to alert error")
+			}
 		} else {
 			log.Info("finished drip")
+			msg := fmt.Sprintf("dripped vault %s", dripConfig.Vault)
+			if err := impl.alertService.SendInfo(context.Background(), msg); err != nil {
+				log.WithError(err).Errorf("failed to alert info")
+			}
 		}
 	}
 }
