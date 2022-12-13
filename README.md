@@ -14,21 +14,3 @@ Install dependencies (needed for orca whirlpools)
 2. `npm i`
 
 Run the Bot: `go run main.go`
-
-
-## Devnet
-
-To run the bot against devnet:
-`ENV=DEVNET go run main.go`.
-
-## Heroku
-Enable the nodejs buildpack (needed because the bot spins off a node subprocess to use the orca SDK).
-```bash
-heroku buildpacks:add --index 1 heroku/nodejs -a keeper-bot-devnet
-# verify with
-heroku buildpacks -a keeper-bot-devnet
-# The output should look like the following (go should be last)
-# === keeper-bot-devnet Buildpack URLs
-# 1. heroku/nodejs
-# 2. heroku/go
-```
