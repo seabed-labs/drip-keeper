@@ -8,7 +8,6 @@ import (
 )
 
 type Config struct {
-	Environment              Environment  `yaml:"environment" env:"ENV" env-default:"STAGING"`
 	Network                  Network      `yaml:"network" env:"NETWORK" env-default:"DEVNET"`
 	DripProgramID            string       `yaml:"dripProgramID" env:"DRIP_PROGRAM_ID"  env-default:"dripTrkvSyQKvkyWg7oi4jmeEGMA5scSYowHArJ9Vwk"`
 	Wallet                   string       `yaml:"keeperBotWallet"      env:"KEEPER_BOT_WALLET"`
@@ -58,15 +57,6 @@ const (
 	MainnetNetwork = Network("MAINNET")
 )
 
-type Environment string
-
-const (
-	NilEnv     = Environment("")
-	LocalEnv   = Environment("LocalEnv")
-	StagingEnv = Environment("STAGING")
-	ProdEnv    = Environment("PROD")
-)
-
 const KEEPER_BOT_WALLET = "KEEPER_BOT_WALLET"
 const ENV = "ENV"
 const NETWORK = "NETWORK"
@@ -90,26 +80,4 @@ func New() (*Config, error) {
 	}
 	drip.ProgramID = ag_solanago.MustPublicKeyFromBase58(config.DripProgramID)
 	return &config, nil
-}
-
-func IsLocalnet(network Network) bool {
-	return network == LocalNetwork || network == NilNetwork
-}
-
-func IsDevnet(network Network) bool {
-	return network == DevnetNetwork
-}
-
-func IsMainnet(network Network) bool {
-	return network == MainnetNetwork
-}
-
-func IsStagingEnv(env Environment) bool {
-	return env == StagingEnv
-}
-func IsProductionEnv(env Environment) bool {
-	return env == ProdEnv
-}
-func IsLocalEnv(env Environment) bool {
-	return env == NilEnv || env == LocalEnv
 }
