@@ -167,6 +167,14 @@ func (w *SolanaClient) GetOrcaWhirlpool(ctx context.Context, whirlpoolAddress so
 	return orcaWhirlpool, nil
 }
 
+func (w *SolanaClient) GetDripOracleConfig(ctx context.Context, oracleConfig solana.PublicKey) (drip.OracleConfig, error) {
+	var res drip.OracleConfig
+	if err := w.getAccount(ctx, oracleConfig, &res); err != nil {
+		return drip.OracleConfig{}, err
+	}
+	return res, nil
+}
+
 func (w *SolanaClient) GetOrcaWhirlpoolTickArray(ctx context.Context, whirlpoolTickArrayAddress solana.PublicKey) (whirlpool.TickArray, error) {
 	var orcaWhirlpoolTickArray whirlpool.TickArray
 	if err := w.getAccount(ctx, whirlpoolTickArrayAddress, &orcaWhirlpoolTickArray); err != nil {
@@ -233,7 +241,7 @@ func (w *SolanaClient) GetMaybeUninitializedVaultPeriod(
 		DataSlice:  nil,
 	}); err != nil && err.Error() == ErrNotFound {
 		// Failure is likely because the vault period is not initialized
-		instruction, err = w.InitVaultPeriod(ctx, vault.String(), vaultProtoConfig.String(), vaultPeriod.String(), tokenAMint.String(), tokenBMint.String(), vaultPeriodID)
+		instruction, err = w.InitVaultPeriod(ctx, vault.String(), vaultPeriod.String(), vaultPeriodID)
 		if err != nil {
 			log.
 				WithError(err).

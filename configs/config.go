@@ -45,6 +45,7 @@ type DripConfig struct {
 	VaultProtoConfig    string              `yaml:"vaultProtoConfig"`
 	VaultTokenAAccount  string              `yaml:"vaultTokenAAccount"`
 	VaultTokenBAccount  string              `yaml:"vaultTokenBAccount"`
+	OracleConfig        *string             `yaml:"oracleConfig"`
 	SPLTokenSwapConfig  SPLTokenSwapConfig  `yaml:"SPLTokenSwapConfig"`
 	OrcaWhirlpoolConfig OrcaWhirlpoolConfig `yaml:"orcaWhirlpoolConfig"`
 }

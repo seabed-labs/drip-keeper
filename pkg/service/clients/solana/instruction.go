@@ -11,17 +11,39 @@ import (
 )
 
 type DripOrcaWhirlpoolParams struct {
-	VaultData           drip.Vault
-	Vault               solana.PublicKey
-	VaultPeriodI        solana.PublicKey
-	VaultPeriodJ        solana.PublicKey
-	BotTokenAFeeAccount solana.PublicKey
-	WhirlpoolData       whirlpool.Whirlpool
-	Whirlpool           solana.PublicKey
-	TickArray0          solana.PublicKey
-	TickArray1          solana.PublicKey
-	TickArray2          solana.PublicKey
-	Oracle              solana.PublicKey
+	VaultAccount           drip.Vault
+	VaultPub               solana.PublicKey
+	VaultPeriodIPub        solana.PublicKey
+	VaultPeriodJPub        solana.PublicKey
+	BotTokenAFeeAccountPub solana.PublicKey
+
+	WhirlpoolAccount   whirlpool.Whirlpool
+	WhirlpoolPub       solana.PublicKey
+	TickArray0Pub      solana.PublicKey
+	TickArray1Pub      solana.PublicKey
+	TickArray2Pub      solana.PublicKey
+	WhirlpoolOraclePub solana.PublicKey
+}
+
+type DripV2OrcaWhirlpoolParams struct {
+	VaultAccount           drip.Vault
+	VaultPub               solana.PublicKey
+	VaultPeriodIPub        solana.PublicKey
+	VaultPeriodJPub        solana.PublicKey
+	BotTokenAFeeAccountPub solana.PublicKey
+
+	DripOraclePub                   solana.PublicKey
+	DripOracleTokenAMintPub         solana.PublicKey
+	DripOracleTokenAPriceAccountPub solana.PublicKey
+	DripOracleTokenBMintPub         solana.PublicKey
+	DripOracleTokenBPriceAccountPub solana.PublicKey
+
+	WhirlpoolAccount   whirlpool.Whirlpool
+	WhirlpoolPub       solana.PublicKey
+	TickArray0Pub      solana.PublicKey
+	TickArray1Pub      solana.PublicKey
+	TickArray2Pub      solana.PublicKey
+	WhirlpoolOraclePub solana.PublicKey
 }
 
 func (w *SolanaClient) DripOrcaWhirlpool(
@@ -30,24 +52,62 @@ func (w *SolanaClient) DripOrcaWhirlpool(
 ) (solana.Instruction, error) {
 	commonBuilder := drip.NewDripOrcaWhirlpoolCommonAccountsBuilder()
 	commonBuilder.SetDripTriggerSourceAccount(w.wallet.PublicKey())
-	commonBuilder.SetVaultAccount(params.Vault)
-	commonBuilder.SetVaultProtoConfigAccount(params.VaultData.ProtoConfig)
-	commonBuilder.SetLastVaultPeriodAccount(params.VaultPeriodI)
-	commonBuilder.SetCurrentVaultPeriodAccount(params.VaultPeriodJ)
-	commonBuilder.SetVaultTokenAAccountAccount(params.VaultData.TokenAAccount)
-	commonBuilder.SetVaultTokenBAccountAccount(params.VaultData.TokenBAccount)
-	commonBuilder.SetSwapTokenAAccountAccount(params.WhirlpoolData.TokenVaultA)
-	commonBuilder.SetSwapTokenBAccountAccount(params.WhirlpoolData.TokenVaultB)
-	commonBuilder.SetDripFeeTokenAAccountAccount(params.BotTokenAFeeAccount)
+	commonBuilder.SetVaultAccount(params.VaultPub)
+	commonBuilder.SetVaultProtoConfigAccount(params.VaultAccount.ProtoConfig)
+	commonBuilder.SetLastVaultPeriodAccount(params.VaultPeriodIPub)
+	commonBuilder.SetCurrentVaultPeriodAccount(params.VaultPeriodJPub)
+	commonBuilder.SetVaultTokenAAccountAccount(params.VaultAccount.TokenAAccount)
+	commonBuilder.SetVaultTokenBAccountAccount(params.VaultAccount.TokenBAccount)
+	commonBuilder.SetSwapTokenAAccountAccount(params.WhirlpoolAccount.TokenVaultA)
+	commonBuilder.SetSwapTokenBAccountAccount(params.WhirlpoolAccount.TokenVaultB)
+	commonBuilder.SetDripFeeTokenAAccountAccount(params.BotTokenAFeeAccountPub)
 	commonBuilder.SetTokenProgramAccount(solana.TokenProgramID)
 
 	txBuilder := drip.NewDripOrcaWhirlpoolInstructionBuilder()
 	txBuilder.SetCommonAccountsFromBuilder(commonBuilder)
-	txBuilder.SetWhirlpoolAccount(params.Whirlpool)
-	txBuilder.SetTickArray0Account(params.TickArray0)
-	txBuilder.SetTickArray1Account(params.TickArray1)
-	txBuilder.SetTickArray2Account(params.TickArray2)
-	txBuilder.SetOracleAccount(params.Oracle)
+	txBuilder.SetWhirlpoolAccount(params.WhirlpoolPub)
+	txBuilder.SetTickArray0Account(params.TickArray0Pub)
+	txBuilder.SetTickArray1Account(params.TickArray1Pub)
+	txBuilder.SetTickArray2Account(params.TickArray2Pub)
+	txBuilder.SetOracleAccount(params.WhirlpoolOraclePub)
+
+	txBuilder.SetWhirlpoolProgramAccount(whirlpool.ProgramID)
+
+	return txBuilder.ValidateAndBuild()
+}
+
+func (w *SolanaClient) DripV2OrcaWhirlpool(
+	ctx context.Context,
+	params DripV2OrcaWhirlpoolParams,
+) (solana.Instruction, error) {
+	commonBuilder := drip.NewDripV2OrcaWhirlpoolCommonAccountsBuilder()
+	commonBuilder.SetDripTriggerSourceAccount(w.wallet.PublicKey())
+	commonBuilder.SetVaultAccount(params.VaultPub)
+	commonBuilder.SetVaultProtoConfigAccount(params.VaultAccount.ProtoConfig)
+	commonBuilder.SetLastVaultPeriodAccount(params.VaultPeriodIPub)
+	commonBuilder.SetCurrentVaultPeriodAccount(params.VaultPeriodJPub)
+	commonBuilder.SetVaultTokenAAccountAccount(params.VaultAccount.TokenAAccount)
+	commonBuilder.SetVaultTokenBAccountAccount(params.VaultAccount.TokenBAccount)
+	commonBuilder.SetSwapTokenAAccountAccount(params.WhirlpoolAccount.TokenVaultA)
+	commonBuilder.SetSwapTokenBAccountAccount(params.WhirlpoolAccount.TokenVaultB)
+	commonBuilder.SetDripFeeTokenAAccountAccount(params.BotTokenAFeeAccountPub)
+	commonBuilder.SetTokenProgramAccount(solana.TokenProgramID)
+
+	oracleBuilder := drip.NewDripV2OrcaWhirlpoolOracleCommonAccountsBuilder()
+	oracleBuilder.SetOracleConfigAccount(params.DripOraclePub)
+	oracleBuilder.SetTokenAMintAccount(params.DripOracleTokenAMintPub)
+	oracleBuilder.SetTokenAPriceAccount(params.DripOracleTokenAPriceAccountPub)
+	oracleBuilder.SetTokenBMintAccount(params.DripOracleTokenBMintPub)
+	oracleBuilder.SetTokenBPriceAccount(params.DripOracleTokenBPriceAccountPub)
+
+	txBuilder := drip.NewDripV2OrcaWhirlpoolInstructionBuilder()
+	txBuilder.SetCommonAccountsFromBuilder(commonBuilder)
+	txBuilder.SetOracleCommonAccountsFromBuilder(oracleBuilder)
+	txBuilder.SetWhirlpoolAccount(params.WhirlpoolPub)
+	txBuilder.SetTickArray0Account(params.TickArray0Pub)
+	txBuilder.SetTickArray1Account(params.TickArray1Pub)
+	txBuilder.SetTickArray2Account(params.TickArray2Pub)
+	txBuilder.SetOracleAccount(params.WhirlpoolOraclePub)
 
 	txBuilder.SetWhirlpoolProgramAccount(whirlpool.ProgramID)
 
@@ -55,9 +115,9 @@ func (w *SolanaClient) DripOrcaWhirlpool(
 }
 
 type InitializeTickArrayParams struct {
-	Whirlpool  solana.PublicKey
-	StartIndex int32
-	TickArray  solana.PublicKey
+	WhirlpoolPub solana.PublicKey
+	StartIndex   int32
+	TickArray    solana.PublicKey
 }
 
 func (w *SolanaClient) InitializeTickArray(
@@ -65,7 +125,7 @@ func (w *SolanaClient) InitializeTickArray(
 	params InitializeTickArrayParams,
 ) (solana.Instruction, error) {
 	txBuilder := whirlpool.NewInitializeTickArrayInstructionBuilder()
-	txBuilder.SetWhirlpoolAccount(params.Whirlpool)
+	txBuilder.SetWhirlpoolAccount(params.WhirlpoolPub)
 	txBuilder.SetFunderAccount(w.wallet.PublicKey())
 	txBuilder.SetTickArrayAccount(params.TickArray)
 	txBuilder.SetSystemProgramAccount(solana.SystemProgramID)
@@ -100,7 +160,7 @@ func (w *SolanaClient) DripSPLTokenSwap(
 }
 
 func (w *SolanaClient) InitVaultPeriod(
-	ctx context.Context, vault, vaultProtoConfig, vaultPeriod, tokenAMint, tokenBMint string, vaultPeriodID int64,
+	ctx context.Context, vault, vaultPeriod string, vaultPeriodID int64,
 ) (solana.Instruction, error) {
 	txBuilder := drip.NewInitVaultPeriodInstructionBuilder()
 	txBuilder.SetVaultPeriodAccount(solana.MustPublicKeyFromBase58(vaultPeriod))
