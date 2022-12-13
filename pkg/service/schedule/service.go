@@ -89,7 +89,7 @@ package schedule
 //					}
 //					dcaCron := v.(*DripConfig)
 //					if err := dcaCronService.stopCron(ctx, dcaCron.Cron); err != nil {
-//						logrus.WithError(err).WithField("vault", dcaCron.Config.Vault).Error("failed to stop dca cron job")
+//						logrus.WithError(err).WithField("vault", dcaCron.Config.VaultPub).Error("failed to stop dca cron job")
 //					}
 //				}
 //			}
@@ -110,7 +110,7 @@ package schedule
 //			logrus.
 //				WithField("nextTryUnix", entry.Next.Unix()).
 //				WithField("nextTry", entry.Next).
-//				WithField("vault", dripConfig.Config.Vault).
+//				WithField("vault", dripConfig.Config.VaultPub).
 //				Infof("next scheduled drip attempt")
 //		}
 //
@@ -118,24 +118,24 @@ package schedule
 //}
 //
 //func (dripScheduler *DripSchedulerService) registerDripConfig(newConfig configs.DripConfig) (*DripConfig, error) {
-//	log := logrus.WithField("vault", newConfig.Vault)
+//	log := logrus.WithField("vault", newConfig.VaultPub)
 //	log.Debug("received new config")
 //
-//	if v, ok := dripScheduler.dripConfigs.Get(newConfig.Vault); ok {
+//	if v, ok := dripScheduler.dripConfigs.Get(newConfig.VaultPub); ok {
 //		dripConfig := v.(*DripConfig)
 //		// If there is a new whirlpool config, and it's different from what we have, set it
 //		// If there is a new splTokenSwap config, and it's different from what we have, set it
-//		if (newConfig.OrcaWhirlpoolConfig.Whirlpool != "" && dripConfig.Config.OrcaWhirlpoolConfig.Whirlpool != newConfig.OrcaWhirlpoolConfig.Whirlpool) ||
+//		if (newConfig.OrcaWhirlpoolConfig.WhirlpoolPub != "" && dripConfig.Config.OrcaWhirlpoolConfig.WhirlpoolPub != newConfig.OrcaWhirlpoolConfig.WhirlpoolPub) ||
 //			(newConfig.SPLTokenSwapConfig.Swap != "" && dripConfig.Config.SPLTokenSwapConfig.Swap != newConfig.SPLTokenSwapConfig.Swap) {
 //			logrus.
-//				WithField("vault", newConfig.Vault).
+//				WithField("vault", newConfig.VaultPub).
 //				WithField("oldSwap", dripConfig.Config.SPLTokenSwapConfig.Swap).
 //				WithField("newSwap", newConfig.SPLTokenSwapConfig.Swap).
 //				WithField("oldSwap", dripConfig.Config.SPLTokenSwapConfig.Swap).
 //				WithField("newSwap", newConfig.SPLTokenSwapConfig.Swap).
 //				Info("vault already registered, overriding swap")
 //			dripConfig.Config = newConfig
-//			dripScheduler.dripConfigs.Set(newConfig.Vault, dripConfig)
+//			dripScheduler.dripConfigs.Set(newConfig.VaultPub, dripConfig)
 //			return dripConfig, nil
 //		}
 //		log.Debug("vault already registered, skipping cron creation")
@@ -192,7 +192,7 @@ package schedule
 //		if try >= maxTry {
 //			if err.Error() != keeper.ErrDripAmount0 && err.Error() != keeper.ErrDripAlreadyTriggered {
 //				log.Error("failed to drip")
-//				if alertErr := dripScheduler.alertService.SendError(context.Background(), fmt.Errorf("err in runWithRetry, try %d, maxTry %d, vault %s, err %w", try, maxTry, config.Vault, err)); alertErr != nil {
+//				if alertErr := dripScheduler.alertService.SendError(context.Background(), fmt.Errorf("err in runWithRetry, try %d, maxTry %d, vault %s, err %w", try, maxTry, config.VaultPub, err)); alertErr != nil {
 //					log.WithField("alertErr", alertErr.Error()).Errorf("failed to send error alert")
 //				}
 //			}
@@ -215,20 +215,20 @@ package schedule
 //		}
 //		//log.Warn("waiting before retrying drip")
 //		time.Sleep(time.Duration(timeout) * time.Second)
-//		dripScheduler.runWithRetry(config.Vault, try+1, maxTry, timeout)
+//		dripScheduler.runWithRetry(config.VaultPub, try+1, maxTry, timeout)
 //	}
 //}
 //
 //func (dripScheduler *DripSchedulerService) scheduleDrip(config configs.DripConfig, snapToBeginning bool, reason string) (*DripConfig, error) {
-//	log := logrus.WithField("vault", config.Vault).WithField("reason", reason).WithField("snapToBeginning", snapToBeginning)
-//	schedule, granularity, err := dripScheduler.getScheduler(config.VaultProtoConfig, config.Vault, snapToBeginning)
+//	log := logrus.WithField("vault", config.VaultPub).WithField("reason", reason).WithField("snapToBeginning", snapToBeginning)
+//	schedule, granularity, err := dripScheduler.getScheduler(config.VaultProtoConfig, config.VaultPub, snapToBeginning)
 //	if err != nil {
 //		log.WithError(err).Error("failed to getScheduler")
 //		return nil, err
 //	}
 //	log.WithField("nextSchedule", schedule.At.String())
 //	cronJob := cron.New()
-//	doDrip := dripScheduler.getDripFunc(config.Vault)
+//	doDrip := dripScheduler.getDripFunc(config.VaultPub)
 //	if _, err := cronJob.AddFunc(fmt.Sprintf("@every %ds", granularity), doDrip); err != nil {
 //		log.WithError(err).Error("failed to addFunc to cronJob while trying to reschedule")
 //		return nil, err
@@ -238,11 +238,11 @@ package schedule
 //		Config: config,
 //		Cron:   cronJob,
 //	}
-//	dripScheduler.dripConfigs.Set(config.Vault, &newDripConfig)
+//	dripScheduler.dripConfigs.Set(config.VaultPub, &newDripConfig)
 //	// Run the first trigger dca right now in case we created this cron past the lastDCAActivation timestamp
 //	go doDrip()
 //	newDripConfig.Cron.Start()
-//	log.WithField("vault", config.Vault).Info("scheduled doDrip")
+//	log.WithField("vault", config.VaultPub).Info("scheduled doDrip")
 //	return &newDripConfig, nil
 //}
 //

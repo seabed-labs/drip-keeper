@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/alert"
-
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/alert"
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/keeper"
 	"github.com/dcaf-labs/drip-client/drip-go"
 	"github.com/robfig/cron/v3"
@@ -115,7 +114,7 @@ func (impl vaultProviderImpl) getAllDripConfigs() ([]configs.DripConfig, error) 
 		orcaWhirlpoolConfigsByVault[orcaWhirlpoolConfig.Vault] = orcaWhirlpoolConfig
 		vaultSet[orcaWhirlpoolConfig.Vault] = true
 	}
-	dripConfigs := []configs.DripConfig{}
+	var dripConfigs []configs.DripConfig
 	for vault := range vaultSet {
 		dripSPLTokenSwapConfig, validTokenSwapConfig := splTokenSwapConfigsByVault[vault]
 		dripOrcaWhirlpoolConfig, validOrcaWhirlpoolConfig := orcaWhirlpoolConfigsByVault[vault]
@@ -125,6 +124,7 @@ func (impl vaultProviderImpl) getAllDripConfigs() ([]configs.DripConfig, error) 
 			dripConfig.VaultProtoConfig = dripSPLTokenSwapConfig.VaultProtoConfig
 			dripConfig.VaultTokenAAccount = dripSPLTokenSwapConfig.VaultTokenAAccount
 			dripConfig.VaultTokenBAccount = dripSPLTokenSwapConfig.VaultTokenBAccount
+			dripConfig.OracleConfig = dripSPLTokenSwapConfig.OracleConfig
 			dripConfig.SPLTokenSwapConfig = configs.SPLTokenSwapConfig{
 				TokenAMint:        dripSPLTokenSwapConfig.TokenAMint,
 				TokenBMint:        dripSPLTokenSwapConfig.TokenBMint,
@@ -141,6 +141,7 @@ func (impl vaultProviderImpl) getAllDripConfigs() ([]configs.DripConfig, error) 
 			dripConfig.VaultProtoConfig = dripOrcaWhirlpoolConfig.VaultProtoConfig
 			dripConfig.VaultTokenAAccount = dripOrcaWhirlpoolConfig.VaultTokenAAccount
 			dripConfig.VaultTokenBAccount = dripOrcaWhirlpoolConfig.VaultTokenBAccount
+			dripConfig.OracleConfig = dripOrcaWhirlpoolConfig.OracleConfig
 			dripConfig.OrcaWhirlpoolConfig = configs.OrcaWhirlpoolConfig{
 				SwapTokenAAccount: dripOrcaWhirlpoolConfig.TokenVaultA,
 				SwapTokenBAccount: dripOrcaWhirlpoolConfig.TokenVaultB,
