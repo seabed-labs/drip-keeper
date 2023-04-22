@@ -314,8 +314,8 @@ func GetURLWithRateLimit(network configs.Network) (string, int) {
 	switch network {
 	case configs.MainnetNetwork:
 		// return rpc.MainNetBeta_RPC, 3
-		// mocha+1@dcaf.so
-		return "https://palpable-warmhearted-hexagon.solana-mainnet.discover.quiknode.pro/5793cf44e6e16325347e62d571454890f16e0388", 10
+		// mocha+3@dcaf.so
+		return "https://quick-dark-dust.solana-mainnet.discover.quiknode.pro/67c6e7fd9430ec7c3cf355ce177b058d653a416e/", 10
 	case configs.DevnetNetwork:
 		// return rpc.DevNet_RPC, 3
 		// mocha+2@dcaf.so
