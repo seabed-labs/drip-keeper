@@ -48,7 +48,7 @@ func NewService(
 			}),
 		)
 		service.discordClient = &client
-		if err := service.SendInfo(context.Background(), "initialized alert service"); err != nil {
+		if err := service.SendInfo(context.Background(), "initialized keeper alert service"); err != nil {
 			return nil, err
 		}
 	}
@@ -85,7 +85,7 @@ func (a serviceImpl) SendError(ctx context.Context, err error) (retErr error) {
 
 func (a serviceImpl) SendInfo(ctx context.Context, message string) (retErr error) {
 	if sendErr := a.sendDiscord(ctx, discord.Embed{
-		Title:       "Error",
+		Title:       "Info",
 		Description: message,
 		Color:       int(InfoColor),
 	}); sendErr != nil {
