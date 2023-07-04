@@ -19,6 +19,7 @@ type Config struct {
 	// Discord Compatible webhook URL
 	DiscordWebhookID          string `yaml:"DiscordWebhookID" env:"DISCORD_WEBHOOK_ID"`
 	DiscordWebhookAccessToken string `yaml:"DiscordWebhookAccessToken" env:"DISCORD_ACCESS_TOKEN"`
+	SlackWebhookURL           string `yaml:"slackWebhookURL" env:"SLACK_WEBHOOK_URL"`
 }
 
 type SPLTokenSwapConfig struct {
