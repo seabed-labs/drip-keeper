@@ -7,19 +7,15 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gagliardetto/solana-go/rpc/jsonrpc"
-
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients"
-
-	"github.com/dcaf-labs/solana-go-clients/pkg/whirlpool"
-	"github.com/gagliardetto/solana-go/programs/token"
-
-	bin "github.com/gagliardetto/binary"
-
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
+	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients"
 	"github.com/dcaf-labs/solana-go-clients/pkg/drip"
+	"github.com/dcaf-labs/solana-go-clients/pkg/whirlpool"
+	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/gagliardetto/solana-go/rpc/jsonrpc"
 	"github.com/mr-tron/base58"
 	"github.com/sirupsen/logrus"
 )
@@ -35,11 +31,10 @@ const ErrNotFound = "not found"
 func New(
 	config *configs.Config,
 ) (*SolanaClient, error) {
-	url, callsPerSecond := GetURLWithRateLimit(config.Network)
 	opts := &jsonrpc.RPCClientOpts{
-		HTTPClient: clients.GetRateLimitedHTTPClient(callsPerSecond),
+		HTTPClient: clients.GetRateLimitedHTTPClient(10),
 	}
-	rpcClient := rpc.NewWithCustomRPCClient(jsonrpc.NewClientWithOpts(url, opts))
+	rpcClient := rpc.NewWithCustomRPCClient(jsonrpc.NewClientWithOpts(config.SolanaRPCURL, opts))
 	resp, err := rpcClient.GetVersion(context.Background())
 	if err != nil {
 		logrus.WithError(err).Fatalf("failed to get client version info")
@@ -48,7 +43,7 @@ func New(
 	logrus.
 		WithFields(logrus.Fields{
 			"version": resp.SolanaCore,
-			"url":     url}).
+			"url":     config.SolanaRPCURL}).
 		Info("created rpcClient")
 
 	solanaClient := SolanaClient{client: rpcClient}
@@ -310,21 +305,21 @@ func checkTxHash(
 	}
 }
 
-func GetURLWithRateLimit(network configs.Network) (string, int) {
-	switch network {
-	case configs.MainnetNetwork:
-		// return rpc.MainNetBeta_RPC, 3
-		// mocha+3@dcaf.so
-		return "https://quick-dark-dust.solana-mainnet.discover.quiknode.pro/67c6e7fd9430ec7c3cf355ce177b058d653a416e/", 10
-	case configs.DevnetNetwork:
-		// return rpc.DevNet_RPC, 3
-		// mocha+2@dcaf.so
-		return "https://wiser-icy-bush.solana-devnet.discover.quiknode.pro/7288cc56d980336f6fc0508eb1aa73e44fd2efcd", 10
-	case configs.NilNetwork:
-		fallthrough
-	case configs.LocalNetwork:
-		fallthrough
-	default:
-		return rpc.LocalNet_RPC, 2
-	}
-}
+//func GetURLWithRateLimit(network configs.Network) (string, int) {
+//	switch network {
+//	case configs.MainnetNetwork:
+//		// return rpc.MainNetBeta_RPC, 3
+//		// mocha+3@dcaf.so
+//		return "https://quick-dark-dust.solana-mainnet.discover.quiknode.pro/67c6e7fd9430ec7c3cf355ce177b058d653a416e/", 10
+//	case configs.DevnetNetwork:
+//		// return rpc.DevNet_RPC, 3
+//		// mocha+2@dcaf.so
+//		return "https://wiser-icy-bush.solana-devnet.discover.quiknode.pro/7288cc56d980336f6fc0508eb1aa73e44fd2efcd", 10
+//	case configs.NilNetwork:
+//		fallthrough
+//	case configs.LocalNetwork:
+//		fallthrough
+//	default:
+//		return rpc.LocalNet_RPC, 2
+//	}
+//}

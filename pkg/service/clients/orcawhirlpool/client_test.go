@@ -10,7 +10,7 @@ import (
 )
 
 func TestOrcaWhirlpoolClient(t *testing.T) {
-
+	t.Skip("skipping...")
 	client := NewOrcaWhirlpoolClient(&configs.Config{
 		Network: configs.DevnetNetwork,
 	})

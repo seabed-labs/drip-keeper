@@ -8,7 +8,6 @@ import (
 	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients"
 
 	"github.com/Dcaf-Protocol/drip-keeper/configs"
-	"github.com/Dcaf-Protocol/drip-keeper/pkg/service/clients/solana"
 	dripextension "github.com/dcaf-labs/drip-client/drip-extension-go"
 )
 
@@ -19,7 +18,7 @@ type OrcaWhirlpoolClient interface {
 func NewOrcaWhirlpoolClient(
 	config *configs.Config,
 ) OrcaWhirlpoolClient {
-	return newClient(config.Network)
+	return newClient(config.SolanaRPCURL)
 }
 
 type client struct {
@@ -27,8 +26,7 @@ type client struct {
 	connectionUrl string
 }
 
-func newClient(network configs.Network) *client {
-	connectionURL, callsPerSecond := solana.GetURLWithRateLimit(network)
+func newClient(rpcUrl string) *client {
 	httpClient := clients.GetRateLimitedHTTPClient(callsPerSecond)
 
 	config := dripextension.NewConfiguration()
@@ -38,7 +36,7 @@ func newClient(network configs.Network) *client {
 	config.Scheme = "https"
 	return &client{
 		APIClient:     dripextension.NewAPIClient(config),
-		connectionUrl: connectionURL,
+		connectionUrl: rpcUrl,
 	}
 }
 
