@@ -304,22 +304,3 @@ func checkTxHash(
 		}
 	}
 }
-
-//func GetURLWithRateLimit(network configs.Network) (string, int) {
-//	switch network {
-//	case configs.MainnetNetwork:
-//		// return rpc.MainNetBeta_RPC, 3
-//		// mocha+3@dcaf.so
-//		return "https://quick-dark-dust.solana-mainnet.discover.quiknode.pro/67c6e7fd9430ec7c3cf355ce177b058d653a416e/", 10
-//	case configs.DevnetNetwork:
-//		// return rpc.DevNet_RPC, 3
-//		// mocha+2@dcaf.so
-//		return "https://wiser-icy-bush.solana-devnet.discover.quiknode.pro/7288cc56d980336f6fc0508eb1aa73e44fd2efcd", 10
-//	case configs.NilNetwork:
-//		fallthrough
-//	case configs.LocalNetwork:
-//		fallthrough
-//	default:
-//		return rpc.LocalNet_RPC, 2
-//	}
-//}
